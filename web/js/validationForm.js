@@ -353,3 +353,12 @@ Validator.maxFileCount = function (selector, maxCount, message) {
         }
     };
 };
+
+Validator.isSelectRequired = function (selector, message) {
+    return {
+        selector: selector,
+        test: function (value) {
+            return value && value !== "" ? undefined : message || 'Please choose an option';
+        }
+    }
+}
