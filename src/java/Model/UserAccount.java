@@ -15,10 +15,13 @@ public class UserAccount {
     private String status;
     private String create_at;
     private String phonenumber;
-    // Thêm thuộc tính branchId cho staff
     private Integer branchId;
     private String branchName;
-
+    private String fullname;
+    private String login_type;
+    private boolean is_deleted;
+    private String last_login_at;
+    
     public UserAccount() {
     }
 
@@ -59,6 +62,40 @@ public class UserAccount {
         this.branchId = branchId;
     }
 
+    //author: hung
+    //Content: Constructor đầy đủ cho data mới
+    public UserAccount(String id, String username, String password, String email, String avatar_url, String role, String status, String create_at, String phonenumber, Integer branchId, String branchName, String fullname, String login_type, boolean is_deleted, String last_login_at) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.avatar_url = avatar_url;
+        this.role = role;
+        this.status = status;
+        this.create_at = create_at;
+        this.phonenumber = phonenumber;
+        this.branchId = branchId;
+        this.branchName = branchName;
+        this.fullname = fullname;
+        this.login_type = login_type;
+        this.is_deleted = is_deleted;
+        this.last_login_at = last_login_at;
+    }
+
+    //author: hung
+    //Content: Constructor dùng để add staff, manager
+    public UserAccount(String username, String password, String email, String avatar_url, String role, String phonenumber, Integer branchId, String fullname) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.avatar_url = avatar_url;
+        this.role = role;
+        this.phonenumber = phonenumber;
+        this.branchId = branchId;
+        this.fullname = fullname;
+    }
+    
+    
     public String getBranchName() {
         return branchName;
     }
@@ -148,8 +185,40 @@ public class UserAccount {
         this.branchId = branchId;
     }
 
+    public String getFullname() {
+        return fullname;
+    }
+
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
+    }
+
+    public String getLogin_type() {
+        return login_type;
+    }
+
+    public void setLogin_type(String login_type) {
+        this.login_type = login_type;
+    }
+
+    public boolean isIs_deleted() {
+        return is_deleted;
+    }
+
+    public void setIs_deleted(boolean is_deleted) {
+        this.is_deleted = is_deleted;
+    }
+
+    public String getLast_login_at() {
+        return last_login_at;
+    }
+
+    public void setLast_login_at(String last_login_at) {
+        this.last_login_at = last_login_at;
+    }
+
     @Override
     public String toString() {
-        return "UserAccount{" + "id=" + id + ", username=" + username + ", password=" + password + ", email=" + email + ", avatar_url=" + avatar_url + ", role=" + role + ", status=" + status + ", create_at=" + create_at + ", phonenumber=" + phonenumber + ", branchId=" + branchId + '}';
+        return "UserAccount{" + "id=" + id + ", username=" + username + ", password=" + password + ", email=" + email + ", avatar_url=" + avatar_url + ", role=" + role + ", status=" + status + ", create_at=" + create_at + ", phonenumber=" + phonenumber + ", branchId=" + branchId + ", branchName=" + branchName + ", fullname=" + fullname + ", login_type=" + login_type + ", is_deleted=" + is_deleted + ", last_login_at=" + last_login_at + '}';
     }
 }

@@ -362,3 +362,17 @@ Validator.isSelectRequired = function (selector, message) {
         }
     }
 }
+
+Validator.passwordStrength = function (selector, message) {
+    return {
+        selector: selector,
+        test: function (value) {
+            const hasLetter = /[a-zA-Z]/.test(value);
+            const hasDigit = /[0-9]/.test(value);
+
+            return hasLetter && hasDigit
+                ? undefined
+                : message || 'Password must include at least one letter and one digit.';
+        }
+    };
+};

@@ -395,30 +395,63 @@
                     <!-- Manual Entry Tab -->
                     <div id="manualTab" class="tab-content active">
                         <form id="addAccountForm">
+                            <input type="hidden" name="action" value="addAcount">
                             <div class="form-grid">
                                 <div class="form-group">
                                     <label for="emailAdd">Email Address</label>
                                     <input type="email" id="emailAdd" name="emailAdd" required>
+                                    <p class="form__error"></p>
                                 </div>
                                 <div class="form-group">
                                     <label for="fullNameAdd">Full Name</label>
                                     <input type="text" id="fullNameAdd" name="fullNameAdd" required>
+                                    <p class="form__error"></p>
                                 </div>
                                 <div class="form-group">
                                     <label for="phoneAdd">Phone Number</label>
                                     <input type="tel" id="phoneAdd" name="phoneAdd">
+                                    <p class="form__error"></p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="usernameAdd">Username</label>
+                                    <input type="text" id="usernameAdd" name="usernameAdd">
+                                    <p class="form__error"></p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="passwordAdd">Password</label>
+                                    <input type="password" id="passwordAdd" name="passwordAdd">
+                                    <p class="form__error"></p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirmPasswordAdd">Confirm password</label>
+                                    <input type="password" id="confirmPasswordAdd" name="confirmPasswordAdd">
+                                    <p class="form__error"></p>
                                 </div>
                                 <div class="form-group">
                                     <label for="roleAdd">Role</label>
                                     <select id="roleAdd" name="roleAdd" required>
-                                        <option value="staff">Staff</option>
-                                        <option value="manager">Manager</option>
+                                        <option value="">Choose role</option>
+                                        <option value="Staff">Staff</option>
+                                        <option value="Manager">Manager</option>
+                                        <option value="Admin">Admin</option>
                                     </select>
+                                    <p class="form__error"></p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="roleAdd">Brand</label>
+                                    <select id="brandIDAdd" name="brandIDAdd" required>
+                                        <option value="">Choose brand</option>
+                                        <c:forEach items="${hotelBranchList}" var="b">
+                                            <option value="${b.id}">${b.name}</option>
+                                        </c:forEach>
+                                    </select>
+                                    <p class="form__error"></p>
                                 </div>
                             </div>
+
                             <div class="modal-actions">
                                 <button type="button" class="btn btn-outline" onclick="closeAddAccountModal()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Create Account</button>
+                                <button type="button" class="btn btn-primary" onclick="sendCodeEmailToAdd()">Create Account</button>
                             </div>
                         </form>
                     </div>
@@ -436,23 +469,29 @@
                                         <li>Duplicate emails will be ignored and reported</li>
                                         <li>Maximum 1000 accounts per upload</li>
                                     </ul>
-                                    <button class="btn btn-link" onclick="downloadTemplate()">
-                                        <i class="fas fa-download"></i>
-                                        Download Template
-                                    </button>
+                                    <form action="account" method="post">
+                                        <input type="hidden" name="action" value="downloadTemplate" />
+                                        <button class="btn btn-link">
+                                            <i class="fas fa-download"></i>
+                                            Download Template
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
                         <div class="upload-area">
-                            <div class="upload-zone" onclick="document.getElementById('excelFile').click()">
-                                <i class="fas fa-file-excel"></i>
-                                <p>Drop your Excel file here or click to browse</p>
-                                <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
-                                <button type="button" class="btn btn-outline">
-                                    <i class="fas fa-upload"></i>
-                                    Choose File
-                                </button>
-                            </div>
+                            <form action="account" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="action" value="uploadExcel" />
+                                <div class="upload-zone" onclick="document.getElementById('excelFile').click()">
+                                    <i class="fas fa-file-excel"></i>
+                                    <p>Drop your Excel file here or click to browse</p>
+                                    <input type="file" name="excelFile" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="this.form.submit()">
+                                    <button type="button" class="btn btn-outline">
+                                        <i class="fas fa-upload"></i>
+                                        Choose File
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -518,6 +557,33 @@
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Verify Email to Add Account Modal -->
+        <div id="verifyEmailModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>You need to verify email to create account?</h2>
+                    <button class="btn btn-ghost" onclick="closeVerifyEmailModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div id="notificationForAdd"></div>
+                        <label for="verificationCodeAdd">Enter verification code</label>
+                        <input type="text" id="verificationCodeAdd" maxlength="6" placeholder="Enter 6-digit code">
+                        <p class="help-text">
+                            Didn't receive the code? 
+                            <button class="btn btn-link" onclick="resendCodeToAdd()">Resend</button>
+                        </p>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-outline" onclick="closeVerifyEmailModal()">Cancel</button>
+                        <button type="button" class="btn btn-warning" onclick="verifyCodeToAdd()">Verify</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -680,21 +746,23 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="confirmation-content">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <div>
-                            <h3>User Action</h3>
-                            <p id="bulkActionChangeText"></p>
-                            <p class="text-muted">This action will immediately update their permissions and access levels.</p>
+                    <form action="accountEventHandler" method="post">
+                        <div class="confirmation-content">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>
+                                <h3>User Action</h3>
+                                <p id="bulkActionChangeText"></p>
+                                <p class="text-muted">This action will immediately update their permissions and access levels.</p>
+                            </div>
                         </div>
-                    </div>
-                    <input type="hidden" name="listUserId" id="listUserId">
-                    <input type="hidden" name="action" value="bulkActions">
-                    <input type="hidden" name="bulkActionType" id="bulkActionType">
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-outline" onclick="closeBulkActionsModal()">Cancel</button>
-                        <button type="submit" class="btn btn-warning">Confirm Change</button>
-                    </div>
+                        <input type="hidden" name="listUserId" id="listUserId">
+                        <input type="hidden" name="action" value="bulkActions">
+                        <input type="hidden" name="bulkActionType" id="bulkActionType">
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-outline" onclick="closeBulkActionsModal()">Cancel</button>
+                            <button type="submit" class="btn btn-warning">Confirm Change</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -703,45 +771,115 @@
         <!-- Toast Notifications -->
         <div id="toastContainer" class="toast-container"></div>
 
-        <script src="../js/accountScript.js"></script>
-        <script src="../js/toastMessage.js"></script>
-        <script src="../js/validationForm.js"></script>
-
+        <script src="../js/accountScript.js">
+        </script>
+        <script src="../js/toastMessage.js">
+        </script>
+        <script src="../js/validationForm.js">
+        </script>
 
 
         <script>
-                            Validator({
-                                form: '#createOwnerForm',
-                                formGroupSelector: '.form-group',
-                                errorSelector: '.form__error',
-                                rules: [
-                                    Validator.isRequired('#fullName', 'Please enter full name'),
-                                    Validator.isRequired('#username', 'Please enter username'),
-                                    Validator.lengthRange('#username', 6, 30, 'Username must be between 6 and 30 characters.'),
-                                    Validator.isPhoneNumber('#phone', 'Please enter your phone number'),
-                                    Validator.isRequired('#email', 'Please enter your email'),
-                                    Validator.isEmail('#email'),
-                                    Validator.minLength(' #password', 8),
-                                    Validator.isRequired('#confirmPassword'),
-                                    Validator.isConfirmed(' #confirmPassword', function () {
-                                        return document.querySelector('#createOwnerForm #password').value;
-                                    }, 'Confirm password is incorrect'),
-                                ],
-                                onsubmit: function (formValue) {
-                                    document.querySelector('#createOwnerForm').submit();
-                                }
-                            });
-                            Validator({
-                                form: '#selectOwner',
-                                formGroupSelector: '.form-group',
-                                errorSelector: '.form__error',
-                                rules: [
-                                    Validator.isSelectRequired('#newOwner', 'Please select new owner')
-                                ],
-                                onsubmit: function (formValue) {
-                                    document.querySelector('#selectOwner').submit();
-                                }
-                            });
+            document.addEventListener("DOMContentLoaded", function () {
+                const roleSelect = document.getElementById("roleAdd");
+                const brandSelect = document.getElementById("brandIDAdd");
+
+                // Tạo sẵn option "pass" nhưng chưa thêm vào DOM
+                const passOption = document.createElement("option");
+                passOption.value = "pass";
+                passOption.textContent = "Don't need to choose";
+
+                roleSelect.addEventListener("change", function () {
+                    const roleValue = roleSelect.value;
+
+                    if (roleValue === "Admin") {
+                        // Nếu chưa có thì thêm option "pass"
+                        const exists = Array.from(brandSelect.options).some(opt => opt.value === "pass");
+                        if (!exists) {
+                            brandSelect.appendChild(passOption);
+                        }
+
+                        // Chọn option "pass"
+                        brandSelect.value = "pass";
+                        brandSelect.style.pointerEvents = "none";
+                        brandSelect.style.backgroundColor = "#e9ecef";
+                    } else {
+                        // Nếu tồn tại option "pass" thì xóa đi
+                        const optionToRemove = Array.from(brandSelect.options).find(opt => opt.value === "pass");
+                        if (optionToRemove) {
+                            brandSelect.removeChild(optionToRemove);
+                        }
+
+                        // Reset lại select
+                        brandSelect.value = "";
+                        brandSelect.style.pointerEvents = "auto";
+                        brandSelect.style.backgroundColor = "";
+                    }
+                });
+            });
         </script>
+
+        <script>
+            Validator({
+                form: '#createOwnerForm',
+                formGroupSelector: '.form-group',
+                errorSelector: '.form__error',
+                rules: [
+                    Validator.isRequired('#fullName', 'Please enter full name'),
+                    Validator.isRequired('#username', 'Please enter username'),
+                    Validator.lengthRange('#username', 6, 30, 'Username must be between 6 and 30 characters.'),
+                    Validator.isPhoneNumber('#phone', 'Please enter your phone number'),
+                    Validator.isRequired('#email', 'Please enter your email'),
+                    Validator.isEmail('#email'),
+                    Validator.minLength(' #password', 8),
+                    Validator.passwordStrength(' #password'),
+                    Validator.isRequired('#confirmPassword'),
+                    Validator.isConfirmed(' #confirmPassword', function () {
+                        return document.querySelector('#createOwnerForm #password').value;
+                    }, 'Confirm password is incorrect'),
+                ],
+                onsubmit: function (formValue) {
+                    document.querySelector('#createOwnerForm').submit();
+                }
+            });
+
+            Validator({
+                form: '#selectOwner',
+                formGroupSelector: '.form-group',
+                errorSelector: '.form__error',
+                rules: [
+                    Validator.isSelectRequired('#newOwner', 'Please select new owner')
+                ],
+                onsubmit: function (formValue) {
+                    document.querySelector('#selectOwner').submit();
+                }
+            });
+            Validator({
+                form: '#addAccountForm',
+                formGroupSelector: '.form-group',
+                errorSelector: '.form__error',
+                rules: [
+                    Validator.isRequired('#fullNameAdd', 'Please enter full name'),
+                    Validator.isRequired('#usernameAdd', 'Please enter username'),
+                    Validator.lengthRange('#usernameAdd', 6, 30, 'Username must be between 6 and 30 characters.'),
+                    Validator.isPhoneNumber('#phoneAdd', 'Please enter your phone number'),
+                    Validator.isRequired('#emailAdd', 'Please enter your email'),
+                    Validator.isEmail('#emailAdd'),
+                    Validator.minLength(' #passwordAdd', 8),
+                    Validator.passwordStrength(' #passwordAdd'),
+                    Validator.isRequired('#confirmPasswordAdd'),
+                    Validator.isConfirmed(' #confirmPasswordAdd', function () {
+                        return document.querySelector('#addAccountForm #passwordAdd').value;
+                    }, 'Confirm password is incorrect'),
+                    Validator.isSelectRequired('#roleAdd', 'Please select role'),
+                    Validator.isSelectRequired('#brandIDAdd', 'Please select brand')
+                ],
+                onsubmit: function (formValue) {
+                    document.querySelector('#addAccountForm').submit();
+                }
+            });
+        </script>
+
+
     </body>
 </html>

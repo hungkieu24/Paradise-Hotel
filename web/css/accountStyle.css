@@ -793,12 +793,12 @@ body {
     }
 }
 
-#notificationArea, #notificationAreaCreate {
+#notificationArea, #notificationAreaCreate, #notificationForAdd {
     color: green;
     font-size: 16px;
     padding: 10px 0;
 }
 
-#notificationArea.warning, #notificationAreaCreate.warning {
+#notificationArea.warning, #notificationAreaCreate.warning, #notificationForAdd.warning {
     color: red;
 }

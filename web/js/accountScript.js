@@ -303,6 +303,11 @@ function openTranferModal(userId, fullname, email) {
     modal.classList.add("show");
 }
 
+function closeVerifyEmailModal() {
+    const modal = document.getElementById("verifyEmailModal");
+    modal.classList.remove("show");
+}
+
 function closeTranferModal() {
     const modal = document.getElementById("tranferModal");
     modal.classList.remove("show");
@@ -406,7 +411,7 @@ function sendCodeToCreateOwner() {
     const phone = document.getElementById("phone").value.trim();
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value.trim();
-    
+
     const notification = document.getElementById("notificationAreaCreate");
 
     const xhr = new XMLHttpRequest();
@@ -449,7 +454,7 @@ function resendCodeCreate() {
 
             if (xhr.status === 200) {
                 const result = JSON.parse(xhr.responseText);
-                notification.innerHTML =  result.message;
+                notification.innerHTML = result.message;
             } else {
                 notification.classList.add("warning");
                 notification.innerHTML = "Failed to resend code. Please try again.";
@@ -467,7 +472,7 @@ function verifyCodeCreate() {
     const notification = document.getElementById("notificationAreaCreate");
 
     if (code.length !== 6 || isNaN(code)) {
-        notification.innerHTML = `<div class="alert alert-warning">Please enter a valid 6-digit code.</div>`;
+        notification.innerHTML = "Please enter a valid 6-digit code.";
         return;
     }
 
@@ -487,8 +492,10 @@ function verifyCodeCreate() {
                 if (xhr.status === 400 || xhr.status === 500) {
                     try {
                         const res = JSON.parse(xhr.responseText);
-                        if (res.message) message = res.message;
-                    } catch (_) { }
+                        if (res.message)
+                            message = res.message;
+                    } catch (_) {
+                    }
                 }
 
                 notification.innerHTML = message;
@@ -500,3 +507,99 @@ function verifyCodeCreate() {
     xhr.send(params);
 }
 
+function sendCodeEmailToAdd() {
+    const email = document.getElementById("emailAdd").value.trim();
+    const fullName = document.getElementById("fullNameAdd").value.trim();
+    const phone = document.getElementById("phoneAdd").value.trim();
+    const username = document.getElementById("usernameAdd").value.trim();
+    const password = document.getElementById("passwordAdd").value.trim();
+    const confirmPassword = document.getElementById("confirmPasswordAdd").value.trim();
+    const role = document.getElementById("roleAdd").value;
+    const branchId = document.getElementById("brandIDAdd").value;
+    const modal = document.getElementById("verifyEmailModal");
+    const notification = document.getElementById("notificationForAdd");
+    
+    const params = new URLSearchParams();
+    params.append("action", "sendCodeToAdd");
+    params.append("email", email);
+    params.append("fullName", fullName);
+    params.append("phone", phone);
+    params.append("username", username);
+    params.append("password", password);
+    params.append("role", role);
+    params.append("branchId", branchId);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/ParadiseHotel/admin/accountEventHandler", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                notification.innerHTML = "Verification code sent successfully to email.";
+                modal.classList.add("show");
+                
+            } else {
+                notification.classList.add("warning");
+                notification.innerHTML = "Failed to send verification code.";
+            }
+        }
+    };
+
+    xhr.send(params.toString());
+}
+
+function resendCodeToAdd() {
+    const notification = document.getElementById("notificationForAdd");
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/ParadiseHotel/admin/accountEventHandler", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                notification.innerHTML = "Verification code resent.";
+            } else {
+                notification.classList.add("warning");
+                notification.innerHTML = "Failed to resend verification code.";
+            }
+        }
+    };
+
+    xhr.send("action=resendCodeToAdd");
+}
+
+function verifyCodeToAdd() {
+    const codeInput = document.getElementById("verificationCodeAdd");
+    const code = codeInput.value.trim();
+    const notification = document.getElementById("notificationAreaAdd");
+
+    if (code.length !== 6 || isNaN(code)) {
+        notification.classList.add("warning");
+        notification.innerText = "Please enter a valid 6-digit code.";
+        return;
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/ParadiseHotel/admin/accountEventHandler", true);
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                window.location.href = "./account"; // load lại
+            } else {
+                let message = "Verification failed. Please try again.";
+                try {
+                    const res = JSON.parse(xhr.responseText);
+                    if (res.message) message = res.message;
+                } catch (_) {}
+                notification.classList.add("warning");
+                notification.innerText = message;
+            }
+        }
+    };
+
+    const params = `action=verifyCodeToAdd&codeInput=${encodeURIComponent(code)}`;
+    xhr.send(params);
+}

@@ -29,6 +29,8 @@ public class AccountEventHandlerServlet extends HttpServlet {
 
     private final UserAccountDAO accountDAO = new UserAccountDAO();
 
+    private static final String COL_Email = "email";
+    private static final String COL_USERNAME = "username";
     private static final String COL_STATUS = "status";
     private static final String COL_ROLE = "role";
     private static final String COL_PASSWORD = "password";
@@ -98,13 +100,160 @@ public class AccountEventHandlerServlet extends HttpServlet {
             handleResendCodeCreateAjax(request, response, session);
             return;
         }
-        
+
         if (action.equals("verifyCodeCreate")) {
             handleVerifyCodeCreate(request, response, session);
             return;
         }
 
+        if (action.equals("sendCodeToAdd")) {
+            handleSendCodeToAdd(request, response);
+            return;
+        }
+
+        if (action.equals("resendCodeToAdd")) {
+            handleResendCodeToAdd(request, response);
+            return;
+        }
+
+        if (action.equals("verifyCodeToAdd")) {
+            handleVerifyCodeToAdd(request, response, session);
+            return;
+        }
+
         response.sendRedirect("./account");
+    }
+
+    public boolean isValidRegistration(String email, String username, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+
+        // Kiểm tra email và username đã tồn tại chưa
+        UserAccountDAO accountDAO = new UserAccountDAO();
+        if (accountDAO.isFieldExists(COL_Email, email, null)) {
+            setSessionMessage(session, "Email already exists!", "error");
+            return false;
+        }
+
+        if (accountDAO.isFieldExists(COL_USERNAME, username, null)) {
+            setSessionMessage(session, "Username already exists!", "error");
+            return false;
+        }
+
+        // Nếu qua hết thì hợp lệ
+        return true;
+    }
+
+    private void handleVerifyCodeToAdd(HttpServletRequest request, HttpServletResponse response, HttpSession session) throws IOException {
+        String code = request.getParameter("codeInput");
+        String expectedCode = (String) session.getAttribute("add_email_code");
+        long expiry = (long) session.getAttribute("add_email_expiry");
+
+        if (code == null || expectedCode == null || System.currentTimeMillis() > expiry) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "{\"message\": \"Code is missing or expired.\"}");
+            return;
+        }
+
+        if (!code.equals(expectedCode)) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "{\"message\": \"Incorrect verification code.\"}");
+            return;
+        }
+
+        // Lấy dữ liệu đã lưu trong session
+        String emailAdd = (String) session.getAttribute("add_email");
+        String fullNameAdd = (String) session.getAttribute("add_fullName");
+        String phoneAdd = (String) session.getAttribute("add_phone");
+        String usernameAdd = (String) session.getAttribute("add_username");
+        String passwordAdd = (String) session.getAttribute("add_password");
+        String roleAdd = (String) session.getAttribute("add_role");
+        String brandIDAddString = (String) session.getAttribute("add_branchId");
+
+        UserAccount newAcc = new UserAccount();
+        if (!roleAdd.equals("Admin")) {
+            int brandIDAdd = Integer.parseInt(brandIDAddString);
+            newAcc.setBranchId(brandIDAdd);
+        }
+        String hashPassword = PasswordUtils.hashPassword(passwordAdd);
+        newAcc.setUsername(usernameAdd);
+        newAcc.setEmail(emailAdd);
+        newAcc.setPassword(hashPassword);
+        newAcc.setPhonenumber(phoneAdd);
+        newAcc.setAvatar_url("./img/avatar/avatar.jpg");
+        newAcc.setFullname(fullNameAdd);
+        newAcc.setRole(roleAdd);
+
+        boolean success = accountDAO.insertUser(newAcc);
+        if (success) {
+            setSessionMessage(session, "Create successfully!", "success");
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\": \"Account created successfully.\"}");
+        } else {
+            setSessionMessage(session, "Failed to create account.", "error");
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "{\"message\": \"Failed to insert user.\"}");
+        }
+    }
+
+    private void handleSendCodeToAdd(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String email = request.getParameter("email");
+        String fullName = request.getParameter("fullName");
+        String phone = request.getParameter("phone");
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        String role = request.getParameter("role");
+        String branchIdStr = request.getParameter("branchId");
+
+        String code = String.format("%06d", new Random().nextInt(1000000));
+        long expiryTime = System.currentTimeMillis() + 60 * 1000;
+        boolean valid = isValidRegistration(email, username, request);
+        if (!valid) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "{\"message\": \"Email or Username already exists!\"}");
+            return;
+        }
+        try {
+            EmailUtility.sendEmail(email, "Your verification code for new account", code);
+
+            HttpSession session = request.getSession();
+            session.setAttribute("add_email_code", code);
+            session.setAttribute("add_email_expiry", expiryTime);
+            session.setAttribute("add_email", email);
+            session.setAttribute("add_fullName", fullName);
+            session.setAttribute("add_phone", phone);
+            session.setAttribute("add_username", username);
+            session.setAttribute("add_password", password);
+            session.setAttribute("add_role", role);
+            session.setAttribute("add_branchId", branchIdStr);
+
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\": \"Verification code sent to email.\"}");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to send verification code.");
+        }
+    }
+
+    private void handleResendCodeToAdd(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        HttpSession session = request.getSession();
+        String email = (String) session.getAttribute("add_email");
+
+        if (email == null) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Email is missing in session.");
+            return;
+        }
+
+        String code = String.format("%06d", new Random().nextInt(1000000));
+        long expiryTime = System.currentTimeMillis() + 60 * 1000;
+
+        try {
+            EmailUtility.sendEmail(email, "Your new verification code", code);
+
+            session.setAttribute("add_email_code", code);
+            session.setAttribute("add_email_expiry", expiryTime);
+
+            response.setContentType("application/json");
+            response.getWriter().write("{\"message\": \"Verification code resent successfully.\"}");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Failed to resend code.");
+        }
     }
 
     private void handleVerifyCodeCreate(HttpServletRequest request, HttpServletResponse response, HttpSession session)
@@ -149,6 +298,7 @@ public class AccountEventHandlerServlet extends HttpServlet {
         newOwner.setPhonenumber(phone);
         newOwner.setUsername(username);
         newOwner.setPassword(hashedPassword);
+        newOwner.setAvatar_url("./img/avatar/avatar.jpg");
         newOwner.setRole("HotelOwner");
 
         boolean created = accountDAO.insertHotelOwner(newOwner);
@@ -156,10 +306,10 @@ public class AccountEventHandlerServlet extends HttpServlet {
         if (created) {
             // Xóa owner cũ (đặt isDeleted = true)
             String ownerId = (String) session.getAttribute("ownerId");
-            if(ownerId != null) {
+            if (ownerId != null) {
                 accountDAO.updateUserField(COL_IS_DELETED, true, ownerId);
             }
-            
+
             session.removeAttribute("newEmailVerificationCode");
             session.removeAttribute("newEmail");
             session.removeAttribute("newEmailExpiryTime");
@@ -445,7 +595,7 @@ public class AccountEventHandlerServlet extends HttpServlet {
                 return;
             }
 
-            for (String userId : userIds) {;
+            for (String userId : userIds) {
                 boolean success = false;
 
                 if (actionType.contains("Active")) {

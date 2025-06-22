@@ -1070,6 +1070,8 @@ public class UserAccountDAO extends DBContext {
         return null; // Không tìm thấy user
     }
 
+    // author : hung
+    // Content: get useraccount by id follow new constructor
     public boolean insertHotelOwner(UserAccount user) {
         try {
             // 1. Tạo ID mới
@@ -1102,6 +1104,54 @@ public class UserAccountDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return false;
+    }
+
+    public boolean insertUser(UserAccount user) {
+        String newId = "U001";
+
+        try {
+            // 1. Lấy ID lớn nhất hiện tại để sinh ID mới
+            String getMaxIdSql = "SELECT MAX(CAST(SUBSTRING(id, 2, LEN(id)) AS INT)) AS maxId FROM UserAccount";
+            PreparedStatement ps1 = connection.prepareStatement(getMaxIdSql);
+            ResultSet rs = ps1.executeQuery();
+            if (rs.next()) {
+                int maxId = rs.getInt("maxId");
+                newId = String.format("U%03d", maxId + 1);
+            }
+
+            // 2. Câu lệnh INSERT (chỉ insert các trường do bạn cung cấp)
+            String sql = """
+            INSERT INTO UserAccount (
+                id, username, password, email, avatar_url,
+                role, phonenumber, branch_id, fullname
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """;
+
+            PreparedStatement ps2 = connection.prepareStatement(sql);
+            ps2.setString(1, newId);
+            ps2.setString(2, user.getUsername());
+            ps2.setString(3, user.getPassword());
+            ps2.setString(4, user.getEmail());
+            ps2.setString(5, user.getAvatar_url());
+            ps2.setString(6, user.getRole());
+            ps2.setString(7, user.getPhonenumber());
+
+            if (user.getBranchId() != null) {
+                ps2.setInt(8, user.getBranchId());
+            } else {
+                ps2.setNull(8, java.sql.Types.INTEGER);
+            }
+
+            ps2.setString(9, user.getFullname());
+
+            int rows = ps2.executeUpdate();
+            return rows > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         return false;
     }
 
