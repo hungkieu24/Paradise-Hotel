@@ -1107,6 +1107,8 @@ public class UserAccountDAO extends DBContext {
         return false;
     }
 
+    // author : hung
+    // Content: insert account for staff
     public boolean insertUser(UserAccount user) {
         String newId = "U001";
 
@@ -1148,6 +1150,48 @@ public class UserAccountDAO extends DBContext {
             int rows = ps2.executeUpdate();
             return rows > 0;
 
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // author : hung
+    // Content: Check the last account
+    public boolean isLastActiveAccountOfRole(String role) {
+        String sql = "SELECT COUNT(*) AS total FROM UserAccount WHERE role = ?";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, role);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                int total = rs.getInt("total");
+                return total == 1;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // author : hung
+    // Content: Check is Admin Or HotelOwner
+    public boolean isAdminOrHotelOwner(String userId) {
+        String sql = "SELECT role FROM UserAccount WHERE id = ?";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, userId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                String role = rs.getString("role");
+                return "Admin".equalsIgnoreCase(role) || "HotelOwner".equalsIgnoreCase(role);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

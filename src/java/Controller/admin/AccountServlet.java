@@ -21,6 +21,11 @@ import java.io.InputStream;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Set;
+import java.util.regex.Pattern;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
@@ -111,12 +116,12 @@ public class AccountServlet extends HttpServlet {
         request.setAttribute("userAccountList", userAccountList);
         request.getRequestDispatcher("./account.jsp").forward(request, response);
     }
-    
+
     private void setSessionMessage(HttpSession session, String message, String type) {
         session.setAttribute("message", message);
         session.setAttribute("messageType", type);
     }
-    
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -130,6 +135,19 @@ public class AccountServlet extends HttpServlet {
             handleExcelUpload(request, response);
             return;
         }
+        
+        if ("AddExcelAccount".equals(action)) {
+            HttpSession session = request.getSession();
+            String defaultAvatarUrl = "../img/avatar/avatar.jpg";
+            UserAccountDAO accountDAO = new UserAccountDAO();
+            List<UserAccount> userList = (List<UserAccount>) session.getAttribute("userListSession");
+            for (UserAccount userAccount : userList) {
+                userAccount.setAvatar_url(defaultAvatarUrl);
+                accountDAO.insertUser(userAccount);
+            }
+            response.sendRedirect("./account");
+            return;
+        }
     }
 
     private void downloadExcelTemplate(HttpServletResponse response) throws IOException {
@@ -138,7 +156,7 @@ public class AccountServlet extends HttpServlet {
 
         // Cấu hình tiêu đề
         String[] headers = {
-            "Full Name", "Username", "Email", "Phone Number", "Role", "Branch ID"
+            "Full Name", "Username", "Email", "Password", "Phone Number", "Role", "Branch ID"
         };
         Row headerRow = sheet.createRow(0);
         for (int i = 0; i < headers.length; i++) {
@@ -150,14 +168,15 @@ public class AccountServlet extends HttpServlet {
         sampleRow.createCell(0).setCellValue("Nguyễn Văn A");
         sampleRow.createCell(1).setCellValue("nguyenvana");
         sampleRow.createCell(2).setCellValue("a@example.com");
-        sampleRow.createCell(3).setCellValue("0909123456");
-        sampleRow.createCell(4).setCellValue("Manager"); // dropdown sẽ hỗ trợ
-        sampleRow.createCell(5).setCellValue("1");       // dropdown sẽ hỗ trợ
+        sampleRow.createCell(3).setCellValue("abcd1234");
+        sampleRow.createCell(4).setCellValue("0909123456");
+        sampleRow.createCell(5).setCellValue("Manager"); // dropdown sẽ hỗ trợ
+        sampleRow.createCell(6).setCellValue("1");       // dropdown sẽ hỗ trợ
 
         // ✅ Tạo dropdown cho Role (chỉ chọn được Manager hoặc Staff)
         DataValidationHelper dvHelper = sheet.getDataValidationHelper();
         DataValidationConstraint roleConstraint = dvHelper.createExplicitListConstraint(new String[]{"Manager", "Staff"});
-        CellRangeAddressList roleRange = new CellRangeAddressList(1, 100, 4, 4); // Từ dòng 2 đến 101, cột E (4)
+        CellRangeAddressList roleRange = new CellRangeAddressList(1, 100, 5, 5); // Từ dòng 2 đến 101, cột F (5)
         DataValidation roleValidation = dvHelper.createValidation(roleConstraint, roleRange);
         roleValidation.setShowErrorBox(true);
         sheet.addValidationData(roleValidation);
@@ -172,7 +191,7 @@ public class AccountServlet extends HttpServlet {
                 .toArray(String[]::new);
 
         DataValidationConstraint branchConstraint = dvHelper.createExplicitListConstraint(branchIdList);
-        CellRangeAddressList branchRange = new CellRangeAddressList(1, 100, 5, 5); // Cột F (5)
+        CellRangeAddressList branchRange = new CellRangeAddressList(1, 100, 6, 6); // Cột G (6)
         DataValidation branchValidation = dvHelper.createValidation(branchConstraint, branchRange);
         branchValidation.setShowErrorBox(true);
         sheet.addValidationData(branchValidation);
@@ -188,23 +207,37 @@ public class AccountServlet extends HttpServlet {
     private void handleExcelUpload(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
+
         try {
             Part filePart = request.getPart("excelFile");
 
-            List<UserAccount> userList = parseUserAccountsFromExcel(filePart);
-            int size = userList.size();
-            request.setAttribute("userListSize", size);
+            Map<String, List<Integer>> errorMap = new LinkedHashMap<>();
+            List<UserAccount> userList = parseUserAccountsFromExcel(filePart, errorMap);
+
             request.setAttribute("userList", userList);
+            session.setAttribute("userListSession", userList);
+            request.setAttribute("userListSize", userList.size());
+            request.setAttribute("errorMap", errorMap);
+
             request.getRequestDispatcher("/admin/view_uploaded_accounts.jsp").forward(request, response);
         } catch (Exception e) {
             e.printStackTrace();
-            setSessionMessage(session, "Error when processing Excel file:" + e.getMessage(), "error");
+            setSessionMessage(session, "Lỗi khi xử lý file Excel: " + e.getMessage(), "error");
             request.getRequestDispatcher("./account.jsp").forward(request, response);
         }
     }
 
-    private List<UserAccount> parseUserAccountsFromExcel(Part filePart) throws IOException {
+    private List<UserAccount> parseUserAccountsFromExcel(Part filePart, Map<String, List<Integer>> errorMap) throws IOException {
+
         List<UserAccount> userList = new ArrayList<>();
+
+        HotelBranchDAO branchDAO = new HotelBranchDAO();
+        List<HotelBranch> branchList = branchDAO.getAllHotelBranchesSimple();
+        int maxBranchId = branchList.stream().mapToInt(HotelBranch::getId).max().orElse(0);
+
+        Set<String> usernameSet = new HashSet<>();
+        Set<String> emailSet = new HashSet<>();
+        Set<String> phoneSet = new HashSet<>();
 
         try (InputStream inputStream = filePart.getInputStream(); Workbook workbook = new XSSFWorkbook(inputStream)) {
 
@@ -219,41 +252,57 @@ public class AccountServlet extends HttpServlet {
                 String fullName = getCellValue(row.getCell(0));
                 String username = getCellValue(row.getCell(1));
                 String email = getCellValue(row.getCell(2));
-                String phone = getCellValue(row.getCell(3));
-                String role = getCellValue(row.getCell(4));
-                String branchIdStr = getCellValue(row.getCell(5));
+                String password = getCellValue(row.getCell(3));
+                String phone = getCellValue(row.getCell(4));
+                String role = getCellValue(row.getCell(5));
+                String branchIdStr = getCellValue(row.getCell(6));
 
                 if (username.isEmpty() || email.isEmpty() || branchIdStr.isEmpty()) {
+                    addError(errorMap, "Missing required information", i);
                     continue;
                 }
 
+                // Kiểm tra Branch ID
                 int branchId;
                 try {
                     branchId = Integer.parseInt(branchIdStr.trim());
+                    if (branchId > maxBranchId) {
+                        addError(errorMap, "Branch ID does not exist", i);
+                        continue;
+                    }
                 } catch (NumberFormatException e) {
+                    addError(errorMap, "Invalid Branch ID", i);
                     continue;
                 }
 
-                UserAccount user = new UserAccount(
+                if (!validateRow(i, role, email, username, password, phone,
+                        usernameSet, emailSet, phoneSet, errorMap)) {
+                    continue;
+                }
+
+                // Nếu mọi thứ hợp lệ → thêm vào danh sách
+                userList.add(new UserAccount(
                         username,
-                        "123456",
+                        password,
                         email,
                         null,
                         role,
                         phone,
                         branchId,
                         fullName
-                );
-
-                userList.add(user);
+                ));
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            throw new IOException("Lỗi khi xử lý file Excel: " + e.getMessage());
+            throw new IOException("Error when processing Excel file: " + e.getMessage());
         }
 
         return userList;
+    }
+
+    private void addError(Map<String, List<Integer>> errorMap, String errorMessage, int rowIndex) {
+        errorMap.computeIfAbsent(errorMessage, k -> new ArrayList<>()).add(rowIndex);
     }
 
     private String getCellValue(Cell cell) {
@@ -271,7 +320,49 @@ public class AccountServlet extends HttpServlet {
                 "";
         };
     }
-    
+
+    private boolean validateRow(
+            int rowIndex,
+            String role, String email, String username, String password, String phone,
+            Set<String> usernameSet, Set<String> emailSet, Set<String> phoneSet,
+            Map<String, List<Integer>> errorMap) {
+        boolean isValid = true;
+        Pattern emailPattern = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$");
+        Pattern passwordPattern = Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$");
+
+        if (!role.equalsIgnoreCase("Manager") && !role.equalsIgnoreCase("Staff")) {
+            addError(errorMap, "Invalid role (Manager or Staff only)", rowIndex);
+            isValid = false;
+        }
+
+        if (!emailPattern.matcher(email).matches()) {
+            addError(errorMap, "Email format is incorrect.", rowIndex);
+            isValid = false;
+        }
+
+        if (!usernameSet.add(username)) {
+            addError(errorMap, "Duplicate username in file", rowIndex);
+            isValid = false;
+        }
+
+        if (!emailSet.add(email)) {
+            addError(errorMap, "Duplicate emails in file", rowIndex);
+            isValid = false;
+        }
+
+        if (!passwordPattern.matcher(password).matches()) {
+            addError(errorMap, "Password must be at least 8 characters, include both letters and numbers", rowIndex);
+            isValid = false;
+        }
+
+        if (!phone.isEmpty() && !phoneSet.add(phone)) {
+            addError(errorMap, "Duplicate phone number in file", rowIndex);
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
     private String generateTemporaryPassword(int length) {
         final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         SecureRandom random = new SecureRandom();

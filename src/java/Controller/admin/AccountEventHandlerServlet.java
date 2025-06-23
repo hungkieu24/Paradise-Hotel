@@ -501,13 +501,29 @@ public class AccountEventHandlerServlet extends HttpServlet {
                 success = accountDAO.updateUserField(COL_STATUS, "Inactive", userId);
 
             } else if (actionType.contains("Ban")) {
-                success = accountDAO.updateUserField(COL_STATUS, "Banned", userId);
+                boolean isAdminOrHotelOwner = accountDAO.isAdminOrHotelOwner(userId);
+                if (isAdminOrHotelOwner) {
+                    boolean lastAmin = accountDAO.isLastActiveAccountOfRole("Admin");
+                    if (lastAmin) {
+                        success = false;
+                    }
+                } else {
+                    success = accountDAO.updateUserField(COL_STATUS, "Banned", userId);
+                }
 
             } else if (actionType.contains("Unban")) {
                 success = accountDAO.updateUserField(COL_STATUS, "Active", userId);
 
             } else if (actionType.contains("Delete")) {
-                success = accountDAO.updateUserField(COL_IS_DELETED, true, userId);
+                boolean isAdminOrHotelOwner = accountDAO.isAdminOrHotelOwner(userId);
+                if (isAdminOrHotelOwner) {
+                    boolean lastAmin = accountDAO.isLastActiveAccountOfRole("Admin");
+                    if (lastAmin) {
+                        success = false;
+                    }
+                } else {
+                    success = accountDAO.updateUserField(COL_IS_DELETED, true, userId);
+                }
 
             } else if (actionType.contains("Restore")) {
                 success = accountDAO.updateUserField(COL_IS_DELETED, false, userId);
@@ -603,11 +619,27 @@ public class AccountEventHandlerServlet extends HttpServlet {
                 } else if (actionType.contains("Inactive")) {
                     success = accountDAO.updateUserField(COL_STATUS, "Inactive", userId);
                 } else if (actionType.contains("Ban")) {
-                    success = accountDAO.updateUserField(COL_STATUS, "Banned", userId);
+                    boolean isAdminOrHotelOwner = accountDAO.isAdminOrHotelOwner(userId);
+                    if (isAdminOrHotelOwner) {
+                        boolean lastAmin = accountDAO.isLastActiveAccountOfRole("Admin");
+                        if (lastAmin) {
+                            success = false;
+                        }
+                    } else {
+                        success = accountDAO.updateUserField(COL_STATUS, "Banned", userId);
+                    }
                 } else if (actionType.contains("UnBan")) {
                     success = accountDAO.updateUserField(COL_STATUS, "Active", userId);
                 } else if (actionType.contains("Delete")) {
-                    success = accountDAO.updateUserField(COL_IS_DELETED, true, userId);
+                    boolean isAdminOrHotelOwner = accountDAO.isAdminOrHotelOwner(userId);
+                    if (isAdminOrHotelOwner) {
+                        boolean lastAmin = accountDAO.isLastActiveAccountOfRole("Admin");
+                        if (lastAmin) {
+                            success = false;
+                        }
+                    } else {
+                        success = accountDAO.updateUserField(COL_IS_DELETED, true, userId);
+                    }
                 } else if (actionType.contains("Restore")) {
                     success = accountDAO.updateUserField(COL_IS_DELETED, false, userId);
                 }

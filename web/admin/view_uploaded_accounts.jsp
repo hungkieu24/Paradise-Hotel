@@ -15,6 +15,14 @@
         <title>Hotel Management System - Account Administration</title>
         <link rel="stylesheet" href="../css/accountStyle.css">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+        <style>
+            .alert-danger {
+                margin-left: 5px;
+                padding: 5px;
+                color: red;
+            }
+        </style>
     </head>
     <body>
         <div class="app">
@@ -52,9 +60,9 @@
                         <div>
                             <h1>View Uploaded Accounts</h1>
                         </div>
-                        <button class="btn btn-primary">
+                        <button class="btn btn-primary" onclick="openAddExcelAccount()">
                             <i class="fas fa-plus"></i>
-                            Add Accounts
+                            Add Passed Accounts
                         </button>
                     </div>
                 </div>
@@ -62,13 +70,29 @@
 
                 <!-- Users Table -->
                 <div class="table-container">
-                    <p style="margin-left: 5px; padding: 5px;">Total Accounts: <strong>${userListSize}</strong></p>
+                    <p style="margin-left: 5px; padding: 5px;">Total Accounts(Pass): <strong>${userListSize}</strong></p>
+                    <c:if test="${not empty errorMap}">
+                        <div class="alert alert-danger">
+                            <ul>
+                                <c:forEach var="entry" items="${errorMap}">
+                                    <li>${entry.key}: Line 
+                                        <c:forEach var="row" items="${entry.value}" varStatus="loop">
+                                            ${row}<c:if test="${!loop.last}">, </c:if>
+                                        </c:forEach>
+                                    </li>
+                                </c:forEach>
+                            </ul>
+                        </div>
+                    </c:if>
+
+
                     <table class="users-table" id="usersTable">
                         <thead>
                             <tr>
                                 <th>Email</th>
                                 <th>Full Name</th>
                                 <th>UserName</th>
+                                <th>Password</th>
                                 <th>Phone</th>
                                 <th>Role</th>
                                 <th>Brand Id</th>
@@ -88,6 +112,7 @@
                                     <td>${a.email} </td>
                                     <td>${a.fullname} </td>
                                     <td>${a.username} </td>
+                                    <td>${a.password} </td>
                                     <td>${a.phonenumber}</td>
                                     <td>${a.role}</td>
                                     <td>${a.branchId}</td>
@@ -125,34 +150,41 @@
             </main>
         </div>
         <!-- Actions Modal -->
-        <div id="actionsModal" class="modal">
+        <div id="addExcelAccountModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2>Confirm Action</h2>
-                    <button class="btn btn-ghost" onclick="closeActionsModal()">
+                    <button class="btn btn-ghost" onclick="closeAddExcelAccount()">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <form method="post" action="accountEventHandler">
+                <form method="post" action="account">
                     <div class="modal-body">
                         <div class="confirmation-content">
                             <i class="fas fa-exclamation-triangle"></i>
                             <div>
                                 <h3>User Action</h3>
-                                <p id="actionChangeText"></p>
-                                <p class="text-muted">This action will immediately update their permissions and access levels.</p>
+                                <p id="actionChangeText">Do you want to add these accounts?</p>
                             </div>
                         </div>
-                        <input type="hidden" name="userId" id="actionUserId">
-                        <input type="hidden" name="action" value="multyActions">
-                        <input type="hidden" name="actionType" id="actionType">
+                        <input type="hidden" name="action" value="AddExcelAccount">
                         <div class="modal-actions">
-                            <button type="button" class="btn btn-outline" onclick="closeActionsModal()">Cancel</button>
-                            <button type="submit" class="btn btn-warning">Confirm Change</button>
+                            <button type="button" class="btn btn-outline" onclick="closeAddExcelAccount()">Cancel</button>
+                            <button type="submit" class="btn btn-warning">Confirm</button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
+        <script>
+            function openAddExcelAccount() {
+                document.getElementById("addExcelAccountModal").classList.add("show");
+            }
+
+            function closeAddExcelAccount() {
+                document.getElementById("addExcelAccountModal").classList.remove("show");
+            }
+
+        </script>
     </body>
 </html>
