@@ -135,19 +135,28 @@ public class AccountServlet extends HttpServlet {
             handleExcelUpload(request, response);
             return;
         }
-        
+
         if ("AddExcelAccount".equals(action)) {
-            HttpSession session = request.getSession();
-            String defaultAvatarUrl = "../img/avatar/avatar.jpg";
-            UserAccountDAO accountDAO = new UserAccountDAO();
-            List<UserAccount> userList = (List<UserAccount>) session.getAttribute("userListSession");
+            handleAddExcelAccounts(request, response);
+            return;
+        }
+    }
+
+    private void handleAddExcelAccounts(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession();
+        String defaultAvatarUrl = "../img/avatar/avatar.jpg";
+        UserAccountDAO accountDAO = new UserAccountDAO();
+
+        List<UserAccount> userList = (List<UserAccount>) session.getAttribute("userListSession");
+        if (userList != null) {
             for (UserAccount userAccount : userList) {
                 userAccount.setAvatar_url(defaultAvatarUrl);
                 accountDAO.insertUser(userAccount);
             }
-            response.sendRedirect("./account");
-            return;
         }
+
+        response.sendRedirect("./account");
     }
 
     private void downloadExcelTemplate(HttpServletResponse response) throws IOException {

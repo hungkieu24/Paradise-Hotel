@@ -64,18 +64,36 @@
             <!-- Main Content -->
             <main class="main-content">
                 <!-- Header -->
-                <div class="page-header">
-                    <div class="header-content">
-                        <div>
-                            <h1>Account Management</h1>
-                            <p>Manage user accounts, roles, and permissions</p>
-                        </div>
-                        <button class="btn btn-primary" onclick="openAddAccountModal()">
-                            <i class="fas fa-plus"></i>
-                            Add Account
-                        </button>
+                <header class="header">
+                    <div class="header-left">
+                        <h1 id="page-title">Account Management</h1>
+                        <p id="page-description">Manage user accounts, roles, and permissions</p>
                     </div>
-                </div>
+                    <div class="header-right">
+                        <div class="notification-bell">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </div>
+                        <div class="admin-profile">
+                            <div class="profile-dropdown">
+                                <div class="profile-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="dropdown-content">
+                                    <div class="dropdown-header">
+                                        <strong>Admin User</strong>
+                                        <small>admin@system.com</small>
+                                    </div>
+                                    <a href="#">Profile Settings</a>
+                                    <a href="#">Account Security</a>
+                                    <a href="#">Preferences</a>
+                                    <hr>
+                                    <a href="#" class="sign-out">Sign Out</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
 
                 <!-- Filters -->
                 <div class="filters-panel">
@@ -118,6 +136,12 @@
                                     <option value="Deleted">Deleted</option> 
                                 </select>
                             </form>
+                        </div>
+                        <div class="filter-group">
+                            <button style="margin-top: 29px;" class="btn btn-primary" onclick="openAddAccountModal()">
+                                <i class="fas fa-plus"></i>
+                                Add Account
+                            </button>
                         </div>
                     </div>
                 </div>
