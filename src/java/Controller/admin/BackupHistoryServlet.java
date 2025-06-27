@@ -108,27 +108,32 @@ public class BackupHistoryServlet extends HttpServlet {
         }
 
         if (action.equals("downloadFullBackup")) {
-            handleDownloadBackup(request, response);
+            handleDownloadFullBackup(request, response);
             return;
         }
-        
-        if(action.equals("deleteSoft")) {
+
+        if (action.equals("downloadPartialBackup")) {
+            handleDownloadPartialBackup(request, response);
+            return;
+        }
+
+        if (action.equals("deleteSoft")) {
             String deleteIDString = request.getParameter("deleteID");
             int deleteID = Integer.parseInt(deleteIDString);
             boolean success = backupHistoryDAO.markRowAsDeleted("BackupHistory", deleteID);
-            setSessionMessage(session, 
+            setSessionMessage(session,
                     success ? "Delete successfully!" : "Fail to delete",
                     success ? "success" : "error");
-        } 
-        
-        if(action.equals("restore")) {
+        }
+
+        if (action.equals("restore")) {
             String restoreIDString = request.getParameter("restoreID");
             int restoreID = Integer.parseInt(restoreIDString);
             boolean success = backupHistoryDAO.markRowAsRestore("BackupHistory", restoreID);
-            setSessionMessage(session, 
+            setSessionMessage(session,
                     success ? "Restore successfully!" : "Fail to restore",
                     success ? "success" : "error");
-        } 
+        }
 
         response.sendRedirect("./backup");
     }
@@ -154,7 +159,7 @@ public class BackupHistoryServlet extends HttpServlet {
             }
         }
         double estimatedSizeMb = 0.0;
-        int logId = backupHistoryDAO.insertBackupHistoryReturnId("PARTIAL", fullPath, estimatedSizeMb);
+        int logId = backupHistoryDAO.insertBackupHistoryReturnId("FULL", fullPath, estimatedSizeMb);
 
         if (logId != -1) {
             File backupFile = backupHistoryDAO.backupDatabaseToFile(backupFolderPath, dbName, fullPath);
@@ -204,21 +209,19 @@ public class BackupHistoryServlet extends HttpServlet {
         response.sendRedirect("./backup");
     }
 
-    private void handleDownloadBackup(HttpServletRequest request, HttpServletResponse response)
+    private void handleDownloadFullBackup(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-
+        HttpSession session = request.getSession();
         String fullPath = request.getParameter("backupPath"); // Đường dẫn tuyệt đối, ví dụ D:\backup\HotelBookingSystemDB_...
 
         if (fullPath == null || fullPath.trim().isEmpty()) {
-            response.setContentType("text/plain");
-            response.getWriter().write("❌ Invalid backup path.");
+            setSessionMessage(session, "Invalid backup path.", "error");
             return;
         }
 
         File file = new File(fullPath);
         if (!file.exists()) {
-            response.setContentType("text/plain");
-            response.getWriter().write("❌ File not found: " + fullPath);
+            setSessionMessage(session, "File not found: " + fullPath, "error");
             return;
         }
 
@@ -233,6 +236,39 @@ public class BackupHistoryServlet extends HttpServlet {
             while ((bytesRead = in.read(buffer)) != -1) {
                 out.write(buffer, 0, bytesRead);
             }
+        }
+    }
+
+    private void handleDownloadPartialBackup(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        String fullPath = request.getParameter("backupPath"); // đường dẫn tuyệt đối file .sql
+
+        if (fullPath == null || fullPath.trim().isEmpty()) {
+            response.setContentType("text/plain");
+            response.getWriter().write("❌ Invalid backup path.");
+            return;
+        }
+
+        File file = new File(fullPath);
+        if (!file.exists()) {
+            response.setContentType("text/plain");
+            response.getWriter().write("❌ File not found: " + fullPath);
+            return;
+        }
+
+        // Thiết lập header để tải file
+        response.setContentType("application/sql");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + file.getName() + "\"");
+        response.setContentLengthLong(file.length());
+
+        FileInputStream in = new FileInputStream(file);
+        OutputStream out = response.getOutputStream();
+
+        byte[] buffer = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = in.read(buffer)) != -1) {
+            out.write(buffer, 0, bytesRead);
         }
     }
 

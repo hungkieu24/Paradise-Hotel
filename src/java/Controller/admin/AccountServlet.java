@@ -8,6 +8,7 @@ import Dal.HotelBranchDAO;
 import Dal.UserAccountDAO;
 import Model.HotelBranch;
 import Model.UserAccount;
+import Utility.PasswordUtils;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -47,7 +48,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 )
 @WebServlet(name = "AccountServlet", urlPatterns = {"/admin/account"})
 public class AccountServlet extends HttpServlet {
-
+    
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -147,13 +148,22 @@ public class AccountServlet extends HttpServlet {
         HttpSession session = request.getSession();
         String defaultAvatarUrl = "../img/avatar/avatar.jpg";
         UserAccountDAO accountDAO = new UserAccountDAO();
-
+        boolean overallSuccess = true;
         List<UserAccount> userList = (List<UserAccount>) session.getAttribute("userListSession");
         if (userList != null) {
             for (UserAccount userAccount : userList) {
+                String hashPassword = PasswordUtils.hashPassword(userAccount.getPassword());
+                userAccount.setPassword(hashPassword);
                 userAccount.setAvatar_url(defaultAvatarUrl);
-                accountDAO.insertUser(userAccount);
+                boolean success = accountDAO.insertUser(userAccount);
+                if (!success) {
+                    overallSuccess = false;
+                }
             }
+            String msg = overallSuccess
+                    ? "Passed accounts added successfully"
+                    : "Some account failed to add.";
+            setSessionMessage(session, msg, overallSuccess ? "success" : "error");
         }
 
         response.sendRedirect("./account");

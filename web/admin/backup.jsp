@@ -43,21 +43,13 @@
                     <p>Management System</p>
                 </div>
                 <nav class="sidebar-nav">
-                    <a href="#account-management" class="nav-item active">
+                    <a href="./account" class="nav-item ">
                         <i class="fas fa-users"></i>
                         Account Management
                     </a>
-                    <a href="#hotels" class="nav-item">
-                        <i class="fas fa-building"></i>
-                        Hotels
-                    </a>
-                    <a href="#bookings" class="nav-item">
-                        <i class="fas fa-calendar-check"></i>
-                        Bookings
-                    </a>
-                    <a href="#analytics" class="nav-item">
-                        <i class="fas fa-chart-bar"></i>
-                        Analytics
+                    <a href="./backup" class="nav-item active">
+                        <i class="fa-solid fa-database"></i>
+                        Backup
                     </a>
                 </nav>
             </aside>
@@ -274,8 +266,8 @@
                         <input type="hidden" name="action" value="deleteSoft">
                         <input type="hidden" id="deleteID" name="deleteID" value="">
                         <div class="modal-actions">
-                            <button class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
-                            <button class="btn btn-danger">
+                            <button type="button" class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
+                            <button type="submit" class="btn btn-danger">
                                 <span id="delete-btn-text">Delete</span>
                             </button>
                         </div>

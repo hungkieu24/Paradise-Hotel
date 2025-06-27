@@ -27,27 +27,19 @@
     <body>
         <div class="app">
             <!-- Sidebar -->
-            <aside class="sidebar">
+             <aside class="sidebar">
                 <div class="sidebar-header">
                     <h1>Hotel Admin</h1>
                     <p>Management System</p>
                 </div>
                 <nav class="sidebar-nav">
-                    <a href="#account-management" class="nav-item active">
+                    <a href="./account" class="nav-item active">
                         <i class="fas fa-users"></i>
                         Account Management
                     </a>
-                    <a href="#hotels" class="nav-item">
-                        <i class="fas fa-building"></i>
-                        Hotels
-                    </a>
-                    <a href="#bookings" class="nav-item">
-                        <i class="fas fa-calendar-check"></i>
-                        Bookings
-                    </a>
-                    <a href="#analytics" class="nav-item">
-                        <i class="fas fa-chart-bar"></i>
-                        Analytics
+                    <a href="./backup" class="nav-item ">
+                        <i class="fa-solid fa-database"></i>
+                        Backup
                     </a>
                 </nav>
             </aside>
@@ -55,7 +47,7 @@
             <!-- Main Content -->
             <main class="main-content">
                 <!-- Header -->
-                <div class="page-header">
+                <div class="page-header" style="margin: 24px">
                     <div class="header-content">
                         <div>
                             <h1>View Uploaded Accounts</h1>

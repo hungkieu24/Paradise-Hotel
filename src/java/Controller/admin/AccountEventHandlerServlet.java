@@ -496,7 +496,15 @@ public class AccountEventHandlerServlet extends HttpServlet {
                 success = accountDAO.updateUserField(COL_STATUS, "Active", userId);
 
             } else if (actionType.contains("Inactivate")) {
-                success = accountDAO.updateUserField(COL_STATUS, "Inactive", userId);
+                boolean isAdminOrHotelOwner = accountDAO.isAdminOrHotelOwner(userId);
+                if (isAdminOrHotelOwner) {
+                    boolean lastAmin = accountDAO.isLastActiveAccountOfRole("Admin");
+                    if (lastAmin) {
+                        success = false;
+                    }
+                } else {
+                    success = accountDAO.updateUserField(COL_STATUS, "Inactive", userId);
+                }
 
             } else if (actionType.contains("Ban")) {
                 boolean isAdminOrHotelOwner = accountDAO.isAdminOrHotelOwner(userId);
@@ -615,7 +623,15 @@ public class AccountEventHandlerServlet extends HttpServlet {
                 if (actionType.contains("Active")) {
                     success = accountDAO.updateUserField(COL_STATUS, "Active", userId);
                 } else if (actionType.contains("Inactive")) {
-                    success = accountDAO.updateUserField(COL_STATUS, "Inactive", userId);
+                    boolean isAdminOrHotelOwner = accountDAO.isAdminOrHotelOwner(userId);
+                    if (isAdminOrHotelOwner) {
+                        boolean lastAmin = accountDAO.isLastActiveAccountOfRole("Admin");
+                        if (lastAmin) {
+                            success = false;
+                        }
+                    } else {
+                        success = accountDAO.updateUserField(COL_STATUS, "Inactive", userId);
+                    }
                 } else if (actionType.contains("Ban")) {
                     boolean isAdminOrHotelOwner = accountDAO.isAdminOrHotelOwner(userId);
                     if (isAdminOrHotelOwner) {
