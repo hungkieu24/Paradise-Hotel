@@ -32,5 +32,19 @@ public class LoyaltyPointDAO extends DBContext{
         }
         return null;
     }
-
+    
+   public String getRankByUserId(String userId) {
+        String sql = "SELECT level FROM LoyaltyPoint WHERE user_id = ?";
+        try (
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, userId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("level");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

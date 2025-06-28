@@ -18,7 +18,10 @@ public class UserAccount {
     // Thêm thuộc tính branchId cho staff
     private Integer branchId;
     private String branchName;
-
+    
+    private String fullName;
+    private String rank;
+    
     public UserAccount() {
     }
 
@@ -147,7 +150,23 @@ public class UserAccount {
     public void setBranchId(Integer branchId) {
         this.branchId = branchId;
     }
+     // Getter và Setter cho fullName
+    public String getFullName() {
+        return fullName;
+    }
 
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    // Getter và Setter cho rank
+    public String getRank() {
+        return rank;
+    }
+
+    public void setRank(String rank) {
+        this.rank = rank;
+    }
     @Override
     public String toString() {
         return "UserAccount{" + "id=" + id + ", username=" + username + ", password=" + password + ", email=" + email + ", avatar_url=" + avatar_url + ", role=" + role + ", status=" + status + ", create_at=" + create_at + ", phonenumber=" + phonenumber + ", branchId=" + branchId + '}';

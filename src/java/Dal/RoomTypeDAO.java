@@ -36,7 +36,8 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("image_url"));
 
                 roomTypeList.add(roomtype);
@@ -50,7 +51,7 @@ public class RoomTypeDAO extends DBcontext.DBContext {
 
     public List<RoomType> searchAvailableRoomTypes(LocalDate checkInDate, LocalDate checkOutDate, int guests) {
         List<RoomType> roomTypeList = new ArrayList<>();
-        String sql = "SELECT rt.id, rt.name, rt.description, rt.base_price, rt.capacity, rt.image_url "
+        String sql = "SELECT rt.id, rt.name, rt.description, rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url "
                 + "FROM RoomType rt "
                 + "WHERE rt.capacity >= ? "
                 + "AND EXISTS ( "
@@ -77,7 +78,8 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("image_url")
                 );
                 roomTypeList.add(roomType);
@@ -105,7 +107,8 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("image_url"));
 
                 roomTypeList.add(roomtype);
@@ -120,7 +123,7 @@ public class RoomTypeDAO extends DBcontext.DBContext {
         List<RoomType> availableRoomTypes = new ArrayList<>();
 
         String sql = """
-        SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price, rt.capacity, rt.image_url
+        SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url
         FROM RoomType rt
         WHERE EXISTS (
             SELECT 1
@@ -149,7 +152,8 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("image_url")
                 );
                 availableRoomTypes.add(roomType);
@@ -165,7 +169,7 @@ public class RoomTypeDAO extends DBcontext.DBContext {
         List<RoomType> availableRoomTypes = new ArrayList<>();
 
         String sql = """
-        SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price, rt.capacity, rt.image_url
+        SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url
         FROM RoomType rt
         WHERE rt.base_price BETWEEN ? AND ?
           AND EXISTS (
@@ -197,7 +201,8 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("image_url")
                 );
                 availableRoomTypes.add(roomType);
@@ -224,7 +229,8 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("image_url")
                 );
             }
@@ -256,7 +262,8 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("image_url")
                 );
                 allOtherRooms.add(room);
@@ -280,7 +287,7 @@ public class RoomTypeDAO extends DBcontext.DBContext {
         List<RoomType> availableRoomTypes = new ArrayList<>();
 
         String sql = """
-            SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price, rt.capacity, rt.image_url
+            SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url
             FROM RoomType rt
             WHERE rt.capacity >= ?
               AND EXISTS (
@@ -313,7 +320,8 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("image_url")
                 );
                 availableRoomTypes.add(roomType);

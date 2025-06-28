@@ -20,42 +20,40 @@ public class StaffBookingsListServlet extends HttpServlet {
             response.sendRedirect("login.jsp");
             return;
         }
+
         UserAccount staff = (UserAccount) session.getAttribute("user");
         Integer branchId = staff.getBranchId();
-        
-        
-        if (session.getAttribute("branchName") == null) {
-            Integer branchIdInt = branchId;
-            if (branchIdInt != null) {
-                Dal.HotelBranchDAO branchDAO = new Dal.HotelBranchDAO();
-                String branchName = branchDAO.getBranchNameById(branchIdInt);
-                session.setAttribute("branchName", branchName);
-            }
-        }      
-        request.setAttribute("branchName", session.getAttribute("branchName"));
-        
-        // --- Paging & Search ---
-        String keyword = request.getParameter("keyword");
-        int page = 1, pageSize = 5;
-        String pageParam = request.getParameter("page");
-        try { if (pageParam != null) page = Integer.parseInt(pageParam); } catch (Exception ignored) {}
 
-        BookingDAO bookingDAO = new BookingDAO();
-        List<Booking> bookings;
-        int totalBooking;
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            bookings = bookingDAO.searchBookingsTodayByCustomerAndBranchPaging(keyword.trim(), branchId, page, pageSize);
-            totalBooking = bookingDAO.countBookingsTodayByCustomerAndBranch(keyword.trim(), branchId);
-            request.setAttribute("keyword", keyword.trim());
-        } else {
-            bookings = bookingDAO.getBookingsTodayByBranchPaging(branchId, page, pageSize);
-            totalBooking = bookingDAO.countBookingsTodayByBranch(branchId);
+
+        if (session.getAttribute("branchName") == null && branchId != null) {
+            Dal.HotelBranchDAO branchDAO = new Dal.HotelBranchDAO();
+            String branchName = branchDAO.getBranchNameById(branchId);
+            session.setAttribute("branchName", branchName);
         }
-        int totalPage = (int) Math.ceil((double) totalBooking / pageSize);
-        if (totalPage == 0) totalPage = 1;
-        if (page > totalPage) page = totalPage;
+        request.setAttribute("branchName", session.getAttribute("branchName"));
 
-        // Flash messages
+        // Lấy filter từ request (search, status, từ ngày, đến ngày)
+        String keyword = request.getParameter("keyword");
+        String status = request.getParameter("status");
+        String fromDate = request.getParameter("fromDate");
+        String toDate = request.getParameter("toDate");
+
+     
+        BookingDAO bookingDAO = new BookingDAO();
+
+        // Lấy toàn bộ bookings theo filter, KHÔNG phân trang
+        List<Booking> bookings = bookingDAO.searchBookingsByBranchWithFilter(
+                branchId, keyword, status, fromDate, toDate
+        );
+
+     
+        // Trả filter lại cho view
+        request.setAttribute("keyword", keyword != null ? keyword : "");
+        request.setAttribute("status", status != null ? status : "");
+        request.setAttribute("fromDate", fromDate != null ? fromDate : "");
+        request.setAttribute("toDate", toDate != null ? toDate : "");
+
+        // Flash message
         Object checkinMsg = session.getAttribute("checkinMessage");
         if (checkinMsg != null) { request.setAttribute("checkinMessage", checkinMsg); session.removeAttribute("checkinMessage"); }
         Object checkoutMsg = session.getAttribute("checkoutMessage");
@@ -63,14 +61,10 @@ public class StaffBookingsListServlet extends HttpServlet {
         Object errorMsg = session.getAttribute("errorMessage");
         if (errorMsg != null) { request.setAttribute("errorMessage", errorMsg); session.removeAttribute("errorMessage"); }
 
-       
         request.setAttribute("bookings", bookings);
-        request.setAttribute("currentPage", page);
-        request.setAttribute("totalPage", totalPage);
 
-        // --- AJAX support for live search ---
+        // AJAX support cho live search/filter
         if ("1".equals(request.getParameter("ajax"))) {
-           
             request.getRequestDispatcher("staff-bookings-tablebody.jsp").forward(request, response);
             return;
         }
