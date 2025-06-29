@@ -13,11 +13,27 @@ public class Service {
     // Thêm trường này để lưu trạng thái dịch vụ trong từng booking
     private String bookingServiceStatus;
     private int quantity;
-
+    private String paidStatus;
     // Constructors
     public Service() {
     }
 
+    public boolean isIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public String getPaidStatus() {
+        return paidStatus;
+    }
+
+    public void setPaidStatus(String paidStatus) {
+        this.paidStatus = paidStatus;
+    }
+    
     // Getter & Setter
     public int getId() {
         return id;

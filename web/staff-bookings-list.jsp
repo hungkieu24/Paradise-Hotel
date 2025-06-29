@@ -436,14 +436,14 @@
                                                         <!-- Modified: Changed both Check-in and Assign Room buttons to link to staff/room-assignment -->
                                                         <% if (canCheckin) { %>
                                                         <%-- Nếu đến giờ check-in, hiển thị nút Check-in (màu xanh lá) và link đến trang gán phòng --%>
-                                                        <a href="staff/room-assignment?action=assign&bookingId=<%= b.getId() %>" 
+                                                        <a href="staff-room-assignment?action=assign&bookingId=<%= b.getId() %>" 
                                                            class="btn btn-success btn-sm" 
                                                            title="Assign rooms and check-in customer">
                                                             <i class="bi bi-person-check"></i> Check-in
                                                         </a>
                                                         <% } else if (canAssignRoom) { %>
                                                         <%-- Nếu chưa đến giờ check-in nhưng có thể gán phòng, hiển thị nút Assign Room (màu xanh dương) --%>
-                                                        <a href="staff/room-assignment?action=assign&bookingId=<%= b.getId() %>" 
+                                                        <a href="staff-room-assignment?action=assign&bookingId=<%= b.getId() %>" 
                                                            class="btn btn-outline-primary btn-sm" 
                                                            title="Assign rooms to this booking">
                                                             <i class="bi bi-house-door"></i> Assign Room
@@ -453,15 +453,13 @@
 
                                                         <!-- Check-out Button -->
                                                         <% if (canCheckout) { %>
-                                                        <form method="post" action="staff-booking-action" style="display:inline;">
-                                                            <input type="hidden" name="action" value="checkout"/>
+                                                        <form method="get" action="staff-checkout" style="display:inline;">
                                                             <input type="hidden" name="bookingId" value="<%= b.getId() %>"/>
-                                                            <button class="btn btn-warning btn-sm" type="submit" title="Check-out customer">
-                                                                <i class="bi bi-box-arrow-right"></i> Check-out
+                                                            <button class="btn btn-warning btn-sm" type="submit" title="Proceed to checkout payment">
+                                                                <i class="bi bi-credit-card"></i> Checkout & Payment
                                                             </button>
                                                         </form>
                                                         <% } %>
-
 
                                                         <!-- View Customer Button -->
                                                         <a href="view-user-info?bookingId=<%= b.getId() %>" 
@@ -548,28 +546,28 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="js/main.js"></script>
         <script>
-            // Auto-refresh every 5 minutes
-            setTimeout(function () {
-                window.location.reload();
-            }, 300000);
+                                    // Auto-refresh every 5 minutes
+                                    setTimeout(function () {
+                                        window.location.reload();
+                                    }, 300000);
 
-            // Confirm before check-in/check-out
-            document.querySelectorAll('form[action="staff-booking-action"]').forEach(form => {
-                form.addEventListener('submit', function (e) {
-                    const action = this.querySelector('input[name="action"]').value;
-                    const bookingId = this.querySelector('input[name="bookingId"]').value;
+                                    // Confirm before check-in/check-out
+                                    document.querySelectorAll('form[action="staff-booking-action"]').forEach(form => {
+                                        form.addEventListener('submit', function (e) {
+                                            const action = this.querySelector('input[name="action"]').value;
+                                            const bookingId = this.querySelector('input[name="bookingId"]').value;
 
-                    if (action === 'checkin') {
-                        if (!confirm(`Are you sure you want to check-in booking #${bookingId}?`)) {
-                            e.preventDefault();
-                        }
-                    } else if (action === 'checkout') {
-                        if (!confirm(`Are you sure you want to check-out booking #${bookingId}?`)) {
-                            e.preventDefault();
-                        }
-                    }
-                });
-            });
+                                            if (action === 'checkin') {
+                                                if (!confirm(`Are you sure you want to check-in booking #${bookingId}?`)) {
+                                                    e.preventDefault();
+                                                }
+                                            } else if (action === 'checkout') {
+                                                if (!confirm(`Are you sure you want to check-out booking #${bookingId}?`)) {
+                                                    e.preventDefault();
+                                                }
+                                            }
+                                        });
+                                    });
         </script>
     </body>
 </html>

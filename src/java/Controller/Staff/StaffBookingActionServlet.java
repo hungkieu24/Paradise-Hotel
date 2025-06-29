@@ -86,7 +86,7 @@ public class StaffBookingActionServlet extends HttpServlet {
                 
                 // Modified: Always redirect to room assignment page
                 // This ensures that the staff can verify room assignments before check-in
-                response.sendRedirect("staff/room-assignment?action=assign&bookingId=" + bookingId);
+                response.sendRedirect("staff-room-assignment?action=assign&bookingId=" + bookingId);
                 return;
             }
             // ----------- CHECK-OUT ACTION -----------

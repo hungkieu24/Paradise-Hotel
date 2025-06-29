@@ -28,7 +28,7 @@ public class Booking {
     private String fullName;
     private String note;
     private int branchId;
-
+    
     public Booking() {
     }
 
