@@ -83,3 +83,355 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
 a{
     color: white;
 }
+.toast {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background-color: #4caf50;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    z-index: 9999;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast.hidden {
+    display: none;
+}
+
+.cart-container {
+    max-width: 1100px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+h2 {
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.cart-item .col {
+    flex: 1;
+    text-align: center;
+}
+
+.cart-item .col.image {
+    flex: 0 0 auto;
+}
+
+.cart-item img {
+    width: 100%;
+    max-width: 120px; /* giới hạn chiều rộng tối đa */
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+
+.cart-item .details h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.cart-item .col.details .price {
+    font-weight: bold;
+    color: #e91e63;
+        font-size: 16px;
+}
+
+.cart-item .col.quantity input[type="number"] {
+    width: 60px;
+    padding: 5px;
+    text-align: center;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.cart-item .col.quantity input[type="submit"] {
+    background-color: #ff6f00;
+    color: white;
+    padding: 5px 12px;
+    margin-left: 8px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.cart-item .col.quantity input[type="submit"]:hover {
+    background-color: #e65100;
+}
+
+.cart-item .col.total {
+    font-weight: bold;
+}
+
+.cart-item .col.actions a {
+    background-color: #e53935;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.cart-item .col.actions a:hover {
+    opacity: 0.9;
+}
+
+.cart-summary {
+    text-align: right;
+    margin-top: 30px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.checkout-btn {
+    display: inline-block;
+    margin-left: 10px;
+    background-color: #43a047;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.checkout-btn:hover {
+    background-color: #388e3c;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cart-item {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .cart-item .col {
+        width: 100%;
+    }
+
+    .cart-summary {
+        text-align: center;
+    }
+}
+.cart-container {
+    padding-bottom: 100px; /* đảm bảo phần cuối không bị footer che */
+}
+
+
+.checkout-container {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    /* Thêm margin-bottom để tạo khoảng cách với footer */
+    margin-bottom: 50px;
+}
+
+.customer-info, .booking-details, .services, .summary {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.customer-info h3, .services h3, .summary h3 {
+    margin-top: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.customer-info label, .booking-details label {
+    display: block;
+    margin: 10px 0 5px;
+    font-weight: bold;
+}
+
+.customer-info input, .booking-details input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.booking-details {
+    display: flex;
+    justify-content: space-between;
+}
+
+.booking-details label {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.booking-details label:last-child {
+    margin-right: 0;
+}
+
+.booking-details input[type="date"], .booking-details input[type="number"] {
+    width: 120px;
+}
+
+.booking-details .increment {
+    background: #ff4d4d;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.booking-details .increment:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.services {
+    display: flex;
+    justify-content: space-between;
+}
+
+.services div {
+    flex: 1;
+    padding: 10px;
+    background: #e9ecef;
+    border-radius: 8px;
+    margin-right: 10px;
+}
+
+.services div:last-child {
+    margin-right: 0;
+}
+
+.services select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.summary {
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.summary ul {
+    list-style: none;
+    padding: 0;
+}
+
+.summary ul li {
+    margin-bottom: 10px;
+}
+
+.summary .total {
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 10px;
+    text-align: right;
+}
+
+textarea {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background: #ff4d4d;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #e60000;
+}
+
+.summary-card {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    width: 250px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.summary-card h3 {
+    margin-top: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.summary-card ul {
+    list-style: none;
+    padding: 0;
+}
+
+.summary-card ul li {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.summary-card .total {
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 10px;
+    text-align: right;
+}
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+}

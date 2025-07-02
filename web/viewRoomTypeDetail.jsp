@@ -138,7 +138,7 @@
         <main>
 
             <div class="hero full-height jarallax" data-jarallax data-speed="0.2">
-                <img class="jarallax-img kenburns" src="img/room1.jpg" alt="">
+                <img class="jarallax-img kenburns" src="${roomType.getImage_url()}" alt="">
                 <div class="wrapper opacity-mask d-flex align-items-center  text-center animate_hero" data-opacity-mask="rgba(0, 0, 0, 0.5)">
                     <div class="container">
                         <div class="row justify-content-center">
@@ -218,6 +218,7 @@
                     </div>
                     <div class="text-center mt-5">
                         <a class="btn_1 outline" data-fslightbox="gallery_1" data-type="image" href="img/room2.jpg">FullScreen Gallery</a>
+                        <a data-fslightbox="gallery_1" data-type="image" href="img/room1.jpg"></a>
                         <a data-fslightbox="gallery_1" data-type="image" href="img/room3.jpg"></a>
                         <a data-fslightbox="gallery_1" data-type="image" href="img/room4.jpg"></a>
                         <a data-fslightbox="gallery_1" data-type="image" href="img/room5.jpg"></a>
@@ -239,7 +240,7 @@
                                     <a href="./viewRoomTypeDetail?roomTypeId=${r.getRoomTypeID()}" class="box_cat_rooms">
                                         <figure>
 <!--                                            <div class="background-image" data-background="url(${r.getImage_url()})"></div>-->
-                                            <div class="background-image" data-background="url(img/room1.jpg)"></div>
+                                            <div class="background-image" data-background="url(${r.getImage_url()}"></div>
                                             <div class="info">
                                                 <small>
                                                     From 

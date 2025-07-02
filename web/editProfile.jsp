@@ -128,55 +128,69 @@
             <!-- /Background Img Parallax -->
 
             <div class="container margin_120_95">
+                <div class="sidebar">
+                    <img class="avatar" src="${sessionScope.user.getAvatar_url()}" alt="Avatar"/>
+                    <p>Rank: <span>${sessionScope.loyaltypointlp.getLevel()}</span> </p>
+                    <p>Accumulated Points: <a href="redeemVoucher">${sessionScope.loyaltypointlp.getPoints()}</a></p>
+                    <ul>
+                        <li><a href="editProfile">Personal Info</a></li>
+                        <li><a href="#">Booking History</a></li>
+                        <li><a href="#">Your Booking</a></li>
+                        <li><a href="">Loyalty Status</a> </li>
+                        <li><a href="changePassword.jsp">Change Password</a></li>
+                        <li><a href="./homepage?action=logout">Log out</a></li>
+                        <li><a href="homepage">Home</a></li>
+                    </ul>
+                </div>
                 <div class="form-wrapper">
-                        <h3 class="mb-3">Your personal details.</h3>
-                        <div id="message-contact"></div>
-                        <div class="main-content">
-                            <form id="editProfile" action="editProfile" method="post" enctype="multipart/form-data">
-                                <div class="avatar-section">
-                                    <img class="avatar" src="${sessionScope.user.getAvatar_url()}" alt="Avatar"/>
-                                    <!--                                    <p >Choose file to change avatar</p>
-                                    
-                                                                        <input type="file" id="avatar-upload" name="avatar">
-                                                                        <button type="button" class="custom-upload-button" onclick="document.getElementById('avatar-upload').click();">
-                                                                            Upload Avatar
-                                                                        </button>
-                                                                        <span class="file-name" id="file-name">No file chosen</span>-->
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Username</label>
-                                    <input id="username" type="text" value="${sessionScope.user.getUsername()}" name="username" readonly>
-                                    <!--                                    <p class="form_error"></p>-->
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Email</label>
-                                    <input id="email" type="email" value="${sessionScope.user.getEmail()}" name="email" readonly>
-                                    <!--                                    <p class="form_error"></p>-->
-                                </div>
-
-                                <div class="form-group">
-                                    <label>Phone number</label>
-                                    <input id="phonenumber" type="tel" value="${sessionScope.user.getPhonenumber()}" name="phonenumber" readonly>
-                                    <!--                                    <p class="form_error"></p>-->
-                                </div>
-
-                                <!--                                <button type="button" class="cancel-btn" onclick="window.location.href = 'editProfile';">Cancel</button>
+                    <h3 class="mb-3">Your personal details.</h3>
+                    <div id="message-contact"></div>
+                    <div class="main-content">
+                        <form id="editProfile" action="editProfile" method="post" enctype="multipart/form-data">
+                            <div class="avatar-section">
+                                <img class="avatar" src="${sessionScope.user.getAvatar_url()}" alt="Avatar"/>
+                                <!--                                    <p >Choose file to change avatar</p>
                                 
-                                                                <button  class="save-btn">Save Changes</button>-->
-                                <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px;">
-                                    <button type="button" class="openEditProfileModal1" onclick="openEditProfileModal()">Edit Profile</button>
+                                                                    <input type="file" id="avatar-upload" name="avatar">
+                                                                    <button type="button" class="custom-upload-button" onclick="document.getElementById('avatar-upload').click();">
+                                                                        Upload Avatar
+                                                                    </button>
+                                                                    <span class="file-name" id="file-name">No file chosen</span>-->
+                            </div>
 
-                                    <a href="changePassword.jsp" class="btn_1" style="display: inline-block;">Change password</a>
-                                </div>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input id="username" type="text" value="${sessionScope.user.getUsername()}" name="username" readonly>
+                                <!--                                    <p class="form_error"></p>-->
+                            </div>
+
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input id="email" type="email" value="${sessionScope.user.getEmail()}" name="email" readonly>
+                                <!--                                    <p class="form_error"></p>-->
+                            </div>
+
+                            <div class="form-group">
+                                <label>Phone number</label>
+                                <input id="phonenumber" type="tel" value="${sessionScope.user.getPhonenumber()}" name="phonenumber" readonly>
+                                <!--                                    <p class="form_error"></p>-->
+                            </div>
+
+                            <!--                                <button type="button" class="cancel-btn" onclick="window.location.href = 'editProfile';">Cancel</button>
+                            
+                                                            <button  class="save-btn">Save Changes</button>-->
+                            <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px;">
+                                <button type="button" class="openEditProfileModal1" onclick="openEditProfileModal()">Edit Profile</button>
+
+                                <a href="changePassword.jsp" class="btn_1" style="display: inline-block;">Change password</a>
+                            </div>
 
 
-                            </form>
-                        </div>
-
+                        </form>
                     </div>
-                
+
+                </div>
+
                 <!-- /row -->
             </div>
 
@@ -309,12 +323,12 @@
                                             Validator.isPhoneNumber('#phonenumber', 'Please enter your phone number'),
                                             Validator.isRequired('#email', 'Please enter your email'),
                                             Validator.isEmail('#email', 'This field must be an email'),
-                                            Validator.lengthRange('#email', 16, 40),
+                                            Validator.lengthRange('#email', 16, 40)
                                         ],
                                         onsubmit: function (formValue) {
                                             document.querySelector('#editProfileForm').submit();
                                         }
-                                    })
+                                    });
         </script>
         <script>
             const input = document.getElementById('avatar-upload');

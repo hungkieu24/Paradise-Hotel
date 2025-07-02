@@ -8,6 +8,7 @@ package Model;
  *
  * @author thien
  */
+
 public class Service {
     private int id;
     private String name;
@@ -17,6 +18,8 @@ public class Service {
     private String status;
     private String imageUrl;
     private boolean isDeleted;
+    private int quantity;
+    private String paid_status;
 
     // Constructors
     public Service() {}
@@ -31,7 +34,19 @@ public class Service {
         this.imageUrl = imageUrl;
         this.isDeleted = isDeleted;
     }
-    
+
+    public Service(int id, String name, String description, double price, int branchId, String status, String imageUrl, boolean isDeleted, int quantity, String paid_status) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.branchId = branchId;
+        this.status = status;
+        this.imageUrl = imageUrl;
+        this.isDeleted = isDeleted;
+        this.quantity = quantity;
+        this.paid_status = paid_status;
+    }
 
     // Getter & Setter
     public int getId() {
@@ -79,9 +94,38 @@ public class Service {
     public boolean isDeleted() {
         return isDeleted;
     }
+  
     public void setDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
     }
 
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public String getPaid_status() {
+        return paid_status;
+    }
+
+    public void setPaid_status(String paid_status) {
+        this.paid_status = paid_status;
+    }
     
+    @Override
+    public String toString() {
+        return "Service{" +
+               "id=" + id +
+               ", name='" + name + '\'' +
+               ", description='" + description + '\'' +
+               ", price=" + price +
+               ", branchId=" + branchId +
+               ", status='" + status + '\'' +
+               ", imageUrl='" + imageUrl + '\'' +
+               ", isDeleted=" + isDeleted +
+               '}';
+    }
 }

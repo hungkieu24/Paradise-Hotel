@@ -6,6 +6,8 @@ package Controller.Customer;
 
 import Dal.UserAccountDAO;
 import Model.UserAccount;
+import Utility.EmailUtility;
+import Utility.EmailUtilityVerifyCode;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -14,6 +16,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.util.Random;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  *
@@ -87,30 +91,31 @@ public class ChangePasswordServlet extends HttpServlet {
 
         String currentPassword = request.getParameter("currentPassword");
         String newPassword = request.getParameter("newPassword");
-        String confirmPassword = request.getParameter("confirmPassword");
 
-        boolean validCurrentPassword = useraccountdao.checkPassword(user.getUsername(), currentPassword);
+        boolean validCurrentPassword = BCrypt.checkpw(currentPassword, user.getPassword());
 
         if (!validCurrentPassword) {
             request.setAttribute("currentPasswordError", "Current password is incorrect.");
-            setSessionMessage(session, "Password updated failed!", "error");
+            setSessionMessage(session, "Current password is incorrect.", "error");
             request.getRequestDispatcher("changePassword.jsp").forward(request, response);
             return;
         }
 
-        if (!newPassword.equals(confirmPassword)) {
-            request.setAttribute("confirmPasswordError", "New passwords do not match.");
+        String code = String.format("%06d", new Random().nextInt(999999));
+        long expiryTime = System.currentTimeMillis() + 1 * 60 * 1000;// 1 phut ke tu luc send
+        session.setAttribute("resetCode", code);
+        session.setAttribute("resetExpiry", expiryTime);
+        // Gửi email
+        try {
+            EmailUtilityVerifyCode.sendEmail(user.getEmail(), "Change password", code);
+            session.setAttribute("newPassword", newPassword);
+            request.getRequestDispatcher("verifyCodeForChangePassword.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Unable to send email");
             request.getRequestDispatcher("changePassword.jsp").forward(request, response);
-            return;
         }
-
-        boolean updated = useraccountdao.updatePassword1(user.getUsername(), newPassword);
-        if (updated) {
-            setSessionMessage(session, "Your password has been updated.", "success");
-        } else {
-            setSessionMessage(session, "Password updated failed!", "error");
-        }
-        request.getRequestDispatcher("changePassword.jsp").forward(request, response);
+     
     }
 
     private void setSessionMessage(HttpSession session, String message, String type) {

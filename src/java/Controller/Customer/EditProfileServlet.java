@@ -35,41 +35,6 @@ public class EditProfileServlet extends HttpServlet {
 
     private final UserAccountDAO useraccountdao = new UserAccountDAO();
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet EditProfileServlet1</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet EditProfileServlet1 at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -81,21 +46,13 @@ public class EditProfileServlet extends HttpServlet {
             return;
         }
 
-//        LoyaltyPointDAO loyaltypointdao = new LoyaltyPointDAO(); 
-//        LoyaltyPoint loyaltypointlp = loyaltypointdao.getLoyaltyPointByUserId(user.getId());
-//        
-//        session.setAttribute("loyaltypointlp", loyaltypointlp); 
+        LoyaltyPointDAO loyaltypointdao = new LoyaltyPointDAO();
+        LoyaltyPoint loyaltypointlp = loyaltypointdao.getLoyaltyPointByUserId(user.getId());
+
+        session.setAttribute("loyaltypointlp", loyaltypointlp);
         request.getRequestDispatcher("editProfile.jsp").forward(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -107,7 +64,7 @@ public class EditProfileServlet extends HttpServlet {
 
         UploadImage up = new UploadImage();
         String UPLOAD_DIR = "/img/avatar";// duong dan luu tru trong du an
-        
+
         String image = user.getAvatar_url();
         String pathHost = getServletContext().getRealPath("");   // lay thu muc goc cua project tren server
         //lay duong dan thuc te noi project đang chạy.
@@ -130,8 +87,8 @@ public class EditProfileServlet extends HttpServlet {
             response.sendRedirect("./editProfile");
             return;
         }
-        if(!email.equals(user.getEmail())){
-            
+        if (!email.equals(user.getEmail())) {
+
             sendVerificationCode(request, response, email);
             session.setAttribute("username", username);
             session.setAttribute("phonenumber", phonenumber);
@@ -140,7 +97,7 @@ public class EditProfileServlet extends HttpServlet {
             session.setAttribute("email", email);
             return;
         }
-            
+
         session.setAttribute("username", username);
         session.setAttribute("email", email);
         session.setAttribute("phonenumber", phonenumber);
@@ -164,7 +121,7 @@ public class EditProfileServlet extends HttpServlet {
         session.setAttribute("messageType", type);
     }
 
-    public boolean validateForUpdate(String id, String username, String email, String phonenumber, HttpServletRequest request)   {
+    public boolean validateForUpdate(String id, String username, String email, String phonenumber, HttpServletRequest request) {
         HttpSession session = request.getSession();
         if (useraccountdao.isFieldExists("username", username, id)) {
             setSessionMessage(session, "Username already exists!", "error");
@@ -175,7 +132,6 @@ public class EditProfileServlet extends HttpServlet {
             setSessionMessage(session, "Email already exists!", "error");
             return false;
         }
-        
 
         if (useraccountdao.isFieldExists("phonenumber", phonenumber, id)) {
             setSessionMessage(session, "Phone already exists!", "error");
@@ -210,15 +166,5 @@ public class EditProfileServlet extends HttpServlet {
         // Điều hướng đến trang xác minh
         response.sendRedirect("verifyEmailForEditProfile.jsp");
     }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
 
 }
