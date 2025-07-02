@@ -133,6 +133,20 @@
             <!-- /Background Img Parallax -->
 
             <div class="container margin_120_95">
+                <div class="sidebar">
+                    <img class="avatar" src="${sessionScope.user.getAvatar_url()}" alt="Avatar"/>
+                    <p>Rank: <span>${sessionScope.loyaltypointlp.getLevel()}</span> </p>
+                    <p>Accumulated Points: <a href="#">${sessionScope.loyaltypointlp.getPoints()}</a></p>
+                    <ul>
+                        <li><a href="editProfile">Personal Info</a></li>
+                        <li><a href="#">Booking History</a></li>
+                        <li><a href="#">Your Booking</a></li>
+                        <li><a href="#">Loyalty Status</a> </li>
+                        <li><a href="changePassword.jsp">Change Password</a></li>
+                        <li><a href="./homepage?action=logout">Log out</a></li>
+                        <li><a href="homepage">Home</a></li>
+                    </ul>
+                </div>
                 <div class="form-wrapper">
                     <h3 class="mb-3">Change Password</h3>
                     <div id="message-contact"></div>
@@ -146,9 +160,9 @@
                                     <i class="bi bi-eye-slash toggle-password" toggle="#currentPassword"></i>
                                 </div>
                                 <!--<p class="form_error"></p>-->
-                                <c:if test="${not empty currentPasswordError}">
+<!--                                <c:if test="${not empty currentPasswordError}">
                                     <p class="form_error">${currentPasswordError}</p>
-                                </c:if> 
+                                </c:if> -->
                             </div> 
 
                             <div class="form-group">
@@ -175,7 +189,7 @@
                             <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px;">
                                 <button class="openEditProfileModal1" type="submit">Update</button>
                                 <!--                                <button class="openEditProfileModal1" type="reset">Cancel</button>-->
-                                <a href="#" class="btn_1" style="display: inline-block;">Forgot password?</a>
+                                <a href="forgotPassword.jsp" class="btn_1" style="display: inline-block;">Forgot password?</a>
                             </div>
 
                         </form>
@@ -285,12 +299,12 @@
                     Validator.isRequired('#confirmPassword'),
                     Validator.isConfirmed(' #confirmPassword', function () {
                         return document.querySelector('#changePassword #newPassword').value;
-                    }, 'Password re-entered is incorrect'),
+                    }, 'Password re-entered is incorrect')
                 ],
                 onsubmit: function (formValue) {
                     document.querySelector('#changePassword').submit();
                 }
-            })
+            });
         </script>
         <script>
             window.addEventListener("load", function () {

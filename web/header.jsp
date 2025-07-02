@@ -10,8 +10,8 @@
     <div class="container">
         <div class="row align-items-center">
             <div class="col-3">
-                <a href="index222.html" class="logo_normal"><img src="img/logo.png" width="135" height="45" alt=""></a>
-                <a href="index222.html" class="logo_sticky"><img src="img/logo_sticky.png" width="135" height="45" alt=""></a>
+                <a href="./homepage" class="logo_normal"><img src="img/logo.png" width="135" height="45" alt=""></a>
+                <a href="./homepage" class="logo_sticky"><img src="img/logo_sticky.png" width="135" height="45" alt=""></a>
             </div>
             <div class="col-9">
                 <div class="main-menu">
@@ -37,14 +37,14 @@
                                 </ul>
                             </li>
                             <li class="submenu">
-                                <a href="#0" class="show-submenu">Rooms & Suites</a>
-                                <ul>
+                                <a href="viewRoomTypeList" class="show-submenu">View Room Type List</a>
+<!--                                <ul>
                                     <li><a href="searchRoomResult22.html">Room list 1</a></li>
                                     <li><a href="room-list-2.html">Room list 2</a></li>
                                     <li><a href="room-list-3.html">Room list 3</a></li>
                                     <li><a href="room-details.html">Room details</a></li>
                                     <li><a href="room-details-booking.html">Working Booking Request</a></li>
-                                </ul>
+                                </ul>-->
                             </li>
                             <!--                                    <li class="submenu">
                                                                     <a href="#0" class="show-submenu">Other Pages</a>
@@ -62,7 +62,7 @@
                                                                         <li><a href="menu-4.html">Menu Version 4</a></li>
                                                                     </ul>
                                                                 </li>-->
-                            <li><a href="about.html">About</a></li>
+                            <li><a href="viewServiceList">View Service List</a></li>
                             <li><a href="contacts.html">Contacts</a></li>
                             <c:if test="${sessionScope.user == null}">
                                 <li><a href="login.jsp">Login</a></li>
