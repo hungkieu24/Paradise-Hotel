@@ -185,12 +185,13 @@ public class RoomDAO extends DBContext {
             return false;
         }
     }
-
+    //author: Thien
+    // Fix theo database moi
     public List<Room> getRooms(String status, String roomTypeId, String search) {
         List<Room> rooms = new ArrayList<>();
         String sql = "SELECT r.id, r.room_number, r.branch_id, r.room_type_id, r.status, r.image_url, "
                 + "rt.id AS rt_id, rt.name AS rt_name, rt.description AS rt_description, "
-                + "rt.base_price, rt.capacity, rt.image_url AS rt_image_url "
+                + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
                 + "FROM Room r JOIN RoomType rt ON r.room_type_id = rt.id WHERE 1=1";
 
         if (status != null && !status.isEmpty()) {
@@ -226,7 +227,8 @@ public class RoomDAO extends DBContext {
                         rs.getString("rt_name"),
                         rs.getString("rt_description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("rt_image_url")
                 );
 
@@ -482,11 +484,12 @@ public class RoomDAO extends DBContext {
 
     // author : thien
     // Content: get all room by branch id
+    // Fix theo database moi
     public List<Room> getAllRoomByBranchId(int branchId, int page, int pageSize) {
         List<Room> rooms = new ArrayList<>();
         int offset = (page - 1) * pageSize;
         String sql = "SELECT r.id AS room_id, r.room_number, r.status, r.branch_id, r.room_type_id, r.image_url AS room_image_url, "
-                + "rt.id AS roomtype_id, rt.name, rt.description, rt.base_price, rt.capacity, rt.image_url AS roomtype_image_url "
+                + "rt.id AS roomtype_id, rt.name, rt.description, rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS roomtype_image_url "
                 + "FROM Room r "
                 + "JOIN RoomType rt ON r.room_type_id = rt.id "
                 + "WHERE r.is_deleted = 0 and r.branch_id = ? "
@@ -503,7 +506,8 @@ public class RoomDAO extends DBContext {
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("roomtype_image_url")
                 );
                 Room room = new Room(
@@ -543,7 +547,7 @@ public class RoomDAO extends DBContext {
         List<Room> rooms = new ArrayList<>();
         String sql = "SELECT r.id, r.room_number, r.branch_id, r.room_type_id, r.status, r.image_url, "
                 + "rt.id AS rt_id, rt.name AS rt_name, rt.description AS rt_description, "
-                + "rt.base_price, rt.capacity, rt.image_url AS rt_image_url "
+                + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
                 + "FROM Room r JOIN RoomType rt ON r.room_type_id = rt.id WHERE r.is_deleted = 0 and r.branch_id = ?";
         List<String> conditions = new ArrayList<>();
         if (status != null && !status.isEmpty()) {
@@ -588,7 +592,8 @@ public class RoomDAO extends DBContext {
                         rs.getString("rt_name"),
                         rs.getString("rt_description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("rt_image_url")
                 );
 

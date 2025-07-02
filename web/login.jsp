@@ -50,7 +50,7 @@
                 <a href="forgotPassword.jsp">Forgot Password?</a>
             </div>
 
-            <button>Log In</button>
+            <button id="login">Log In</button>
             <div class="social">
                 <a href="https://accounts.google.com/o/oauth2/auth?scope=email%20profile&redirect_uri=http://localhost:8080/ParadiseHotel/login&response_type=code&client_id=202740089898-biog485gnu7f0i8v8q0sma4bjtl6effc.apps.googleusercontent.com&approval_prompt=force">
                     <div class="go"><i class="fab fa-google"></i> Google</div>
