@@ -1,0 +1,445 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f9fafb;
+  color: #374151;
+  line-height: 1.6;
+}
+
+/* Main container - Add spacing from header/footer */
+.checkout-container {
+  max-width: 1200px;
+  margin: 40px auto 80px auto; /* Tăng bottom margin từ 60px lên 80px */
+  padding: 32px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.checkout-container form {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 40px;
+  position: relative;
+}
+
+/* Customer Information Section */
+.customer-info {
+  grid-column: 1;
+  margin-bottom: 32px;
+}
+
+.customer-info h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 20px;
+}
+#username{
+   padding-right: 450px;
+}
+
+.avatar-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #e5e7eb;
+}
+
+.customer-info label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+  margin-top: 16px;
+}
+
+.customer-info input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #f9fafb;
+  color: #6b7280;
+  transition: border-color 0.2s ease;
+}
+
+/* Booking Details - Improved layout */
+.booking-details {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.booking-details label {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 20px;
+}
+
+.booking-details .form-control {
+  flex: 1 1 auto;
+  min-width: 240px;
+}
+
+.guest-inputs {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.guest-inputs label {
+  display: flex;
+  align-items: center; /* <-- Giải quyết lỗi trồi lên */
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.guest-inputs input[type="number"] {
+  width: 60px;
+}
+
+
+
+/* Services Section - Improved to show all services */
+.services {
+  grid-column: 1;
+  margin-bottom: 32px;
+}
+
+.services h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 20px;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.services > div,
+.services-grid > div {
+  background-color: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  border: 2px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.services > div:hover,
+.services-grid > div:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.services label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.services input[type="checkbox"] {
+  margin-right: 12px;
+  width: 18px;
+  height: 18px;
+  accent-color: #ef4444;
+}
+
+/* Summary Section - Fixed position */
+.summary {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  background-color: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  height: fit-content;
+  position: sticky;
+  top: 40px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.summary h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 20px;
+}
+
+.rank {
+  background-color: #fef2f2;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #ef4444;
+}
+
+.rank p {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.summary ul {
+  list-style: none;
+  margin-bottom: 20px;
+}
+
+.summary li {
+  padding: 12px 0;
+  font-size: 14px;
+  color: #6b7280;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary li:last-child {
+  border-bottom: none;
+}
+
+.total {
+  padding: 20px 0;
+  border-top: 2px solid #e5e7eb;
+  margin-top: 20px;
+}
+
+.total strong {
+  font-size: 18px;
+  color: #111827;
+  font-weight: 700;
+}
+
+/* Special Request Textarea */
+textarea[name="note"] {
+  grid-column: 1;
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 32px;
+  transition: border-color 0.2s ease;
+}
+
+textarea[name="note"]:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Submit Button - Larger and more prominent */
+.btn.btn-danger {
+  grid-column: 2;
+  width: 100%;
+  padding: 18px 32px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 24px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn.btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.btn.btn-danger:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .checkout-container {
+    margin: 20px auto 40px auto;
+    padding: 24px;
+  }
+
+  .checkout-container form {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .summary {
+    grid-column: 1;
+    grid-row: auto;
+    position: static;
+    order: -1; /* Move summary above form elements on mobile */
+  }
+
+  .services,
+  textarea[name="note"] {
+    grid-column: 1;
+  }
+
+  .btn.btn-danger {
+    grid-column: 1;
+    order: 999; /* Ensure button stays at bottom */
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .checkout-container {
+    margin: 10px auto 30px auto;
+    padding: 20px;
+  }
+
+  .avatar-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .guest-inputs {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .guest-inputs label {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .guest-inputs input[type="number"] {
+    width: 80px;
+  }
+}
+
+/* Focus states for accessibility */
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Form control specific styling */
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Additional styling for better visual hierarchy */
+.customer-info input[readonly] {
+  background-color: #f8f9fa;
+  cursor: not-allowed;
+}
+
+.services > div:has(input:checked),
+.services-grid > div:has(input:checked) {
+  background-color: #fef2f2;
+  border-color: #ef4444;
+}
+
+/* Loading state for form submission */
+.btn.btn-danger:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Enhanced spacing for better readability */
+.checkout-container h3 {
+  position: relative;
+}
+
+.checkout-container h3::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border-radius: 2px;
+}
+
+.booking-details {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 15px 20px;
+    align-items: center;
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.booking-details label {
+    font-weight: bold;
+    color: #333;
+}
+
+.booking-details input[type="datetime-local"] {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.booking-details input[type="datetime-local"]:hover {
+    border-color: #888;
+}
+
+.booking-details input[type="datetime-local"]:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    outline: none;
+}
+
+
+

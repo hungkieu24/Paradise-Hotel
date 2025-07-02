@@ -12,22 +12,61 @@ public class Booking {
     private Timestamp checkOut;
     private String status;
     private double totalPrice;
-    private double deposit;
     private String paymentStatus;
     private String cancelReason;
     private Timestamp cancelTime;
-    private int promotionId;
+    private Integer promotionId;
     private String roomTypes;
+    private boolean isDeleted;
     // Thông tin bổ sung (không bắt buộc)
     private String userName;
     private String roomNumbers; // VD: "101, 102"
     private List<Room> rooms;
-    
+    private List<Service> services;
+    private String roomTypeName;
+
+    private String rank;
+    private String fullName;
+    private String note;
+    private int branchId;
+
     public Booking() {
     }
 
     // Nếu cần, bạn có thể thêm constructor có đủ thông tin
     // Getters and Setters
+    public String getRoomTypeName() {
+    return roomTypeName;
+}
+
+    public boolean isIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+public void setRoomTypeName(String roomTypeName) {
+    this.roomTypeName = roomTypeName;
+}
+
+    public List<Service> getServices() {
+        return services;
+    }
+
+    public void setServices(List<Service> services) {
+        this.services = services;
+    }
+
+    public int getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(int branchId) {
+        this.branchId = branchId;
+    }
+
     public String getRoomTypes() {
         return roomTypes;
     }
@@ -79,6 +118,7 @@ public class Booking {
     public String getStatus() {
         return status;
     }
+
     public void setStatus(String status) {
         this.status = status;
     }
@@ -86,20 +126,15 @@ public class Booking {
     public double getTotalPrice() {
         return totalPrice;
     }
+
     public void setTotalPrice(double totalPrice) {
         this.totalPrice = totalPrice;
-    }
-
-    public double getDeposit() {
-        return deposit;
-    }
-    public void setDeposit(double deposit) {
-        this.deposit = deposit;
     }
 
     public String getPaymentStatus() {
         return paymentStatus;
     }
+
     public void setPaymentStatus(String paymentStatus) {
         this.paymentStatus = paymentStatus;
     }
@@ -107,6 +142,7 @@ public class Booking {
     public String getCancelReason() {
         return cancelReason;
     }
+
     public void setCancelReason(String cancelReason) {
         this.cancelReason = cancelReason;
     }
@@ -114,20 +150,23 @@ public class Booking {
     public Timestamp getCancelTime() {
         return cancelTime;
     }
+
     public void setCancelTime(Timestamp cancelTime) {
         this.cancelTime = cancelTime;
     }
 
-    public int getPromotionId() {
+    public Integer getPromotionId() {
         return promotionId;
     }
-    public void setPromotionId(int promotionId) {
+
+    public void setPromotionId(Integer promotionId) {
         this.promotionId = promotionId;
     }
 
     public String getUserName() {
         return userName;
     }
+
     public void setUserName(String userName) {
         this.userName = userName;
     }
@@ -135,6 +174,7 @@ public class Booking {
     public String getRoomNumbers() {
         return roomNumbers;
     }
+
     public void setRoomNumbers(String roomNumbers) {
         this.roomNumbers = roomNumbers;
     }
@@ -145,5 +185,29 @@ public class Booking {
 
     public void setRooms(List<Room> rooms) {
         this.rooms = rooms;
+    }
+
+    public String getRank() {
+        return rank;
+    }
+
+    public void setRank(String rank) {
+        this.rank = rank;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 }
