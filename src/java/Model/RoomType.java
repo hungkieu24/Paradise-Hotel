@@ -17,11 +17,17 @@ public class RoomType {
     private String description;
     private double base_price;
     private int capacity;
+    private int capacityAdult;
+    private int capacityChild;
     private String image_url;
+    private int branchId;
+    private boolean isDeleted;
+    private Branch branch;
+
 
     public RoomType() {
     }
-
+    
     public RoomType(int roomTypeID, String name, String description, double base_price, int capacity, String image_url) {
         this.roomTypeID = roomTypeID;
         this.name = name;
@@ -39,6 +45,17 @@ public class RoomType {
         this.image_url = image_url;
     }
 
+    public RoomType(int roomTypeID, String name, String description, double base_price, int capacityAdult, int capacityChild, String image_url, int branchId, boolean isDeleted) {
+        this.roomTypeID = roomTypeID;
+        this.name = name;
+        this.description = description;
+        this.base_price = base_price;
+        this.capacityAdult = capacityAdult;
+        this.capacityChild = capacityChild;
+        this.image_url = image_url;
+        this.branchId = branchId;
+        this.isDeleted = isDeleted;
+    }
     public int getRoomTypeID() {
         return roomTypeID;
     }
@@ -87,6 +104,46 @@ public class RoomType {
         this.image_url = image_url;
     }
 
+    public Branch getBranch() {
+        return branch;
+    }
+
+    public void setBranch(Branch branch) {
+        this.branch = branch;
+    }
+
+    public int getCapacityAdult() {
+        return capacityAdult;
+    }
+
+    public void setCapacityAdult(int capacityAdult) {
+        this.capacityAdult = capacityAdult;
+    }
+
+    public int getCapacityChild() {
+        return capacityChild;
+    }
+
+    public void setCapacityChild(int capacityChild) {
+        this.capacityChild = capacityChild;
+    }
+
+    public int getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(int branchId) {
+        this.branchId = branchId;
+    }
+
+    public boolean isIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+    
     @Override
     public String toString() {
         return "RoomType{" + "roomTypeID=" + roomTypeID + ", name=" + name + ", description=" + description + ", base_price=" + base_price + ", capacity=" + capacity + ", image_url=" + image_url + '}';
