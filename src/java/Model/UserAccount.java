@@ -8,6 +8,7 @@ public class UserAccount {
 
     private String id;
     private String username;
+    private String fullname;
     private String password;
     private String email;
     private String avatar_url;
@@ -17,11 +18,11 @@ public class UserAccount {
     private String phonenumber;
     private Integer branchId;
     private String branchName;
-    private String fullname;
     private String login_type;
     private boolean is_deleted;
     private String last_login_at;
-    
+    private String rank;
+  
     public UserAccount() {
     }
 
@@ -184,7 +185,24 @@ public class UserAccount {
     public void setBranchId(Integer branchId) {
         this.branchId = branchId;
     }
+     // Getter và Setter cho fullName
+    public String getFullName() {
+        return fullName;
+    }
 
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    // Getter và Setter cho rank
+    public String getRank() {
+        return rank;
+    }
+
+    public void setRank(String rank) {
+        this.rank = rank;
+    }
+  
     public String getFullname() {
         return fullname;
     }

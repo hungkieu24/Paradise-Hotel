@@ -464,36 +464,30 @@ public class UserAccountDAO extends DBContext {
     }
 
     //lay thong tin khach hang
-    public UserAccount getUserInfoById(String id) {
-        String sql = "SELECT * FROM UserAccount WHERE id = ?";
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setString(1, id);
+    public UserAccount getUserInfoById(String userId) {
+        String sql = "SELECT u.*, lp.level AS rank " +
+                     "FROM UserAccount u " +
+                     "LEFT JOIN LoyaltyPoint lp ON u.id = lp.user_id " +
+                     "WHERE u.id = ?";
+        try (
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, userId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                Integer branchId = null;
-                try {
-                    branchId = rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null;
-                } catch (Exception e) {
-                    branchId = null;
-                }
-                Timestamp ts = rs.getTimestamp("created_at");
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String createdAt = (ts != null) ? sdf.format(ts) : null;
-                return new UserAccount(
-                        rs.getString("id"),
-                        rs.getString("username"),
-                        rs.getString("password"),
-                        rs.getString("email"),
-                        rs.getString("avatar_url"),
-                        rs.getString("role"),
-                        rs.getString("status"),
-                        createdAt,
-                        rs.getString("phonenumber"),
-                        branchId
-                );
+                UserAccount user = new UserAccount();
+                user.setId(rs.getString("id"));
+                user.setUsername(rs.getString("username"));
+                user.setFullName(rs.getString("fullname"));
+                user.setEmail(rs.getString("email"));
+                user.setPhonenumber(rs.getString("phonenumber"));
+                user.setRole(rs.getString("role"));
+                user.setStatus(rs.getString("status"));
+                user.setAvatar_url(rs.getString("avatar_url"));
+                user.setRank(rs.getString("rank")); // lấy từ LoyaltyPoint
+                // Nếu UserAccount có các trường khác, map thêm tại đây
+                return user;
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -1038,8 +1032,7 @@ public class UserAccountDAO extends DBContext {
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, userId);
-
-            try (ResultSet rs = ps.executeQuery()) {
+           try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     Timestamp ts = rs.getTimestamp("created_at");
@@ -1071,6 +1064,103 @@ public class UserAccountDAO extends DBContext {
         }
 
         return null; // Không tìm thấy user
+    }
+
+     // Lấy thông tin user bởi id (int)
+    public UserAccount findAccountByNumericId(int numericId) {
+        String sql = "SELECT * FROM UserAccount WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, numericId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUserAccount(rs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Lấy thông tin user bởi id (String)
+    public UserAccount lookupAccountById(String userId) {
+        String sql = "SELECT * FROM UserAccount WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUserAccount(rs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Lấy thông tin user đầy đủ (dùng cho hiển thị khách hàng/checkout) (int)
+    public UserAccount fetchFullAccountByNumericId(int numericId) {
+        return findAccountByNumericId(numericId);
+    }
+
+    // Lấy thông tin user đầy đủ (String)
+    public UserAccount fetchFullAccountById(String userId) {
+        return lookupAccountById(userId);
+    }
+
+    // Lấy user theo username
+    public UserAccount queryAccountByUsername(String username) {
+        String sql = "SELECT * FROM UserAccount WHERE username = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, username);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUserAccount(rs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // Lấy user theo email (chỉ user active)
+    public UserAccount getActiveAccountByEmail(String email) {
+        String sql = "SELECT * FROM UserAccount WHERE email = ? AND status = 'Active'";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUserAccount(rs);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private UserAccount mapResultSetToUserAccount(ResultSet rs) throws SQLException {
+        UserAccount ua = new UserAccount();
+        ua.setId(rs.getString("id"));
+        ua.setUsername(rs.getString("username"));
+        ua.setPassword(rs.getString("password"));
+        ua.setEmail(rs.getString("email"));
+        ua.setAvatar_url(rs.getString("avatar_url")); // chú ý đúng tên hàm
+        ua.setRole(rs.getString("role"));
+        ua.setStatus(rs.getString("status"));
+        ua.setCreate_at(rs.getString("create_at"));   // chú ý đúng tên hàm và cột DB
+        ua.setPhonenumber(rs.getString("phonenumber"));
+
+        // Có thể null nếu là customer
+        try { ua.setBranchId(rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null); } catch (Exception ignore) {}
+
+        // Nếu join thêm các trường bên ngoài bảng UserAccount
+        try { ua.setBranchName(rs.getString("branchName")); } catch (Exception ignore) {}
+        try { ua.setFullName(rs.getString("full_name")); } catch (Exception ignore) {}
+        try { ua.setRank(rs.getString("rank")); } catch (Exception ignore) {}
+
+        return ua;
     }
 
     // author : hung

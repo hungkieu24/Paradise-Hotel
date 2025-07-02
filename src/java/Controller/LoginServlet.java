@@ -18,12 +18,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Form;
 
-import org.mindrot.jbcrypt.BCrypt;
-/**
- *
- * @author thien
- */
-@WebServlet(name="LoginServlet", urlPatterns={"/login"})
+@WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
 public class LoginServlet extends HttpServlet {
 
     public static final String CLIENT_ID = "202740089898-biog485gnu7f0i8v8q0sma4bjtl6effc.apps.googleusercontent.com";
@@ -107,29 +102,41 @@ public class LoginServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
-       // Xử lý đăng nhập bằng username/password
-       String username = request.getParameter("username");
-       String password = request.getParameter("password");
-      
-       UserAccountDAO u = new UserAccountDAO();
-       UserAccount user = u.getUserByUserName(username);
-       if(user != null && user.getStatus().equals("Active") && BCrypt.checkpw(password, user.getPassword())){
-           HttpSession session = request.getSession();
-           session.setAttribute("user", user);
-           if(user.getRole().equals("admin")){
-               response.sendRedirect("admindashboard.jsp");// phản hồi lại trang page mặc định khi đăng nhập vào của admin
-           }
-           // tương tự như các useraccount còn lại 
-           if(user.getRole().equals("Manager")){
-               response.sendRedirect("rooms");
-           }
-           else{
-               response.sendRedirect("homepage");// phản hồi lại trang home mặc định khi đăng nhập vào của customer
-           }
-       } else{
-           request.setAttribute("error", "Invalid credentials or account banned");
-           request.getRequestDispatcher("login.jsp").forward(request, response);
-       }
+            throws ServletException, IOException {
+        // Xử lý đăng nhập bằng username/password
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        UserAccountDAO u = new UserAccountDAO();
+        UserAccount user = u.login(username, password);
+        if (user != null && user.getStatus().equals("Active")) {
+            HttpSession session = request.getSession();
+            session.setAttribute("user", user);
+
+            // Sửa tại đây: set userRole và branchId cho staff
+            String role = user.getRole();
+            if ("admin".equalsIgnoreCase(role)) {
+                session.setAttribute("userRole", "admin");
+                response.sendRedirect("admindashboard.jsp");
+            } else if ("Customer".equalsIgnoreCase(role)) {
+                session.setAttribute("userRole", "Customer");
+                response.sendRedirect("homepage");
+            } else if ("staff".equalsIgnoreCase(role)) {
+                session.setAttribute("userRole", "staff");
+                session.setAttribute("branchId", user.getBranchId());
+                // Set branchName cho staff
+                if (user.getBranchId() != null) {
+                    HotelBranchDAO branchDAO = new HotelBranchDAO();
+                    String branchName = branchDAO.getBranchNameById(user.getBranchId());
+                    session.setAttribute("branchName", branchName);
+                }
+                response.sendRedirect("staff-dashboard.jsp");
+            } else {
+                session.setAttribute("userRole", role);
+                response.sendRedirect("homepage");
+            }
+        } else {
+            request.setAttribute("error", "Invalid credentials or account banned");
+            request.getRequestDispatcher("login.jsp").forward(request, response);
+        }
     }
 }

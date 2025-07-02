@@ -45,7 +45,7 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                         rs.getBoolean("is_deleted") // isDeleted
                 );
                 Branch branch = branchDAO.getBranchByRoomTypeId(roomtype.getRoomTypeID());
-            roomtype.setBranch(branch); 
+                roomtype.setBranch(branch); 
                 roomTypeList.add(roomtype);
             }
 
@@ -142,7 +142,6 @@ public class RoomTypeDAO extends DBcontext.DBContext {
         SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price,
                         rt.capacity_adult, rt.capacity_child,
                         rt.image_url, rt.branch_id, rt.is_deleted
-
         FROM RoomType rt
         WHERE rt.is_deleted = 0
           AND EXISTS (

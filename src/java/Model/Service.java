@@ -1,3 +1,4 @@
+
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
@@ -20,7 +21,12 @@ public class Service {
     private boolean isDeleted;
     private int quantity;
     private String paid_status;
-
+    // Thêm trường này để lưu trạng thái dịch vụ trong từng booking
+    private String bookingServiceStatus;
+    private int quantity;
+    private String paidStatus;
+    
+  
     // Constructors
     public Service() {}
 
@@ -52,6 +58,7 @@ public class Service {
     public int getId() {
         return id;
     }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -106,6 +113,22 @@ public class Service {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
+  
+      public String getPaidStatus() {
+        return paidStatus;
+    }
+
+    public void setPaidStatus(String paidStatus) {
+        this.paidStatus = paidStatus;
+    }
+
+    // Getter & Setter cho bookingServiceStatus
+    public String getBookingServiceStatus() {
+        return bookingServiceStatus;
+    }
+
+    public void setBookingServiceStatus(String bookingServiceStatus) {
+        this.bookingServiceStatus = bookingServiceStatus;
 
     public String getPaid_status() {
         return paid_status;

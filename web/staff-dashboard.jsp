@@ -1,10 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%@ page import="Model.UserAccount" %>
 <%
-    // Lấy tên chi nhánh từ session
-    String branchName = (session.getAttribute("branchName") != null && !session.getAttribute("branchName").toString().isEmpty())
-        ? session.getAttribute("branchName").toString()
-        : "Branch";
+   
     // Lấy tên staff từ session (nếu có)
     String staffName = "staff";
     if (session.getAttribute("user") != null) {
@@ -172,6 +169,21 @@
                                     <a href="searchGuest" class="btn btn-success btn-sm mt-2 d-inline-flex align-items-center"
                                        style="background:#22a366;border:none;font-weight:500;">
                                         Add new Booking <i class="fas fa-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">                       
+                                <div class="stat-icon add-booking d-flex align-items-center justify-content-center"
+                                     style="width:48px;height:48px;background:#22a366;border-radius:12px;">
+                                    <i class="fas fa-plus" style="color:white;font-size:2rem;"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 style="font-weight:700;">Check out</h3>
+                                    <p class="text-secondary">Check out</p>
+                                    <a href="staff-checkout" class="btn btn-success btn-sm mt-2 d-inline-flex align-items-center"
+                                       style="background:#22a366;border:none;font-weight:500;">
+                                        Check out<i class="fas fa-arrow-right ms-1"></i>
                                     </a>
                                 </div>
                             </div>

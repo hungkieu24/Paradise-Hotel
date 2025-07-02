@@ -5,9 +5,7 @@
 <%@ page import="Model.Room" %>
 <%
    
-       String branchName = (session.getAttribute("branchName") != null && !session.getAttribute("branchName").toString().isEmpty())
-        ? session.getAttribute("branchName").toString()
-        : "Branch";
+      
 %>
 <!DOCTYPE html>
 <html lang="en">

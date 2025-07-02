@@ -118,7 +118,8 @@ public class Voucher {
     public Date getValid_from() {
         return valid_from;
     }
-  public void setValid_from(Date valid_from) {
+
+    public void setValid_from(Date valid_from) {
         this.valid_from = valid_from;
     }
 

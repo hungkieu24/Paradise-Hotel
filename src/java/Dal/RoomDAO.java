@@ -5,6 +5,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import DBcontext.DBContext;
+import Model.Booking;
 import Model.RoomType;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,31 +15,53 @@ import java.util.Map;
  */
 public class RoomDAO extends DBContext {
 
-    public Room getRoomById(int id) {
-        Room room = null;
-        String sql = "SELECT * FROM Room WHERE id = ?";
-
-        try {
-            PreparedStatement stmt = connection.prepareStatement(sql);
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                room = new Room(
-                        rs.getInt("id"),
-                        rs.getString("room_number"),
-                        rs.getInt("branch_id"),
-                        rs.getInt("room_type_id"),
-                        rs.getString("status"),
-                        rs.getString("image_url")
-                );
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+   /**
+ * Lấy thông tin phòng theo ID
+ * @param roomId ID của phòng
+ * @return Room object hoặc null nếu không tìm thấy
+ */
+public Room getRoomById(int roomId) {
+    String sql = "SELECT r.id, r.room_number, r.status, r.branch_id, " +
+                "rt.name as room_type_name, rt.id as room_type_id " +
+                "FROM Rooms r " +
+                "INNER JOIN RoomTypes rt ON r.room_type_id = rt.id " +
+                "WHERE r.id = ?";
+    
+    PreparedStatement ps = null;
+    ResultSet rs = null;
+    
+    try {
+        ps = connection.prepareStatement(sql);
+        ps.setInt(1, roomId);
+        
+        rs = ps.executeQuery();
+        
+        if (rs.next()) {
+            Room room = new Room();
+            room.setId(rs.getInt("id"));
+            room.setRoomNumber(rs.getString("room_number"));
+            room.setStatus(rs.getString("status"));
+            room.setBranchId(rs.getInt("branch_id"));
+            room.setRoomTypeName(rs.getString("room_type_name"));
+            room.setRoomTypeId(rs.getInt("room_type_id"));
+            
+            return room;
         }
-
-        return room;
+        
+    } catch (SQLException e) {
+        System.err.println("Error getting room by ID " + roomId + ": " + e.getMessage());
+        e.printStackTrace();
+    } finally {
+        try {
+            if (rs != null) rs.close();
+            if (ps != null) ps.close();
+        } catch (SQLException e) {
+            System.err.println("Error closing resources in getRoomById: " + e.getMessage());
+        }
     }
+    
+    return null;
+}
 
     public List<Room> getAllRooms() {
         List<Room> rooms = new ArrayList<>();
@@ -185,6 +208,7 @@ public class RoomDAO extends DBContext {
             return false;
         }
     }
+  
     //author: Thien
     // Fix theo database moi
     public List<Room> getRooms(String status, String roomTypeId, String search) {
@@ -651,10 +675,15 @@ public class RoomDAO extends DBContext {
             ps.setInt(1, branchId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    RoomType rt = new RoomType();
-                    rt.setRoomTypeID(rs.getInt("id"));
-                    rt.setName(rs.getString("name"));
-                    // Mapping thêm các trường khác nếu RoomType có (vd: mô tả, giá, ...)
+                    RoomType rt = new RoomType(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getString("description"),
+                            rs.getDouble("base_price"),
+                            rs.getInt("capacity_adult"),
+                            rs.getInt("capacity_child"),
+                            rs.getString("image_url")
+                    );
                     list.add(rt);
                 }
             }
@@ -715,16 +744,44 @@ public class RoomDAO extends DBContext {
         return list;
     }
 
-    //
+    /**
+     * Cập nhật trạng thái phòng
+     * @param roomId ID của phòng
+     * @param status Trạng thái mới ("Available", "Reserved", "Occupied",
+     * "Maintenance")
+     * @return true nếu thành công, false nếu thất bại
+     */
     public boolean updateRoomStatus(int roomId, String status) {
-        String sql = "UPDATE Room SET status = ? WHERE id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        String sql = "UPDATE Rooms SET status = ? WHERE id = ?";
+        PreparedStatement ps = null;
+
+        try {
+            ps = connection.prepareStatement(sql);
             ps.setString(1, status);
             ps.setInt(2, roomId);
-            return ps.executeUpdate() > 0;
-        } catch (Exception e) {
+
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("Room " + roomId + " status updated to: " + status);
+                return true;
+            } else {
+                System.err.println("No room found with ID: " + roomId);
+                return false;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error updating room status for room " + roomId + ": " + e.getMessage());
             e.printStackTrace();
             return false;
+        } finally {
+            try {
+                if (ps != null) {
+                    ps.close();
+                }
+            } catch (SQLException e) {
+                System.err.println("Error closing resources in updateRoomStatus: " + e.getMessage());
+            }
         }
     }
 
@@ -837,4 +894,1038 @@ public class RoomDAO extends DBContext {
         }
         return 0;
     }
+
+    public List<Integer> getRoomTypeIdsByBookingId(int bookingId) {
+        List<Integer> roomTypeIds = new ArrayList<>();
+        String sql = "SELECT room_type_id FROM BookingRoomType WHERE booking_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    roomTypeIds.add(rs.getInt("room_type_id"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return roomTypeIds;
+    }
+
+    /**
+     * Lấy danh sách phòng đã được gán cho một booking
+     *
+     * @param bookingId ID của booking
+     * @return List<Room> danh sách phòng đã gán
+     */
+    public List<Room> getAssignedRoomsByBookingId(int bookingId) {
+        String sql = "SELECT r.id, r.room_number, r.status, r.branch_id, "
+                + "rt.name as room_type_name, rt.id as room_type_id "
+                + "FROM Rooms r "
+                + "INNER JOIN RoomTypes rt ON r.room_type_id = rt.id "
+                + "INNER JOIN RoomAssignment ra ON r.id = ra.room_id "
+                + "WHERE ra.booking_id = ? "
+                + "ORDER BY r.room_number";
+
+        List<Room> rooms = new ArrayList<>();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            ps = connection.prepareStatement(sql);
+            ps.setInt(1, bookingId);
+
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Room room = new Room();
+                room.setId(rs.getInt("id"));
+                room.setRoomNumber(rs.getString("room_number"));
+                room.setStatus(rs.getString("status"));
+                room.setBranchId(rs.getInt("branch_id"));
+                room.setRoomTypeName(rs.getString("room_type_name"));
+                room.setRoomTypeId(rs.getInt("room_type_id"));
+
+                rooms.add(room);
+            }
+
+            System.out.println("Retrieved " + rooms.size() + " assigned rooms for booking " + bookingId);
+
+        } catch (SQLException e) {
+            System.err.println("Error getting assigned rooms for booking " + bookingId + ": " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+            } catch (SQLException e) {
+                System.err.println("Error closing resources in getAssignedRoomsByBookingId: " + e.getMessage());
+            }
+        }
+
+        return rooms;
+    }
+
+    public List<Room> getSimpleAvailableRoomsByType(int roomTypeId, int branchId) {
+        List<Room> rooms = new ArrayList<>();
+        String sql = "SELECT r.*, rt.name AS roomTypeName "
+                + "FROM Room r "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE r.room_type_id = ? "
+                + "AND r.branch_id = ? "
+                + "AND (r.status = 'Available' OR r.status = 'available' OR r.status = 'AVAILABLE' OR r.status = 'Vacant') "
+                + "AND r.is_deleted = 0";
+
+        // Debug - In ra truy vấn SQL và tham số
+        System.out.println("SQL: " + sql);
+        System.out.println("roomTypeId: " + roomTypeId + ", branchId: " + branchId);
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, roomTypeId);
+            ps.setInt(2, branchId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                // Debug - In ra kết quả truy vấn
+                System.out.println("Executing query...");
+                int count = 0;
+
+                while (rs.next()) {
+                    count++;
+                    Room room = new Room();
+                    room.setId(rs.getInt("id"));
+                    room.setRoomNumber(rs.getString("room_number"));
+                    room.setRoomTypeId(rs.getInt("room_type_id"));
+                    room.setBranchId(rs.getInt("branch_id"));
+                    room.setStatus(rs.getString("status"));
+                    room.setRoomTypeName(rs.getString("roomTypeName"));
+
+                    // Debug - In thông tin phòng
+                    System.out.println("Found room: ID=" + room.getId()
+                            + ", Number=" + room.getRoomNumber()
+                            + ", Status='" + room.getStatus() + "'"
+                            + ", Type=" + room.getRoomTypeName());
+
+                    rooms.add(room);
+                }
+                System.out.println("Found " + count + " rooms");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in getSimpleAvailableRoomsByType: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return rooms;
+    }
+
+    public List<Room> getAvailableRoomsForAssignment(int roomTypeId, int branchId, int bookingId) {
+    List<Room> rooms = new ArrayList<>();
+    
+    // Đầu tiên lấy thông tin thời gian của booking hiện tại
+    String getBookingTimeSql = "SELECT check_in, check_out FROM Booking WHERE id = ?";
+    java.sql.Timestamp bookingCheckIn = null;
+    java.sql.Timestamp bookingCheckOut = null;
+    
+    try (PreparedStatement psTime = connection.prepareStatement(getBookingTimeSql)) {
+        psTime.setInt(1, bookingId);
+        try (ResultSet rsTime = psTime.executeQuery()) {
+            if (rsTime.next()) {
+                bookingCheckIn = rsTime.getTimestamp("check_in");
+                bookingCheckOut = rsTime.getTimestamp("check_out");
+                System.out.println("Booking #" + bookingId + " check-in: " + bookingCheckIn + ", check-out: " + bookingCheckOut);
+            } else {
+                // Không tìm thấy booking
+                System.out.println("Booking #" + bookingId + " not found");
+                return rooms; // Return empty list
+            }
+        }
+    } catch (SQLException e) {
+        System.out.println("Error getting booking time: " + e.getMessage());
+        e.printStackTrace();
+        return rooms;
+    }
+    
+    // Truy vấn chính lấy phòng khả dụng
+    String sql = "SELECT r.*, rt.id AS rt_id, rt.name AS roomTypeName, rt.description, "
+            + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
+            + "FROM Room r "
+            + "JOIN RoomType rt ON r.room_type_id = rt.id "
+            + "WHERE r.room_type_id = ? "
+            + "AND r.branch_id = ? "
+            + "AND r.status = 'Available' "
+            + "AND r.is_deleted = 0 "
+            + "AND r.id NOT IN ( "
+            + "    SELECT ra.room_id FROM RoomAssignment ra "
+            + "    JOIN Booking b ON ra.booking_id = b.id "
+            + "    WHERE b.id != ? " // Không phải booking hiện tại
+            + "    AND b.status NOT IN ('Cancelled', 'Completed', 'NoShow') " // Không phải booking đã hủy/hoàn thành
+            + "    AND (( " // Kiểm tra xem thời gian có trùng không
+            + "        b.check_in < ? AND b.check_out > ? " // Booking khác check-in trước và check-out sau khi booking hiện tại check-in
+            + "    ) OR ( "
+            + "        b.check_in < ? AND b.check_out > ? " // Booking khác check-in trước và check-out sau khi booking hiện tại check-out
+            + "    ) OR ( "
+            + "        b.check_in >= ? AND b.check_out <= ? " // Booking khác nằm hoàn toàn trong khoảng thời gian của booking hiện tại
+            + "    )) "
+            + ") "
+            + "ORDER BY r.room_number";
+
+    try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        ps.setInt(1, roomTypeId);
+        ps.setInt(2, branchId);
+        ps.setInt(3, bookingId);
+        ps.setTimestamp(4, bookingCheckIn);
+        ps.setTimestamp(5, bookingCheckIn);
+        ps.setTimestamp(6, bookingCheckOut);
+        ps.setTimestamp(7, bookingCheckOut);
+        ps.setTimestamp(8, bookingCheckIn);
+        ps.setTimestamp(9, bookingCheckOut);
+
+        // Debug SQL
+        System.out.println("SQL for available rooms for assignment: " + sql);
+        System.out.println("Parameters: roomTypeId=" + roomTypeId + ", branchId=" + branchId + 
+                          ", bookingId=" + bookingId);
+
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Room room = new Room();
+                room.setId(rs.getInt("id"));
+                room.setRoomNumber(rs.getString("room_number"));
+                room.setRoomTypeId(rs.getInt("room_type_id"));
+                room.setBranchId(rs.getInt("branch_id"));
+                room.setStatus(rs.getString("status"));
+                room.setImageUrl(rs.getString("image_url"));
+                room.setRoomTypeName(rs.getString("roomTypeName"));
+
+                // Create RoomType object according to your model
+                RoomType rt = new RoomType(
+                        rs.getInt("rt_id"),
+                        rs.getString("roomTypeName"),
+                        rs.getString("description"),
+                        rs.getDouble("base_price"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
+                        rs.getString("rt_image_url")
+                );
+                room.setRoomType(rt);
+
+                rooms.add(room);
+            }
+            System.out.println("Found " + rooms.size() + " available rooms for roomTypeId=" + roomTypeId);
+        }
+    } catch (SQLException e) {
+        System.out.println("SQL Error getting available rooms for assignment: " + e.getMessage());
+        e.printStackTrace();
+    }
+    
+    // Kiểm tra thêm các phòng đã được gán cho booking này
+    String alreadyAssignedSql = "SELECT r.*, rt.id AS rt_id, rt.name AS roomTypeName, rt.description, "
+            + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
+            + "FROM RoomAssignment ra "
+            + "JOIN Room r ON ra.room_id = r.id "
+            + "JOIN RoomType rt ON r.room_type_id = rt.id "
+            + "WHERE ra.booking_id = ? AND r.room_type_id = ?";
+            
+    try (PreparedStatement ps = connection.prepareStatement(alreadyAssignedSql)) {
+        ps.setInt(1, bookingId);
+        ps.setInt(2, roomTypeId);
+        
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                // Nếu phòng đã được gán cho booking này, kiểm tra xem nó có trong danh sách kết quả chưa
+                int roomId = rs.getInt("id");
+                boolean alreadyInList = false;
+                
+                for (Room existingRoom : rooms) {
+                    if (existingRoom.getId() == roomId) {
+                        alreadyInList = true;
+                        break;
+                    }
+                }
+                
+                // Nếu chưa có trong danh sách, thêm vào
+                if (!alreadyInList) {
+                    Room room = new Room();
+                    room.setId(roomId);
+                    room.setRoomNumber(rs.getString("room_number"));
+                    room.setRoomTypeId(rs.getInt("room_type_id"));
+                    room.setBranchId(rs.getInt("branch_id"));
+                    room.setStatus("Assigned"); // Đánh dấu là đã được gán
+                    room.setImageUrl(rs.getString("image_url"));
+                    room.setRoomTypeName(rs.getString("roomTypeName"));
+                    
+                    RoomType rt = new RoomType(
+                        rs.getInt("rt_id"),
+                        rs.getString("roomTypeName"),
+                        rs.getString("description"),
+                        rs.getDouble("base_price"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
+                        rs.getString("rt_image_url")
+                    );
+                    room.setRoomType(rt);
+                    
+                    rooms.add(room);
+                    System.out.println("Added already assigned room: " + room.getRoomNumber());
+                }
+            }
+        }
+    } catch (SQLException e) {
+        System.out.println("SQL Error getting already assigned rooms: " + e.getMessage());
+        e.printStackTrace();
+    }
+    
+    return rooms;
+}
+    public List<Room> getAvailableRoomsByRoomTypeName(List<String> roomTypeNames, int branchId) {
+        List<Room> rooms = new ArrayList<>();
+
+        if (roomTypeNames == null || roomTypeNames.isEmpty()) {
+            return rooms;
+        }
+
+        // Xây dựng tham số IN cho câu truy vấn SQL
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < roomTypeNames.size(); i++) {
+            placeholders.append("?");
+            if (i < roomTypeNames.size() - 1) {
+                placeholders.append(",");
+            }
+        }
+
+        String sql = "SELECT r.*, rt.name AS roomTypeName, rt.description, "
+                + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
+                + "FROM Room r "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE r.status = 'Available' "
+                + "AND r.branch_id = ? "
+                + "AND r.is_deleted = 0 "
+                + "AND rt.name IN (" + placeholders.toString() + ") "
+                + "ORDER BY rt.name, r.room_number";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+
+            // Thiết lập các tham số tên loại phòng
+            for (int i = 0; i < roomTypeNames.size(); i++) {
+                ps.setString(i + 2, roomTypeNames.get(i));
+            }
+
+            // Debug log
+            System.out.println("Executing query for room types: " + String.join(", ", roomTypeNames));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Room room = new Room();
+                    room.setId(rs.getInt("id"));
+                    room.setRoomNumber(rs.getString("room_number"));
+                    room.setRoomTypeId(rs.getInt("room_type_id"));
+                    room.setBranchId(rs.getInt("branch_id"));
+                    room.setStatus(rs.getString("status"));
+                    room.setImageUrl(rs.getString("image_url"));
+                    room.setRoomTypeName(rs.getString("roomTypeName"));
+
+                    // Tạo đối tượng RoomType
+                    RoomType roomType = new RoomType(
+                            rs.getInt("room_type_id"),
+                            rs.getString("roomTypeName"),
+                            rs.getString("description"),
+                            rs.getDouble("base_price"),
+                            rs.getInt("capacity_adult"),
+                            rs.getInt("capacity_child"),
+                            rs.getString("rt_image_url")
+                    );
+                    room.setRoomType(roomType);
+
+                    rooms.add(room);
+                }
+            }
+
+            System.out.println("Found " + rooms.size() + " available rooms for room types: " + String.join(", ", roomTypeNames));
+        } catch (SQLException e) {
+            System.out.println("Error getting available rooms by room type name: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return rooms;
+    }
+
+    public List<String> getRoomTypeNamesByBookingId(int bookingId) {
+        List<String> roomTypeNames = new ArrayList<>();
+
+        String sql = "SELECT rt.name "
+                + "FROM BookingRoomType brt "
+                + "JOIN RoomType rt ON brt.room_type_id = rt.id "
+                + "WHERE brt.booking_id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    roomTypeNames.add(rs.getString("name"));
+                }
+            }
+
+            System.out.println("Room type names for booking " + bookingId + ": " + String.join(", ", roomTypeNames));
+        } catch (SQLException e) {
+            System.out.println("Error getting room type names by booking id: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return roomTypeNames;
+    }
+
+    /**
+     * Lấy tất cả phòng theo loại và chi nhánh, không quan tâm trạng thái Dùng
+     * cho mục đích debug
+     */
+    public List<Room> getAllRoomsByTypeAndBranch(int roomTypeId, int branchId) {
+        List<Room> rooms = new ArrayList<>();
+        String sql = "SELECT r.*, rt.name AS roomTypeName, rt.description, "
+                + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
+                + "FROM Room r "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE r.room_type_id = ? "
+                + "AND r.branch_id = ? "
+                + "AND r.is_deleted = 0";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, roomTypeId);
+            ps.setInt(2, branchId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Room room = new Room();
+                    room.setId(rs.getInt("id"));
+                    room.setRoomNumber(rs.getString("room_number"));
+                    room.setRoomTypeId(rs.getInt("room_type_id"));
+                    room.setBranchId(rs.getInt("branch_id"));
+                    room.setStatus(rs.getString("status"));
+                    room.setImageUrl(rs.getString("image_url"));
+                    room.setRoomTypeName(rs.getString("roomTypeName"));
+
+                    // Tạo đối tượng RoomType phù hợp với model của bạn
+                    RoomType roomType = new RoomType(
+                            rs.getInt("room_type_id"),
+                            rs.getString("roomTypeName"),
+                            rs.getString("description"),
+                            rs.getDouble("base_price"),
+                            rs.getInt("capacity_adult"),
+                            rs.getInt("capacity_child"),
+                            rs.getString("rt_image_url")
+                    );
+                    room.setRoomType(roomType);
+
+                    rooms.add(room);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("SQL Error getting all rooms by type: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return rooms;
+    }
+
+    /**
+     * Lấy danh sách phòng theo loại, chi nhánh và danh sách các trạng thái có
+     * thể Giúp tìm kiếm phòng với nhiều trạng thái khác nhau (ví dụ:
+     * "Available", "AVAILABLE", "available", v.v.)
+     */
+    public List<Room> getRoomsByTypeAndStatuses(int roomTypeId, int branchId, List<String> statuses) {
+        List<Room> rooms = new ArrayList<>();
+
+        if (statuses == null || statuses.isEmpty()) {
+            return rooms;
+        }
+
+        // Tạo placeholders cho IN clause
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < statuses.size(); i++) {
+            placeholders.append("?");
+            if (i < statuses.size() - 1) {
+                placeholders.append(",");
+            }
+        }
+
+        String sql = "SELECT r.*, rt.name AS roomTypeName, rt.description, "
+                + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
+                + "FROM Room r "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE r.room_type_id = ? "
+                + "AND r.branch_id = ? "
+                + "AND r.status IN (" + placeholders.toString() + ") "
+                + "AND r.is_deleted = 0";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, roomTypeId);
+            ps.setInt(2, branchId);
+
+            // Thiết lập các giá trị cho status
+            for (int i = 0; i < statuses.size(); i++) {
+                ps.setString(i + 3, statuses.get(i));
+            }
+
+            System.out.println("Executing query with statuses: " + statuses);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Room room = new Room();
+                    room.setId(rs.getInt("id"));
+                    room.setRoomNumber(rs.getString("room_number"));
+                    room.setRoomTypeId(rs.getInt("room_type_id"));
+                    room.setBranchId(rs.getInt("branch_id"));
+                    room.setStatus(rs.getString("status"));
+                    room.setImageUrl(rs.getString("image_url"));
+                    room.setRoomTypeName(rs.getString("roomTypeName"));
+
+                    // Tạo đối tượng RoomType phù hợp với model của bạn
+                    RoomType roomType = new RoomType(
+                            rs.getInt("room_type_id"),
+                            rs.getString("roomTypeName"),
+                            rs.getString("description"),
+                            rs.getDouble("base_price"),
+                            rs.getInt("capacity_adult"),
+                            rs.getInt("capacity_child"),
+                            rs.getString("rt_image_url")
+                    );
+                    room.setRoomType(roomType);
+
+                    rooms.add(room);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("SQL Error getting rooms by statuses: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return rooms;
+    }
+
+    /**
+     * Lấy phòng theo tên loại phòng
+     */
+    public List<Room> getAvailableRoomsByTypeName(String roomTypeName, int branchId) {
+        List<Room> rooms = new ArrayList<>();
+        String sql = "SELECT r.*, rt.name AS roomTypeName, rt.description, "
+                + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
+                + "FROM Room r "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE rt.name = ? "
+                + "AND r.branch_id = ? "
+                + "AND LOWER(r.status) = 'available' "
+                + "AND r.is_deleted = 0";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, roomTypeName);
+            ps.setInt(2, branchId);
+
+            System.out.println("Searching rooms by type name: " + roomTypeName);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Room room = new Room();
+                    room.setId(rs.getInt("id"));
+                    room.setRoomNumber(rs.getString("room_number"));
+                    room.setRoomTypeId(rs.getInt("room_type_id"));
+                    room.setBranchId(rs.getInt("branch_id"));
+                    room.setStatus(rs.getString("status"));
+                    room.setImageUrl(rs.getString("image_url"));
+                    room.setRoomTypeName(rs.getString("roomTypeName"));
+
+                    // Tạo đối tượng RoomType phù hợp với model của bạn
+                    RoomType roomType = new RoomType(
+                            rs.getInt("room_type_id"),
+                            rs.getString("roomTypeName"),
+                            rs.getString("description"),
+                            rs.getDouble("base_price"),
+                            rs.getInt("capacity_adult"),
+                            rs.getInt("capacity_child"),
+                            rs.getString("rt_image_url")
+                    );
+                    room.setRoomType(roomType);
+
+                    rooms.add(room);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("SQL Error getting rooms by type name: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return rooms;
+    }
+
+    public int getRoomTypeIdByName(String roomTypeName) {
+        String sql = "SELECT id FROM RoomType WHERE name = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, roomTypeName);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error getting roomTypeId by name: " + e.getMessage());
+        }
+        return -1;
+    }
+
+    /**
+     * Lấy phòng có sẵn theo loại phòng dựa trên tên
+     */
+    public List<Room> getAvailableRoomsByTypeNames(List<String> roomTypeNames, int branchId) {
+        List<Room> rooms = new ArrayList<>();
+
+        if (roomTypeNames == null || roomTypeNames.isEmpty()) {
+            return rooms;
+        }
+
+        // Tạo danh sách tên loại phòng để dùng trong IN clause
+        List<String> quotedTypeNames = new ArrayList<>();
+        for (String typeName : roomTypeNames) {
+            quotedTypeNames.add("'" + typeName.trim() + "'");
+        }
+
+        String typeNamesClause = String.join(",", quotedTypeNames);
+
+        String sql = "SELECT r.*, rt.name AS roomTypeName "
+                + "FROM Room r "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE rt.name IN (" + typeNamesClause + ") "
+                + "AND r.branch_id = ? "
+                + "AND (LOWER(r.status) = 'available' OR LOWER(r.status) = 'vacant') "
+                + "AND r.is_deleted = 0";
+
+        System.out.println("SQL for multiple room types: " + sql);
+        System.out.println("Room types: " + typeNamesClause + ", Branch ID: " + branchId);
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                int count = 0;
+                while (rs.next()) {
+                    count++;
+                    Room room = new Room();
+                    room.setId(rs.getInt("id"));
+                    room.setRoomNumber(rs.getString("room_number"));
+                    room.setRoomTypeId(rs.getInt("room_type_id"));
+                    room.setBranchId(rs.getInt("branch_id"));
+                    room.setStatus(rs.getString("status"));
+                    room.setImageUrl(rs.getString("image_url"));
+                    room.setRoomTypeName(rs.getString("roomTypeName"));
+
+                    System.out.println("Found room: ID=" + room.getId()
+                            + ", Number=" + room.getRoomNumber()
+                            + ", Type=" + room.getRoomTypeName());
+
+                    rooms.add(room);
+                }
+                System.out.println("Found " + count + " available rooms for types: " + typeNamesClause);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in getAvailableRoomsByTypeNames: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return rooms;
+    }
+
+    /**
+     * Lấy tất cả phòng theo loại phòng dựa trên tên (bất kể trạng thái) Phương
+     * pháp dự phòng khi không tìm thấy phòng nào có sẵn
+     */
+    public List<Room> getAllRoomsByTypeNames(List<String> roomTypeNames, int branchId) {
+        List<Room> rooms = new ArrayList<>();
+
+        if (roomTypeNames == null || roomTypeNames.isEmpty()) {
+            return rooms;
+        }
+
+        // Tạo danh sách tên loại phòng để dùng trong IN clause
+        List<String> quotedTypeNames = new ArrayList<>();
+        for (String typeName : roomTypeNames) {
+            quotedTypeNames.add("'" + typeName.trim() + "'");
+        }
+
+        String typeNamesClause = String.join(",", quotedTypeNames);
+
+        String sql = "SELECT r.*, rt.name AS roomTypeName "
+                + "FROM Room r "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE rt.name IN (" + typeNamesClause + ") "
+                + "AND r.branch_id = ? "
+                + "AND r.is_deleted = 0";
+
+        System.out.println("SQL for all rooms by types: " + sql);
+        System.out.println("Room types: " + typeNamesClause + ", Branch ID: " + branchId);
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                int count = 0;
+                while (rs.next()) {
+                    count++;
+                    Room room = new Room();
+                    room.setId(rs.getInt("id"));
+                    room.setRoomNumber(rs.getString("room_number"));
+                    room.setRoomTypeId(rs.getInt("room_type_id"));
+                    room.setBranchId(rs.getInt("branch_id"));
+                    // Ghi đè trạng thái thành "Available" để hiển thị
+                    room.setStatus("Available");
+                    room.setImageUrl(rs.getString("image_url"));
+                    room.setRoomTypeName(rs.getString("roomTypeName"));
+
+                    System.out.println("Force adding room: ID=" + room.getId()
+                            + ", Number=" + room.getRoomNumber()
+                            + ", Type=" + room.getRoomTypeName());
+
+                    rooms.add(room);
+                }
+                System.out.println("Force found " + count + " rooms for types: " + typeNamesClause);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in getAllRoomsByTypeNames: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return rooms;
+    }
+
+    /**
+     * Lấy danh sách tên loại phòng từ chuỗi phân tách bởi dấu phẩy
+     */
+    public List<String> parseRoomTypeNames(String roomTypeNamesStr) {
+        List<String> roomTypeNames = new ArrayList<>();
+        if (roomTypeNamesStr != null && !roomTypeNamesStr.isEmpty()) {
+            String[] typeArray = roomTypeNamesStr.split(",");
+            for (String type : typeArray) {
+                roomTypeNames.add(type.trim());
+            }
+        }
+        return roomTypeNames;
+    }
+
+    /**
+     * Lấy roomTypeIds từ danh sách tên loại phòng
+     */
+    public List<Integer> getRoomTypeIdsByNames(List<String> roomTypeNames) {
+        List<Integer> roomTypeIds = new ArrayList<>();
+
+        if (roomTypeNames != null && !roomTypeNames.isEmpty()) {
+            for (String roomTypeName : roomTypeNames) {
+                int roomTypeId = getRoomTypeIdByName(roomTypeName);
+                if (roomTypeId > 0) {
+                    roomTypeIds.add(roomTypeId);
+                }
+            }
+        }
+
+        return roomTypeIds;
+    }
+
+    /**
+     * Lấy phòng có sẵn từ một booking dựa vào RoomTypeName
+     */
+//    public static void main(String[] args) {
+//        RoomDAO r = new RoomDAO();
+//        BookingDAO b = new BookingDAO();
+//        Booking bt = b.getBookingById(11);
+//        List<Room> list = r.getAvailableRoomsForBooking(bt);
+//       
+//        // Tạo map để nhóm phòng theo loại
+//        java.util.Map<String, java.util.List<Room>> roomsByType = new java.util.HashMap<>();
+//        for (Room room : list) {
+//            String typeName = room.getRoomTypeName() != null ? room.getRoomTypeName() : "Other";
+//
+//            if (!roomsByType.containsKey(typeName)) {
+//                roomsByType.put(typeName, new java.util.ArrayList<>());
+//            }
+//
+//            roomsByType.get(typeName).add(room);
+//        }
+//        // Hiển thị phòng theo từng loại
+//        for (java.util.Map.Entry<String, java.util.List<Room>> entry : roomsByType.entrySet()) {
+//            String typeName = entry.getKey();
+//            java.util.List<Room> rooms = entry.getValue();
+//            boolean isMatchingType = "Deluxe" != null
+//                    && (bt.getRoomTypeName() != null && bt.getRoomTypeName().contains(typeName));
+//
+//        }
+//
+//    }
+    public List<Room> getAvailableRoomsForBooking(Booking booking) {
+        List<Room> availableRooms = new ArrayList<>();
+
+        if (booking == null) {
+            return availableRooms;
+        }
+        // Thử lấy phòng từ roomTypeName trong booking
+        if (booking.getRoomTypeName() != null && !booking.getRoomTypeName().isEmpty()) {
+            List<String> roomTypeNames = parseRoomTypeNames(booking.getRoomTypeName());
+
+            // Cách 1: Lấy từng loại phòng và gộp vào
+            for (String typeName : roomTypeNames) {
+                int roomTypeId = getRoomTypeIdByName(typeName);
+                if (roomTypeId > 0) {
+                    List<Room> roomsOfType = getSimpleAvailableRoomsByType(roomTypeId, booking.getBranchId());
+                    availableRooms.addAll(roomsOfType);
+                }
+            }
+            // Cách 2: Nếu không tìm thấy phòng, thử dùng câu truy vấn IN
+            if (availableRooms.isEmpty()) {
+                availableRooms = getAvailableRoomsByTypeNames(roomTypeNames, booking.getBranchId());
+            }
+            // Phương án dự phòng: Lấy tất cả phòng bất kể trạng thái
+            if (availableRooms.isEmpty()) {
+                availableRooms = getAllRoomsByTypeNames(roomTypeNames, booking.getBranchId());
+            }
+        } else {
+            // Phương án dự phòng: Lấy theo roomTypeIds từ BookingRoomType
+            List<Integer> roomTypeIds = getRoomTypeIdsByBookingId(booking.getId());
+
+            if (!roomTypeIds.isEmpty()) {
+                for (Integer roomTypeId : roomTypeIds) {
+                    List<Room> roomsOfType = getSimpleAvailableRoomsByType(roomTypeId, booking.getBranchId());
+                    availableRooms.addAll(roomsOfType);
+                }
+            }
+        }
+        return availableRooms;
+    }
+
+    /**
+     * PHƯƠNG PHÁP KHẨN CẤP: Lấy tất cả phòng cho roomType mà không quan tâm đến
+     * trạng thái Sử dụng khi không tìm thấy phòng nào khác
+     */
+    public List<Room> getAllRoomsForBookingEmergency(Booking booking) {
+        List<Room> rooms = new ArrayList<>();
+
+        if (booking == null) {
+            return rooms;
+        }
+
+        System.out.println("EMERGENCY: Getting ALL rooms for booking " + booking.getId()
+                + " with room types: " + booking.getRoomTypeName());
+
+        try {
+            // Truy vấn cực kỳ rộng để lấy TẤT CẢ phòng có trong hệ thống
+            String sql = "SELECT r.*, rt.name as roomTypeName "
+                    + "FROM Room r "
+                    + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                    + "WHERE r.branch_id = ? AND r.is_deleted = 0";
+
+            // Khi chạy phương pháp khẩn cấp, không lọc theo room_type_id để đảm bảo có kết quả
+            // Tuy nhiên, chúng ta sẽ ưu tiên phòng phù hợp sau khi lấy kết quả
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, booking.getBranchId());
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Room room = new Room();
+                        room.setId(rs.getInt("id"));
+                        room.setRoomNumber(rs.getString("room_number"));
+                        room.setRoomTypeId(rs.getInt("room_type_id"));
+                        room.setBranchId(rs.getInt("branch_id"));
+                        room.setStatus("Available"); // Ghi đè thành Available để hiển thị
+                        room.setImageUrl(rs.getString("image_url"));
+                        room.setRoomTypeName(rs.getString("roomTypeName"));
+
+                        rooms.add(room);
+                    }
+                }
+            }
+
+            System.out.println("EMERGENCY: Found " + rooms.size() + " total rooms");
+
+            // Sắp xếp phòng theo ưu tiên:
+            // 1. Phòng có roomTypeName khớp với booking
+            if (booking.getRoomTypeName() != null && !booking.getRoomTypeName().isEmpty()) {
+                List<String> roomTypeNames = parseRoomTypeNames(booking.getRoomTypeName());
+                rooms.sort((r1, r2) -> {
+                    boolean r1Matches = roomTypeNames.contains(r1.getRoomTypeName());
+                    boolean r2Matches = roomTypeNames.contains(r2.getRoomTypeName());
+
+                    if (r1Matches && !r2Matches) {
+                        return -1;  // r1 lên đầu
+                    }
+                    if (!r1Matches && r2Matches) {
+                        return 1;   // r2 lên đầu
+                    }
+                    return 0;  // giữ nguyên
+                });
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in getAllRoomsForBookingEmergency: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return rooms;
+    }
+
+    public List<Room> getRoomsByIds(List<Integer> roomIds) {
+        if (roomIds == null || roomIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Tạo câu SQL với placeholder cho IN clause
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT r.id, r.room_number, r.status, r.branch_id, ")
+                .append("rt.name as room_type_name, rt.id as room_type_id ")
+                .append("FROM Rooms r ")
+                .append("INNER JOIN RoomTypes rt ON r.room_type_id = rt.id ")
+                .append("WHERE r.id IN (");
+
+        // Thêm placeholders
+        for (int i = 0; i < roomIds.size(); i++) {
+            if (i > 0) {
+                sql.append(", ");
+            }
+            sql.append("?");
+        }
+        sql.append(") ORDER BY r.room_number");
+
+        List<Room> rooms = new ArrayList<>();
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            ps = connection.prepareStatement(sql.toString());
+
+            // Set parameters
+            for (int i = 0; i < roomIds.size(); i++) {
+                ps.setInt(i + 1, roomIds.get(i));
+            }
+
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                Room room = new Room();
+                room.setId(rs.getInt("id"));
+                room.setRoomNumber(rs.getString("room_number"));
+                room.setStatus(rs.getString("status"));
+                room.setBranchId(rs.getInt("branch_id"));
+                room.setRoomTypeName(rs.getString("room_type_name"));
+                room.setRoomTypeId(rs.getInt("room_type_id"));
+
+                rooms.add(room);
+            }
+
+            System.out.println("Successfully retrieved " + rooms.size() + " rooms from " + roomIds.size() + " requested IDs");
+
+        } catch (SQLException e) {
+            System.err.println("Error getting rooms by IDs: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+            } catch (SQLException e) {
+                System.err.println("Error closing resources in getRoomsByIds: " + e.getMessage());
+            }
+        }
+
+        return rooms;
+    }
+
+    /**
+     * Phiên bản overload cho array String[]
+     *
+     */
+    public List<Room> getRoomsByIds(String[] roomIdStrings) {
+        if (roomIdStrings == null || roomIdStrings.length == 0) {
+            return new ArrayList<>();
+        }
+
+        try {
+            List<Integer> roomIds = new ArrayList<>();
+            for (String roomIdStr : roomIdStrings) {
+                roomIds.add(Integer.parseInt(roomIdStr.trim()));
+            }
+            return getRoomsByIds(roomIds);
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid room ID format in array: " + e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+public boolean removeRoomAssignment(int bookingId, int roomId) {
+    String sql = "DELETE FROM RoomAssignment WHERE booking_id = ? AND room_id = ?";
+    
+    try {
+        // Start transaction
+        connection.setAutoCommit(false);
+        
+        // Check if the assignment exists
+        String checkSql = "SELECT COUNT(*) FROM RoomAssignment WHERE booking_id = ? AND room_id = ?";
+        PreparedStatement checkStmt = connection.prepareStatement(checkSql);
+        checkStmt.setInt(1, bookingId);
+        checkStmt.setInt(2, roomId);
+        ResultSet rs = checkStmt.executeQuery();
+        
+        if (rs.next() && rs.getInt(1) == 0) {
+            connection.rollback();
+            return false; // Assignment doesn't exist
+        }
+        
+        // Delete assignment from RoomAssignment table
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setInt(1, bookingId);
+        ps.setInt(2, roomId);
+        int rowsAffected = ps.executeUpdate();
+        
+        if (rowsAffected == 0) {
+            connection.rollback();
+            return false;
+        }
+        
+        // Update room status back to Available
+        String updateRoomSql = "UPDATE Room SET status = 'Available' WHERE id = ?";
+        PreparedStatement updatePs = connection.prepareStatement(updateRoomSql);
+        updatePs.setInt(1, roomId);
+        updatePs.executeUpdate();
+        
+        connection.commit();
+        System.out.println("Successfully removed room " + roomId + " assignment from booking " + bookingId);
+        return true;
+    } catch (SQLException e) {
+        try {
+            connection.rollback();
+        } catch (SQLException ex) {
+            System.err.println("Error during rollback: " + ex.getMessage());
+        }
+        System.err.println("Error removing room assignment: " + e.getMessage());
+        e.printStackTrace();
+        return false;
+    } finally {
+        try {
+            connection.setAutoCommit(true);
+        } catch (SQLException e) {
+            System.err.println("Error resetting auto-commit: " + e.getMessage());
+        }
+    }
+}
+/**
+ * Cập nhật trạng thái phòng sau checkout
+ */
+public boolean updateRoomStatusAfterCheckout(int bookingId, String newStatus) {
+    try {
+        String sql = "UPDATE Room SET status = ? WHERE id IN " +
+                     "(SELECT room_id FROM RoomAssignment WHERE booking_id = ?)";
+        
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, newStatus); // "Available"
+            ps.setInt(2, bookingId);
+            
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
 }

@@ -10,6 +10,8 @@ public class Room {
     private String imageUrl;
     private String roomTypeName;
     private String hotelName;
+    private boolean isDeleted;
+    private boolean isAssigned;
 
     public Room() {
     }
@@ -29,6 +31,14 @@ public class Room {
         this.roomTypeId = roomTypeId;
         this.status = status;
         this.imageUrl = imageUrl;
+    }
+
+    public boolean isIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
     }
 
     // Getters and Setters
@@ -105,6 +115,7 @@ public class Room {
         this.hotelName = hotelName;
     }
 // author : Hung
+
     @Override
     public String toString() {
         return "Room{"
@@ -115,5 +126,13 @@ public class Room {
                 + ", status='" + status + '\''
                 + ", imageUrl='" + imageUrl + '\''
                 + '}';
+    }
+    
+    public boolean isAssigned() {
+        return isAssigned;
+    }
+
+    public void setAssigned(boolean isAssigned) {
+        this.isAssigned = isAssigned;
     }
 }
