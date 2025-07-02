@@ -108,7 +108,7 @@
                         <i class="fas fa-chart-line"></i>
                         <span class="menu-text">Dashboard</span>
                     </a>
-                    <a href="/rooms" class="menu-item active">
+                    <a href="rooms" class="menu-item active">
                         <i class="fas fa-bed"></i>
                         <span class="menu-text">Manage room</span>
                     </a>
@@ -116,11 +116,11 @@
                         <i class="fas fa-comments"></i>
                         <span class="menu-text">Manage feedback</span>
                     </a>
-                    <a href="#" class="menu-item">
+                    <a href="serviceManage" class="menu-item">
                         <i class="fas fa-concierge-bell"></i>
                         <span class="menu-text">Manage service</span>
                     </a>
-                    <a href="#" class="menu-item">
+                    <a href="promotions" class="menu-item">
                         <i class="fas fa-tags"></i>
                         <span class="menu-text">Manage promotion</span>
                     </a>
@@ -218,8 +218,12 @@
                                                     <span>${room.roomType.base_price} VND</span>
                                                 </div>
                                                 <div class="detail-item">
-                                                    <i class="fas fa-users"></i>
-                                                    <span>${room.roomType.capacity} people</span>
+                                                    <i class="fas fa-male"></i>
+                                                    <span>${room.roomType.capacity_adult} Adult</span>
+                                                </div>
+                                                <div class="detail-item">
+                                                    <i class="fas fa-child"></i>
+                                                    <span>${room.roomType.capacity_child} Child</span>
                                                 </div>
                                             </div>
                                             <div class="amenities">
@@ -246,7 +250,7 @@
                                         <p>Can you create new room</p>
                                 </div>
                             </c:if>
-                            
+
                             <!-- Thêm các phòng mẫu khác nếu cần -->
                         </div>
 
@@ -258,7 +262,8 @@
                                         <th>Room type</th>
                                         <th>Status</th>
                                         <th>Price</th>
-                                        <th>Capacity</th>
+                                        <th>Capacity adult</th>
+                                        <th>Capacity child</th>
                                         <th>Image</th>
                                         <th>Action</th>
                                     </tr>
@@ -271,7 +276,8 @@
                                             <td>${room.roomType.name}</td>
                                             <td><span class="status-badge status-${room.status.toLowerCase()}">${room.status}</span></td>
                                             <td>${room.roomType.base_price} VND</td>
-                                            <td>${room.roomType.capacity} people</td>
+                                            <td>${room.roomType.capacity_adult} pax</td>
+                                            <td>${room.roomType.capacity_child} pax</td>
                                             <td>
                                                 <c:set var="imgs" value="${roomImageMap[room.roomNumber]}" />
                                                 <c:if test="${not empty imgs}">
@@ -285,7 +291,8 @@
                                                         data-number="${room.roomNumber}"
                                                         data-type="${room.roomType.roomTypeID}"
                                                         data-status="${room.status}"
-                                                        data-capacity="${room.roomType.capacity}"
+                                                        data-capacity_adult="${room.roomType.capacity_adult}"
+                                                        data-capacity_child="${room.roomType.capacity_child}"
                                                         data-price="${room.roomType.base_price}"
                                                         data-description="${room.roomType.description}"
                                                         data-images='<c:forEach var="img" items="${roomImageMap[room.roomNumber]}">${img},</c:forEach>'>
@@ -354,7 +361,8 @@
                                         <c:forEach var="roomtype" items="${roomtypes}">
                                             <option
                                                 value="${roomtype.roomTypeID}"
-                                                data-capacity = "${roomtype.capacity}"
+                                                data-capacity_adult = "${roomtype.capacity_adult}"
+                                                data-capacity_child = "${roomtype.capacity_child}"
                                                 data-price = "${roomtype.base_price}"
                                                 data-description = "${roomtype.description}">
                                                 ${roomtype.name}
@@ -374,8 +382,13 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="capacity">Capacity *</label>
-                                    <input type="number" id="capacity" name="capacity" min="1" required>
+                                    <label for="capacity_adult">Adult Capacity *</label>
+                                    <input type="number" id="capacity_adult" name="capacity_adult" min="0" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="capacity_child">Child Capacity *</label>
+                                    <input type="number" id="capacity_child" name="capacity_child" min="0" required>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -434,7 +447,8 @@
                                         <c:forEach var="roomtype" items="${roomtypes}">
                                             <option
                                                 value="${roomtype.roomTypeID}"
-                                                data-capacity = "${roomtype.capacity}"
+                                                data-capacity_adult = "${roomtype.capacity_adult}"
+                                                data-capacity_child = "${roomtype.capacity_child}"
                                                 data-price = "${roomtype.base_price}"
                                                 data-description = "${roomtype.description}">
                                                 ${roomtype.name}
@@ -454,8 +468,13 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="edit_capacity">Capacity *</label>
-                                    <input type="number" id="edit_capacity" name="capacity" min="1" required>
+                                    <label for="edit_capacity_adult">Adult Capacity *</label>
+                                    <input type="number" id="edit_capacity_adult" name="capacity_adult" min="0" require">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="edit_capacity_child">Child Capacity *</label>
+                                    <input type="number" id="edit_capacity_child" name="capacity_child" min="0" required">
                                 </div>
                             </div>
                             <div class="form-group">
@@ -533,11 +552,13 @@
             // Auto-fill form fields based on room type selection
             document.getElementById('room_type').addEventListener('change', function () {
                 const selectedOption = this.options[this.selectedIndex];
-                const capacity = selectedOption.getAttribute('data-capacity') || '';
+                const capacity_adult = selectedOption.getAttribute('data-capacity_adult') || '';
+                const capacity_child = selectedOption.getAttribute('data-capacity_child') || '';
                 const price = selectedOption.getAttribute('data-price') || '';
                 const description = selectedOption.getAttribute('data-description') || '';
 
-                document.getElementById('capacity').value = capacity;
+                document.getElementById('capacity_adult').value = capacity_adult;
+                document.getElementById('capacity_child').value = capacity_child;
                 document.getElementById('price').value = price;
                 document.getElementById('description').value = description;
             });
@@ -575,7 +596,8 @@
                 document.getElementById('edit_room_number').value = btn.getAttribute('data-number');
                 document.getElementById('edit_room_type').value = btn.getAttribute('data-type');
                 document.getElementById('edit_status').value = btn.getAttribute('data-status');
-                document.getElementById('edit_capacity').value = btn.getAttribute('data-capacity');
+                document.getElementById('edit_capacity_adult').value = btn.getAttribute('data-capacity_adult');
+                document.getElementById('edit_capacity_child').value = btn.getAttribute('data-capacity_child');
                 document.getElementById('edit_price').value = btn.getAttribute('data-price');
                 document.getElementById('edit_description').value = btn.getAttribute('data-description');
                 // Populate image preview
@@ -611,11 +633,13 @@
             }
             document.getElementById('edit_room_type').addEventListener('change', function () {
                 const selectedOption = this.options[this.selectedIndex];
-                const capacity = selectedOption.getAttribute('data-capacity') || '';
+                const capacity_adult = selectedOption.getAttribute('data-capacity_adult') || '';
+                const capacity_child = selectedOption.getAttribute('data-capacity_child') || '';
                 const price = selectedOption.getAttribute('data-price') || '';
                 const description = selectedOption.getAttribute('data-description') || '';
 
-                document.getElementById('edit_capacity').value = capacity;
+                document.getElementById('edit_capacity_adult').value = capacity_adult;
+                document.getElementById('edit_capacity_child').value = capacity_child;
                 document.getElementById('edit_price').value = price;
                 document.getElementById('edit_description').value = description;
             });
@@ -630,6 +654,10 @@
                     icon: 'error',
                     title: 'Error',
                     text: errorMsg
+                }).then(()=>{
+                    document.getElementById("typeFilter").value = '';
+                    document.getElementById("statusFilter").value = '';
+                    document.querySelector('form[action="searchRooms"]').submit();
                 });
             } else if (successMsg && successMsg.trim() !== "") {
                 Swal.fire({
@@ -642,6 +670,10 @@
                     icon: 'warning',
                     title: 'Warning',
                     text: warningMsg
+                }).then(()=>{
+                    document.getElementById("typeFilter").value = '';
+                    document.getElementById("statusFilter").value = '';
+                    document.querySelector('form[action="searchRooms"]').submit();
                 });
             }
         </script>
@@ -653,7 +685,7 @@
                 const roomNumber = form.querySelector('[name="room_number"]');
                 const roomType = form.querySelector('[name="room_type"]');
                 const status = form.querySelector('[name="status"]');
-                const capacity = form.querySelector('[name="capacity"]');
+                const capacity_adult = form.querySelector('[name="capacity_adult"]');
                 const price = form.querySelector('[name="price"]');
                 const images = form.querySelector('[name="images"]');
 
@@ -682,9 +714,9 @@
                 }
 
                 // Validate capacity
-                if (!capacity.value || isNaN(capacity.value) || parseInt(capacity.value) <= 0) {
-                    form.querySelector('#' + capacity.id + '_error').textContent = 'Capacity must be a number greater than 0.';
-                    form.querySelector('#' + capacity.id + '_error').style.display = 'block';
+                if (!capacity_adult.value || isNaN(capacity_adult.value) || parseInt(capacity_adult.value) <= 0) {
+                    form.querySelector('#' + capacity_adult.id + '_error').textContent = 'Capacity adult must be a number greater than 0.';
+                    form.querySelector('#' + capacity_adult.id + '_error').style.display = 'block';
                     isValid = false;
                 }
 

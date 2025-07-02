@@ -78,13 +78,8 @@ public class SearchRoomServlet extends HttpServlet {
         int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
 
         List<Room> rooms = rDao.getRoomsByBranch(branchId, status, roomType, search, page, pageSize);
-        if(rooms.isEmpty() || rooms == null){
-//            request.setAttribute("error", "can't view list");
-//            rooms = rDao.getRoomsByBranch(branchId, "", "", "", page, pageSize);
-//            request.setAttribute("rooms", rooms);
-//            request.getRequestDispatcher("roomManage.jsp").forward(request, response);
-                response.sendRedirect("searchRooms?error=can't view list by fillter");
-            return;
+        if(rooms.isEmpty()){
+            request.setAttribute("warning", "No rooms found matching filter criteria.");
         }
         // Build roomImageMap
         Map<String, List<String>> roomImageMap = new HashMap<>();

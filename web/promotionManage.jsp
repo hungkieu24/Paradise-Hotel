@@ -831,7 +831,7 @@
 
 </script>
 <!-- validate -->
-</<script>
+<script>
     function validateForm(formId) {
         let isValid = true;
         const form = document.getElementById(formId);
