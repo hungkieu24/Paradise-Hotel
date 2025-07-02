@@ -125,7 +125,7 @@ public class FeedbackDAO extends DBcontext.DBContext {
                 + "FROM Feedback f "
                 + "JOIN UserAccount u ON f.user_id = u.id "
                 + "JOIN Booking b ON f.booking_id = b.id "
-                + "JOIN BookingRoom br ON b.id = br.booking_id "
+                + "JOIN RoomAssignment br ON b.id = br.booking_id "
                 + "JOIN Room r ON br.room_id = r.id "
                 + "JOIN RoomType rt ON r.room_type_id = rt.id "
                 + "WHERE f.status = 'Visible' AND rt.id = ? "
@@ -160,7 +160,7 @@ public class FeedbackDAO extends DBcontext.DBContext {
                 + "FROM Feedback f "
                 + "JOIN UserAccount u ON f.user_id = u.id "
                 + "JOIN Booking b ON f.booking_id = b.id "
-                + "JOIN BookingRoom br ON b.id = br.booking_id "
+                + "JOIN RoomAssignment br ON b.id = br.booking_id "
                 + "JOIN Room r ON br.room_id = r.id "
                 + "JOIN RoomType rt ON r.room_type_id = rt.id "
                 + "WHERE f.status = 'Visible' AND rt.id = ? "
@@ -481,9 +481,4 @@ public class FeedbackDAO extends DBcontext.DBContext {
         return false;
     }
 
-    public static void main(String[] args) {
-        FeedbackDAO dao = new FeedbackDAO();
-        List<Feedback> fb = dao.getListFeedbackByRoomTypeId(1);
-        System.out.println(fb.size());
-    }
 }

@@ -2,7 +2,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-
 package Dal;
 
 import DBcontext.DBContext;
@@ -13,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  *
@@ -113,7 +113,7 @@ public class UserAccountDAO extends DBContext {
         }
         return false;
     }
-    
+
     public boolean isEmailExist(String email) {
         String sql = "SELECT 1 FROM UserAccount WHERE email = ?";
         try {
@@ -126,7 +126,7 @@ public class UserAccountDAO extends DBContext {
         }
         return false;
     }
-    
+
     public boolean isUsernameExist(String username) {
         String sql = "SELECT 1 FROM UserAccount WHERE username = ?";
         try {
@@ -431,21 +431,21 @@ public class UserAccountDAO extends DBContext {
             if (excludeId != null) {
                 ps.setString(2, excludeId);
             }
-             ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.executeQuery();
             return rs.next();
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
     }
-    
+
     public UserAccount getUserByUserName(String username) {
         String sql = "select * from UserAccount where username = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, username);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-              return new UserAccount(
+                return new UserAccount(
                         rs.getString("id"),
                         rs.getString("username"),
                         rs.getString("password"),
@@ -462,7 +462,7 @@ public class UserAccountDAO extends DBContext {
         }
         return null;
     }
-    
+
     //lay thong tin khach hang
     public UserAccount getUserInfoById(String id) {
         String sql = "SELECT * FROM UserAccount WHERE id = ?";
@@ -537,7 +537,7 @@ public class UserAccountDAO extends DBContext {
                 branchId
         );
     }
-    
+
     // Lấy User bằng phone (ưu tiên số điện thoại)
     public UserAccount getUserByPhone(String phone) {
         String sql = "SELECT * FROM UserAccount WHERE phonenumber = ?";
@@ -587,27 +587,29 @@ public class UserAccountDAO extends DBContext {
     }
 
     // hoang create
+    // Loại bỏ hoặc không sử dụng checkPassword nếu servlet đã kiểm tra
     public boolean checkPassword(String username, String password) {
-        String sql = "SELECT 1 FROM UserAccount WHERE username = ? AND password = ?";
+        String sql = "SELECT password FROM UserAccount WHERE username = ?";
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, username);
-            ps.setString(2, password);
             ResultSet rs = ps.executeQuery();
-
-            return rs.next(); // Trả về true nếu tìm thấy dòng khớp
+            if (rs.next()) {
+                String storedHashedPassword = rs.getString("password");
+                return BCrypt.checkpw(password, storedHashedPassword);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
     }
 
-    // hoang create
+// Cập nhật updatePassword1 để chấp nhận mật khẩu đã mã hóa
     public boolean updatePassword1(String username, String newPassword) {
         String sql = "UPDATE UserAccount SET password = ? WHERE username = ?";
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setString(1, newPassword);
+            ps.setString(1, newPassword); // newPassword đã được mã hóa trong servlet
             ps.setString(2, username);
             int rowsUpdated = ps.executeUpdate();
             return rowsUpdated > 0;
@@ -616,5 +618,5 @@ public class UserAccountDAO extends DBContext {
         }
         return false;
     }
-
+    
 }
