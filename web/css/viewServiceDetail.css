@@ -1,0 +1,370 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jun 28, 2025, 8:24:30 PM
+    Author     : KTC
+*/
+
+/* Service Detail Page Styles */
+
+/* Global Styles */
+.margin_120_95 {
+    margin-top: 120px;
+    margin-bottom: 95px;
+}
+
+/* Main Service Image */
+.service-image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.service-image-container img {
+    width: 100%;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+.service-image-container:hover img {
+    transform: scale(1.05);
+}
+
+/* Service Details Box */
+.box_contents_in {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f0f0f0;
+    position: relative;
+}
+
+.box_contents_in::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #d4af37, #f4e4a6);
+    border-radius: 12px 12px 0 0;
+}
+
+.box_contents_in h2 {
+    color: #2c3e50;
+    font-weight: 700;
+    font-size: 2.2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.box_contents_in h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: #d4af37;
+    border-radius: 2px;
+}
+
+.box_contents_in p {
+    margin-bottom: 1.2rem;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #555;
+}
+
+.box_contents_in p strong {
+    color: #2c3e50;
+    font-weight: 600;
+    display: inline-block;
+    min-width: 120px;
+}
+
+/* Price Styling */
+.box_contents_in p:has(strong:contains("Price")) {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #d4af37;
+    background: #fefbf3;
+    padding: 0.8rem 1.2rem;
+    border-radius: 8px;
+    border-left: 4px solid #d4af37;
+}
+
+/* Status Badge */
+.box_contents_in p:has(strong:contains("Status")) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Contact Links */
+.box_contents_in a {
+    color: #d4af37;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.box_contents_in a:hover {
+    color: #b8941f;
+    text-decoration: none;
+}
+
+.box_contents_in a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #d4af37;
+    transition: width 0.3s ease;
+}
+
+.box_contents_in a:hover::after {
+    width: 100%;
+}
+
+/* Background Section */
+.bg_white {
+    background: #fafafa;
+    position: relative;
+}
+
+.bg_white::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #ddd, transparent);
+}
+
+/* Title Section */
+.title {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.title small {
+    color: #d4af37;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.title h2 {
+    color: #2c3e50;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    position: relative;
+}
+
+.title h2::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: #d4af37;
+    border-radius: 2px;
+}
+
+/* Related Services Cards */
+.box_cat_rooms {
+    display: block;
+    text-decoration: none;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+}
+
+.box_cat_rooms:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+}
+
+.box_cat_rooms figure {
+    position: relative;
+    margin: 0;
+    height: 250px;
+    overflow: hidden;
+}
+
+.background-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.3s ease;
+}
+
+.box_cat_rooms:hover .background-image {
+    transform: scale(1.1);
+}
+
+.box_cat_rooms .info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    color: white;
+    padding: 2rem 1.5rem 1.5rem;
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+}
+
+.box_cat_rooms:hover .info {
+    transform: translateY(0);
+}
+
+.box_cat_rooms .info small {
+    font-size: 0.9rem;
+    color: #d4af37;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.box_cat_rooms .info h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    color: white;
+}
+
+.box_cat_rooms .info span {
+    font-size: 0.9rem;
+    color: #d4af37;
+    font-weight: 500;
+    position: relative;
+    padding-left: 1rem;
+}
+
+.box_cat_rooms .info span::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    transition: transform 0.3s ease;
+}
+
+.box_cat_rooms:hover .info span::before {
+    transform: translateX(5px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .margin_120_95 {
+        margin-top: 60px;
+        margin-bottom: 60px;
+    }
+    
+    .box_contents_in {
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .box_contents_in h2 {
+        font-size: 1.8rem;
+    }
+    
+    .title h2 {
+        font-size: 2rem;
+    }
+    
+    .box_cat_rooms figure {
+        height: 200px;
+    }
+    
+    .box_contents_in p strong {
+        min-width: auto;
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .box_contents_in {
+        padding: 1rem;
+    }
+    
+    .box_contents_in h2 {
+        font-size: 1.5rem;
+    }
+    
+    .title h2 {
+        font-size: 1.7rem;
+    }
+    
+    .box_cat_rooms .info {
+        padding: 1.5rem 1rem 1rem;
+    }
+}
+
+/* Animation Classes */
+[data-cue="slideInUp"] {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease;
+}
+
+[data-cue="slideInUp"].animate {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Loading Animation */
+.service-image-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Print Styles */
+@media print {
+    .box_cat_rooms,
+    .bg_white {
+        display: none;
+    }
+    
+    .box_contents_in {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
