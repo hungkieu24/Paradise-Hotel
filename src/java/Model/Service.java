@@ -23,7 +23,6 @@ public class Service {
     private String paid_status;
     // Thêm trường này để lưu trạng thái dịch vụ trong từng booking
     private String bookingServiceStatus;
-    private int quantity;
     private String paidStatus;
     
   
@@ -129,7 +128,8 @@ public class Service {
 
     public void setBookingServiceStatus(String bookingServiceStatus) {
         this.bookingServiceStatus = bookingServiceStatus;
-
+    }
+    
     public String getPaid_status() {
         return paid_status;
     }

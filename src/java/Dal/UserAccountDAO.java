@@ -477,7 +477,7 @@ public class UserAccountDAO extends DBContext {
                 UserAccount user = new UserAccount();
                 user.setId(rs.getString("id"));
                 user.setUsername(rs.getString("username"));
-                user.setFullName(rs.getString("fullname"));
+                user.setFullname(rs.getString("fullname"));
                 user.setEmail(rs.getString("email"));
                 user.setPhonenumber(rs.getString("phonenumber"));
                 user.setRole(rs.getString("role"));
@@ -1157,7 +1157,7 @@ public class UserAccountDAO extends DBContext {
 
         // Nếu join thêm các trường bên ngoài bảng UserAccount
         try { ua.setBranchName(rs.getString("branchName")); } catch (Exception ignore) {}
-        try { ua.setFullName(rs.getString("full_name")); } catch (Exception ignore) {}
+        try { ua.setFullname(rs.getString("full_name")); } catch (Exception ignore) {}
         try { ua.setRank(rs.getString("rank")); } catch (Exception ignore) {}
 
         return ua;

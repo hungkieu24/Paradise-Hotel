@@ -185,14 +185,6 @@ public class UserAccount {
     public void setBranchId(Integer branchId) {
         this.branchId = branchId;
     }
-     // Getter và Setter cho fullName
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
 
     // Getter và Setter cho rank
     public String getRank() {

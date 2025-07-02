@@ -51,8 +51,8 @@ public class RoomType {
         this.name = name;
         this.description = description;
         this.base_price = base_price;
-        this.capacityAdult = capacityAdult;
-        this.capacityChild = capacityChild;
+        this.capacity_adult = capacityAdult;
+        this.capacity_child = capacityChild;
         this.image_url = image_url;
         this.branchId = branchId;
         this.isDeleted = isDeleted;
@@ -121,22 +121,6 @@ public class RoomType {
 
     public void setBranch(Branch branch) {
         this.branch = branch;
-    }
-
-    public int getCapacityAdult() {
-        return capacityAdult;
-    }
-
-    public void setCapacityAdult(int capacityAdult) {
-        this.capacityAdult = capacityAdult;
-    }
-
-    public int getCapacityChild() {
-        return capacityChild;
-    }
-
-    public void setCapacityChild(int capacityChild) {
-        this.capacityChild = capacityChild;
     }
 
     public int getBranchId() {

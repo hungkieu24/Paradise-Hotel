@@ -153,7 +153,7 @@ public class ServiceDAO extends DBContext {
     /**
      * Lấy thông tin dịch vụ theo ID
      */
-    public Service getServiceById(int serviceId) {
+    public Service HieugetServiceById(int serviceId) {
         try {
             String sql = "SELECT * FROM Service WHERE id = ? AND is_deleted = 0";
 
@@ -234,33 +234,33 @@ public class ServiceDAO extends DBContext {
         return services;
     }
 
-    public Service getServiceById(int id) {
-        String sql = "SELECT * FROM Service WHERE id = ? AND status = 'Active' AND is_deleted = 0";
-
-        try (PreparedStatement st = connection.prepareStatement(sql)) {
-            st.setInt(1, id);
-
-            try (ResultSet rs = st.executeQuery()) {
-                if (rs.next()) {
-                    Service service = new Service();
-                    service.setId(rs.getInt("id"));
-                    service.setName(rs.getString("name"));
-                    service.setDescription(rs.getString("description"));
-                    service.setPrice(rs.getDouble("price"));
-                    service.setBranchId(rs.getInt("branch_id"));
-                    service.setStatus(rs.getString("status"));
-                    service.setImageUrl(rs.getString("image_url"));
-                    service.setDeleted(rs.getBoolean("is_deleted"));
-                    return service;
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return null; // Trả về null nếu không tìm thấy hoặc có lỗi
-    }
+//    public Service getServiceById(int id) {
+//        String sql = "SELECT * FROM Service WHERE id = ? AND status = 'Active' AND is_deleted = 0";
+//
+//        try (PreparedStatement st = connection.prepareStatement(sql)) {
+//            st.setInt(1, id);
+//
+//            try (ResultSet rs = st.executeQuery()) {
+//                if (rs.next()) {
+//                    Service service = new Service();
+//                    service.setId(rs.getInt("id"));
+//                    service.setName(rs.getString("name"));
+//                    service.setDescription(rs.getString("description"));
+//                    service.setPrice(rs.getDouble("price"));
+//                    service.setBranchId(rs.getInt("branch_id"));
+//                    service.setStatus(rs.getString("status"));
+//                    service.setImageUrl(rs.getString("image_url"));
+//                    service.setDeleted(rs.getBoolean("is_deleted"));
+//                    return service;
+//                }
+//            }
+//
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//
+//        return null; // Trả về null nếu không tìm thấy hoặc có lỗi
+//    }
 
     public Service getServiceById1(int id) {
         String sql = "SELECT * FROM Service WHERE id = ? AND is_deleted = 0";

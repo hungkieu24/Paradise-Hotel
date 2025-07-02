@@ -334,6 +334,15 @@ CREATE TABLE BenefitRank (
     is_deleted BIT DEFAULT 0
 );
 
+CREATE TABLE VoucherRedemptionRule (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    voucher_id INT NOT NULL,
+    required_points INT NOT NULL,
+    required_tier VARCHAR(10) CHECK (required_tier IN ('Member', 'Silver', 'Gold', 'VIP')) NULL,
+    is_active BIT DEFAULT 1,
+    FOREIGN KEY (voucher_id) REFERENCES Voucher(id)
+);
+
 -- 13. FOREIGN KEYS
 ALTER TABLE UserAccount ADD CONSTRAINT FK_UserAccount_Branch FOREIGN KEY (branch_id) REFERENCES HotelBranch (id);
 ALTER TABLE HotelBranch ADD CONSTRAINT FK_HotelBranch_Owner FOREIGN KEY (owner_id) REFERENCES UserAccount (id);
@@ -478,8 +487,8 @@ VALUES
 ('SAVE20', '20 USD off', NULL, 20.00, 100.00, 50, 5, 1, '2025-06-01', '2025-12-31', 'Active'),
 ('SUMMER25', 'Summer discount', 25, NULL, 150.00, 200, 20, 2, '2025-06-01', '2025-08-31', 'Active'),
 ('VIP50', 'VIP discount', NULL, 50.00, 200.00, 30, 2, 3, '2025-06-01', '2025-12-31', 'Active'),
-('WELCOME15', 'Welcome offer', 15, NULL, 80.00, 150, 15, 4, '2025-06-01', '2025-12-31', 'Active');
-
+('WELCOME15', 'Welcome offer', 15, NULL, 80.00, 150, 15, 4, '2025-06-01', '2025-12-31', 'Active'),
+('VIPONLY70', '70% discount for VIP users only', 70, NULL, 300.00, 20, 0, 2, '2025-06-01', '2025-12-31', 'Active');
 -- BookingVoucher (5 rows)
 INSERT INTO BookingVoucher (booking_id, voucher_id, used_at)
 VALUES 
@@ -656,4 +665,14 @@ VALUES
 ('Silver', 2, 10.00, 'Priority booking'),
 ('Gold', 5, 15.00, 'Free upgrades'),
 ('VIP', 10.00, 20, 'Exclusive perks');
+GO
+
+INSERT INTO VoucherRedemptionRule (voucher_id, required_points, required_tier, is_active)
+VALUES 
+(1, 100, NULL, 1),
+(2, 200, 'Member', 1),
+(3, 250, 'Silver', 1),
+(4, 500, 'Gold', 1),
+(5, 150, NULL, 1),
+(6, 1750, 'VIP', 1);
 GO

@@ -22,6 +22,7 @@ public class Voucher {
     private Date valid_to;
     private String status;
     private boolean is_deleted;
+    private VoucherRedemptionRule redemptionRule;
 
     public Voucher() {
     }
@@ -147,5 +148,12 @@ public class Voucher {
         this.is_deleted = is_deleted;
     }
     
+    public VoucherRedemptionRule getRedemptionRule() {
+        return redemptionRule;
+    }
+
+    public void setRedemptionRule(VoucherRedemptionRule redemptionRule) {
+        this.redemptionRule = redemptionRule;
+    }
     
 }
