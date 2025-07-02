@@ -47,30 +47,7 @@
 
         <div class="layer"></div><!-- Opacity Mask -->
 
-        <header class="reveal_header">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-6">
-                        <a href="homepage" class="logo_normal"><img src="img/logo.png" width="135" height="45" alt=""></a>
-                        <a href="index.html" class="logo_sticky"><img src="img/logo_sticky.png" width="135" height="45" alt=""></a>
-                    </div>
-                    <div class="col-6">
-                        <nav>
-                            <ul>
-
-                                <li>
-                                    <div class="hamburger_2 open_close_nav_panel">
-                                        <div class="hamburger__box">
-                                            <div class="hamburger__inner"></div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-            </div><!-- /container -->
-        </header><!-- /Header -->
+        <%@ include file="./header.jsp"%>
 
         <div class="nav_panel">
             <a href="#" class="closebt open_close_nav_panel"><i class="bi bi-x"></i></a>
@@ -174,17 +151,13 @@
                                     <div class="form-group">
                                         <label>Check in / Check out</label>
                                         <input class="form-control" type="text" name="dates" value="${param.dates}" placeholder="YYYY-MM-DD - YYYY-MM-DD" readonly="readonly" required>
-                                        
+
                                     </div>
                                 </div>  
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label>&nbsp;</label> 
                                         <button type="submit" class="btn btn-primary w-100">Search</button>
-                                        <br>
-                                        <br>
-                                        <a href="viewRoomTypeList" class="btn btn-primary w-100">Reset</a>
-
                                     </div>
                                 </div>
 
@@ -194,6 +167,20 @@
                 </div>
 
                 <!-- phan search theo gia tien -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <form id="search" action="./viewRoomTypeList" method="get" class="search-form" novalidate>
+                            <div class="row g-2 align-items-center">
+                                <div class="col-md-6">
+                                    <a href="viewRoomTypeList" class="btn btn-primary w-100">Reset</a>
+                                </div>
+                                <div class="col-md-6">
+                                    <a href="viewCart" class="btn btn-primary w-100">🛒 Cart</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
 
                 <div class="container margin_120_0">
                     <c:forEach items="${listRoomType}" var="r" varStatus="status">
@@ -204,9 +191,8 @@
                                 <div class="col-xl-8 ${status.index % 2 != 0 ? 'order-xl-2' : ''}">
                                     <div class="owl-carousel owl-theme carousel_item_1 kenburns rounded-img">
                                         <div class="item">
-                                            <img src="img/room1.jpg" alt=""/>
+                                            <img src="${r.getImage_url()}" alt=""/>
                                         </div>
-
                                     </div>
                                     <!-- /carousel -->
                                 </div>
@@ -216,6 +202,7 @@
                                             <fmt:formatNumber value="${r.getBase_price()}" type="number" groupingUsed="true" maxFractionDigits="0" />
                                             VND /night</small>
                                         <h2>${r.getName()}</h2>
+                                        <h2>${r.branch.name}</h2>
                                         <p>${r.getDescription()}</p>
                                         <div class="facilities clearfix">
                                             <ul>
@@ -228,16 +215,14 @@
                                             </ul>
                                         </div>
                                         <div class="box_item_footer d-flex align-items-center justify-content-between">
-                                            <a href="#0" class="btn_4 learn-more">
+                                            <a href="booking?roomTypeId=${r.getRoomTypeID()}" class="btn_4 learn-more">
                                                 <span class="circle">
                                                     <span class="icon arrow"></span>
                                                 </span>
                                                 <span class="button-text">Book Now</span>
                                             </a>
-                                            <a href="#0" class="btn_4 learn-more">
-                                                <span class="circle">
-                                                    <span class="icon arrow"></span>
-                                                </span>
+                                            <a href="javascript:void(0);" onclick="addToCart(${r.getRoomTypeID()})" class="btn_4 learn-more">
+                                                <span class="circle"><span class="icon arrow"></span></span>
                                                 <span class="button-text">Add Cart</span>
                                             </a>
                                             <a href="./viewRoomTypeDetail?roomTypeId=${r.getRoomTypeID()}" class="animated_link">
@@ -383,17 +368,49 @@
         <script src="js/datepicker_inline.js"></script>
         <script src="./js/validationForm.js"></script>
         <script>
-            Validator({
-                form: '#search',
-                formGroupSelector: '.form-group',
-                errorSelector: '.form_error',
-                rules: [
-                    Validator.minLessThanMax('#minPrice', '#maxPrice', 'Maximum price must be more than or equal to minimum price')
-                ],
-                onsubmit: function (formValue) {
-                    document.querySelector('#search').submit();
-                }
-            })
+                                                Validator({
+                                                    form: '#search',
+                                                    formGroupSelector: '.form-group',
+                                                    errorSelector: '.form_error',
+                                                    rules: [
+                                                        Validator.minLessThanMax('#minPrice', '#maxPrice', 'Maximum price must be more than or equal to minimum price')
+                                                    ],
+                                                    onsubmit: function (formValue) {
+                                                        document.querySelector('#search').submit();
+                                                    }
+                                                })
+        </script>
+        <script>
+            function addToCart(roomTypeId) {
+                fetch('<%=request.getContextPath()%>/addToCart?roomTypeId=' + roomTypeId)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === "success") {
+                                showToast("✅ Added to cart!");
+                            } else {
+                                showToast("❌ Cannot add to cart", "#e53935");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            showToast("❌ An error occurred");
+                        });
+            }
+        </script>
+        <div id="toast-message" class="toast hidden">Thông báo mẫu</div>
+        <script>
+            function showToast(message, color = "#4caf50") {
+                const toast = document.getElementById("toast-message");
+                toast.innerText = message;
+                toast.style.backgroundColor = color;
+                toast.classList.remove("hidden");
+                toast.classList.add("show");
+
+                setTimeout(() => {
+                    toast.classList.remove("show");
+                    toast.classList.add("hidden");
+                }, 3000);
+            }
         </script>
     </body>
 </html>
