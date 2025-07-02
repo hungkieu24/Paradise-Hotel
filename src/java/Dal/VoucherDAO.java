@@ -1,4 +1,3 @@
-
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
@@ -7,10 +6,10 @@ package Dal;
 
 import DBcontext.DBContext;
 import Model.Voucher;
+import Model.VoucherRedemptionRule;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import Model.VoucherRedemptionRule;
 
 /**
  *
@@ -32,76 +31,6 @@ public class VoucherDAO extends DBContext {
             e.printStackTrace();
         }
         return 0;
-    }
-  
-    public Voucher findVoucherById(int voucherId) {
-        String sql = "SELECT * FROM Voucher WHERE id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, voucherId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    Voucher v = new Voucher();
-                    v.setId(rs.getInt("id"));
-                    v.setCode(rs.getString("code"));
-                    v.setDescription(rs.getString("description"));
-                    v.setDiscountPercent(rs.getInt("discount_percent"));
-                    v.setDiscountAmount(rs.getDouble("discount_amount"));
-                    v.setMinPrice(rs.getDouble("min_price"));
-                    v.setTotalQuantity(rs.getInt("total_quantity"));
-                    v.setUsedQuantity(rs.getInt("used_quantity"));
-                    v.setBranchId(rs.getInt("branch_id"));
-                    v.setValidFrom(rs.getTimestamp("valid_from"));
-                    v.setValidTo(rs.getTimestamp("valid_to"));
-                    v.setStatus(rs.getString("status"));
-                    v.setDeleted(rs.getBoolean("is_deleted"));
-                    return v;
-                }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    // Tìm voucher theo code
-    public Voucher findVoucherByCode(String code) {
-        String sql = "SELECT * FROM Voucher WHERE code = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, code);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    Voucher v = new Voucher();
-                    v.setId(rs.getInt("id"));
-                    v.setCode(rs.getString("code"));
-                    v.setDescription(rs.getString("description"));
-                    v.setDiscountPercent(rs.getInt("discount_percent"));
-                    v.setDiscountAmount(rs.getDouble("discount_amount"));
-                    v.setMinPrice(rs.getDouble("min_price"));
-                    v.setTotalQuantity(rs.getInt("total_quantity"));
-                    v.setUsedQuantity(rs.getInt("used_quantity"));
-                    v.setBranchId(rs.getInt("branch_id"));
-                    v.setValidFrom(rs.getTimestamp("valid_from"));
-                    v.setValidTo(rs.getTimestamp("valid_to"));
-                    v.setStatus(rs.getString("status"));
-                    v.setDeleted(rs.getBoolean("is_deleted"));
-                    return v;
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    // Cập nhật voucher đã sử dụng (tăng used_quantity)
-    public boolean setVoucherUsed(int voucherId) {
-        String sql = "UPDATE Voucher SET used_quantity = used_quantity + 1 WHERE id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, voucherId); 
-           return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
     }
 
     //author: thien
@@ -240,6 +169,7 @@ public class VoucherDAO extends DBContext {
             e.printStackTrace();
         }
         return vouchers;
+
     }
 
     //author: Thien
@@ -304,65 +234,75 @@ public class VoucherDAO extends DBContext {
         }
         return false;
     }
-      
+
     //author: thien
-    public boolean isVoucherCodeExist(String code, int branchId){
-        String sql ="select count(*) from Voucher where code = ? and branch_id = ? and is_deleted = 0";
-        try(PreparedStatement ps  = connection.prepareStatement(sql)){
+    public boolean isVoucherCodeExist(String code, int branchId) {
+        String sql = "select count(*) from Voucher where code = ? and branch_id = ? and is_deleted = 0";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, code);
             ps.setInt(2, branchId);
             ResultSet rs = ps.executeQuery();
-            if(rs.next()){
+            if (rs.next()) {
                 return rs.getInt(1) > 0;
             }
-        }catch(SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
-            
+
         }
         return false;
     }
-  
-  public List<Voucher> getAllVouchers() {
+
+    public List<Voucher> getAllVouchers() {
         List<Voucher> vouchers = new ArrayList<>();
         String sql = "SELECT v.*, r.id AS rule_id, r.required_points, r.required_tier, r.is_active "
                 + "FROM Voucher v LEFT JOIN VoucherRedemptionRule r ON v.id = r.voucher_id";
+
         try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
                 Voucher voucher = new Voucher();
                 voucher.setId(rs.getInt("id"));
                 voucher.setCode(rs.getString("code"));
                 voucher.setDescription(rs.getString("description"));
-                Object discountPercentObj = rs.getObject("discount_percent");
-                voucher.setDiscountPercent(discountPercentObj != null ? rs.getInt("discount_percent") : null);
-                Object discountAmountObj = rs.getObject("discount_amount");
-                voucher.setDiscountAmount(discountAmountObj != null ? rs.getBigDecimal("discount_amount") : null);
-                voucher.setMinPrice(rs.getBigDecimal("min_price"));
-                voucher.setTotalQuantity(rs.getInt("total_quantity"));
-                voucher.setUsedQuantity(rs.getInt("used_quantity"));
+
+                // Lấy trực tiếp kiểu double, nếu null trong DB thì giá trị trả về là 0.0
+                voucher.setDiscount_percent(rs.getDouble("discount_percent"));
+                voucher.setDiscount_amount(rs.getDouble("discount_amount"));
+
+                voucher.setMin_price(rs.getDouble("min_price"));
+                voucher.setTotal_quantity(rs.getInt("total_quantity"));
+                voucher.setUsed_quantity(rs.getInt("used_quantity"));
                 voucher.setBranchId(rs.getInt("branch_id"));
+
                 Timestamp validFrom = rs.getTimestamp("valid_from");
                 Timestamp validTo = rs.getTimestamp("valid_to");
-                voucher.setValidFrom(validFrom != null ? validFrom.toLocalDateTime() : null);
-                voucher.setValidTo(validTo != null ? validTo.toLocalDateTime() : null);
+                voucher.setValid_from(validFrom != null ? new Date(validFrom.getTime()) : null);
+                voucher.setValid_to(validTo != null ? new Date(validTo.getTime()) : null);
+
                 voucher.setStatus(rs.getString("status"));
-                voucher.setDeleted(rs.getBoolean("is_deleted"));
+                voucher.setIs_deleted(rs.getBoolean("is_deleted"));
 
-                // Rule
-                VoucherRedemptionRule rule = new VoucherRedemptionRule();
-                rule.setId(rs.getInt("rule_id"));
-                rule.setVoucherId(voucher.getId());
-                rule.setRequiredPoints(rs.getInt("required_points"));
-                rule.setRequiredTier(rs.getString("required_tier"));
-                rule.setActive(rs.getBoolean("is_active"));
+                // Nếu có rule thì set, còn không thì bỏ qua
+                int ruleId = rs.getInt("rule_id");
+                if (!rs.wasNull()) {
+                    VoucherRedemptionRule rule = new VoucherRedemptionRule();
+                    rule.setId(ruleId);
+                    rule.setVoucherId(voucher.getId());
+                    rule.setRequiredPoints(rs.getInt("required_points"));
+                    rule.setRequiredTier(rs.getString("required_tier"));
+                    rule.setActive(rs.getBoolean("is_active"));
 
-                // Giả sử Voucher có field: private VoucherRedemptionRule redemptionRule;
-                voucher.setRedemptionRule(rule);
+                    voucher.setRedemptionRule(rule);
+                }
 
                 vouchers.add(voucher);
-              }
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return vouchers;
-  }
+    }
+
 }

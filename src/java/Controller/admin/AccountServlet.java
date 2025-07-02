@@ -382,17 +382,5 @@ public class AccountServlet extends HttpServlet {
         return isValid;
     }
 
-    private String generateTemporaryPassword(int length) {
-        final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        SecureRandom random = new SecureRandom();
-        StringBuilder password = new StringBuilder(length);
-
-        for (int i = 0; i < length; i++) {
-            int index = random.nextInt(CHARACTERS.length());
-            password.append(CHARACTERS.charAt(index));
-        }
-
-        return password.toString();
-    }
 
 }

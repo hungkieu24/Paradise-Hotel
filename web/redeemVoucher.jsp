@@ -153,11 +153,11 @@
                                 <td>${voucher.description}</td>
                                 <td>
                                     <c:choose>
-                                        <c:when test="${voucher.discountPercent != null}">
-                                            ${voucher.discountPercent}% OFF
+                                        <c:when test="${voucher.discount_percent != null}">
+                                            ${voucher.discount_percent}% OFF
                                         </c:when>
                                         <c:otherwise>
-                                            ${voucher.discountAmount} VND OFF
+                                            ${voucher.discount_amount} VND OFF
                                         </c:otherwise>
                                     </c:choose>
                                 </td>

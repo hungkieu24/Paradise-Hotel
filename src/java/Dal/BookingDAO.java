@@ -169,25 +169,25 @@ public class BookingDAO extends DBcontext.DBContext {
      * Lấy chuỗi các số phòng đã gán cho booking (VD: "101, 102")
      */
     private String getRoomNumbersStringByBookingId(int bookingId) {
-    String sql = "SELECT STRING_AGG(r.room_number, ', ') AS roomNumbers " +
-                 "FROM RoomAssignment ra " +
-                 "JOIN Room r ON ra.room_id = r.id " +
-                 "WHERE ra.booking_id = ?";
-    
-    try {
-        PreparedStatement ps = connection.prepareStatement(sql);
-        ps.setInt(1, bookingId);
-        ResultSet rs = ps.executeQuery();
-        
-        if (rs.next()) {
-            return rs.getString("roomNumbers");
+        String sql = "SELECT STRING_AGG(r.room_number, ', ') AS roomNumbers "
+                + "FROM RoomAssignment ra "
+                + "JOIN Room r ON ra.room_id = r.id "
+                + "WHERE ra.booking_id = ?";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, bookingId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("roomNumbers");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting room numbers for booking " + bookingId + ": " + e.getMessage());
         }
-    } catch (SQLException e) {
-        System.err.println("Error getting room numbers for booking " + bookingId + ": " + e.getMessage());
+
+        return null;
     }
-    
-    return null;
-}
 
     public List<Room> getRoomsByBookingIdAndBranch(int bookingId, int branchId) {
         List<Room> rooms = new ArrayList<>();
@@ -316,7 +316,7 @@ public class BookingDAO extends DBcontext.DBContext {
             return false;
         }
     }
-  
+
     // Tìm kiếm booking hôm nay theo customer và branch
     public List<Booking> searchBookingsTodayByCustomerAndBranch(String keyword, int branchId) {
         List<Booking> list = new ArrayList<>();
@@ -1587,171 +1587,122 @@ public class BookingDAO extends DBcontext.DBContext {
         }
         return false; // Mặc định trả về false nếu có lỗi
     }
-  public List<Booking> getPendingBookingsForBranch(int branchId) {
-    String sql = "SELECT b.*, u.username as user_name, u.full_name as full_name " +
-                 "FROM Booking b " +
-                 "JOIN UserAccount u ON b.user_id = u.id " +
-                 "WHERE b.branch_id = ? AND (b.status = 'Pending' OR b.status = 'Paid' OR b.status = 'CheckedIn') " +
-                 "ORDER BY b.check_in ASC";
-    
-    // Thêm debug
-    System.out.println("Executing SQL: " + sql.replace("?", String.valueOf(branchId)));
-    
-    try (PreparedStatement ps = connection.prepareStatement(sql)) {
-        ps.setInt(1, branchId);
-        ResultSet rs = ps.executeQuery();
-        List<Booking> bookings = new ArrayList<>();
-        
-        while (rs.next()) {
-            Booking booking = new Booking();
-            // Populate booking...
-            bookings.add(booking);
-        }
-        
-        System.out.println("Found " + bookings.size() + " bookings for branch " + branchId);
-        return bookings;
-    } catch (SQLException e) {
-        System.err.println("Error getting pending bookings: " + e.getMessage());
-        return null;
-    }
-}
-  /**
- * Cập nhật booking sau khi checkout thành công
- */
-public boolean updateBookingAfterCheckout(Booking booking) {
-    try {
-        String sql = "UPDATE Booking SET status = ?, payment_status = ?, total_price = ? WHERE id = ?";
-        
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, booking.getStatus()); // "Completed"
-            ps.setString(2, booking.getPaymentStatus()); // "Paid"
-            ps.setDouble(3, booking.getTotalPrice());
-            ps.setInt(4, booking.getId());
-            
-            int rowsAffected = ps.executeUpdate();
-            return rowsAffected > 0;
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-        return false;
-    }
-}
 
-/**
- * Lấy tổng tiền phòng từ BookingRoomType
- */
-public double getTotalRoomPriceByBookingId(int bookingId) {
-    double total = 0;
-    
-    try {
-        String sql = "SELECT SUM(quantity * price_per_room) as total " +
-                     "FROM BookingRoomType WHERE booking_id = ?";
-        
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, bookingId);
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    total = rs.getDouble("total");
-                }
-            }
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    
-    return total;
-}
-/**
- * Lấy danh sách BookingRoomType theo booking ID với đầy đủ thông tin room type
- */
-public List<BookingRoomType> getBookingRoomTypesByBookingId(int bookingId) {
-    List<BookingRoomType> bookingRoomTypes = new ArrayList<>();
-    
-    try {
-        String sql = "SELECT brt.booking_id, brt.room_type_id, brt.quantity, brt.price_per_room, " +
-                     "rt.name as room_type_name, rt.description as room_type_description, " +
-                     "rt.image_url as room_type_image_url " +
-                     "FROM BookingRoomType brt " +
-                     "JOIN RoomType rt ON brt.room_type_id = rt.id " +
-                     "WHERE brt.booking_id = ? AND rt.is_deleted = 0 " +
-                     "ORDER BY rt.name";
-        
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, bookingId);
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    BookingRoomType brt = new BookingRoomType();
-                    brt.setBookingId(rs.getInt("booking_id"));
-                    brt.setRoomTypeId(rs.getInt("room_type_id"));
-                    brt.setQuantity(rs.getInt("quantity"));
-                    brt.setPricePerRoom(rs.getBigDecimal("price_per_room"));
-                    brt.setRoomTypeName(rs.getString("room_type_name"));
-                    brt.setRoomTypeDescription(rs.getString("room_type_description"));
-                    brt.setRoomTypeImageUrl(rs.getString("room_type_image_url"));
-                    bookingRoomTypes.add(brt);
-                }
-            }
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    
-    return bookingRoomTypes;
-}
+    public List<Booking> getPendingBookingsForBranch(int branchId) {
+        String sql = "SELECT b.*, u.username as user_name, u.full_name as full_name "
+                + "FROM Booking b "
+                + "JOIN UserAccount u ON b.user_id = u.id "
+                + "WHERE b.branch_id = ? AND (b.status = 'Pending' OR b.status = 'Paid' OR b.status = 'CheckedIn') "
+                + "ORDER BY b.check_in ASC";
 
-    // Gán danh sách phòng cho booking (xóa phòng cũ, gán mới)
-    public void assignRoomsToBooking(int bookingId, String[] roomIds) {
-        String deleteSQL = "DELETE FROM BookingRoom WHERE booking_id = ?";
-        String insertSQL = "INSERT INTO BookingRoom (booking_id, room_id) VALUES (?, ?)";
-        PreparedStatement deleteStmt = null;
-        PreparedStatement insertStmt = null;
+        // Thêm debug
+        System.out.println("Executing SQL: " + sql.replace("?", String.valueOf(branchId)));
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            ResultSet rs = ps.executeQuery();
+            List<Booking> bookings = new ArrayList<>();
+
+            while (rs.next()) {
+                Booking booking = new Booking();
+                // Populate booking...
+                bookings.add(booking);
+            }
+
+            System.out.println("Found " + bookings.size() + " bookings for branch " + branchId);
+            return bookings;
+        } catch (SQLException e) {
+            System.err.println("Error getting pending bookings: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Cập nhật booking sau khi checkout thành công
+     */
+    public boolean updateBookingAfterCheckout(Booking booking) {
         try {
-            connection.setAutoCommit(false);
+            String sql = "UPDATE Booking SET status = ?, payment_status = ?, total_price = ? WHERE id = ?";
 
-            // Xóa tất cả phòng đã gán trước đó cho booking này
-            deleteStmt = connection.prepareStatement(deleteSQL);
-            deleteStmt.setInt(1, bookingId);
-            deleteStmt.executeUpdate();
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, booking.getStatus()); // "Completed"
+                ps.setString(2, booking.getPaymentStatus()); // "Paid"
+                ps.setDouble(3, booking.getTotalPrice());
+                ps.setInt(4, booking.getId());
 
-            // Gán lại các phòng mới
-            insertStmt = connection.prepareStatement(insertSQL);
-            for (String rid : roomIds) {
-                int roomId = Integer.parseInt(rid.trim());
-                insertStmt.setInt(1, bookingId);
-                insertStmt.setInt(2, roomId);
-                insertStmt.addBatch();
+                int rowsAffected = ps.executeUpdate();
+                return rowsAffected > 0;
             }
-            insertStmt.executeBatch();
-
-            connection.commit();
         } catch (Exception e) {
             e.printStackTrace();
-            try {
-                connection.rollback();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            throw new RuntimeException("Failed to assign rooms to booking", e);
-        } finally {
-            try {
-                if (deleteStmt != null) {
-                    deleteStmt.close();
-                }
-            } catch (Exception ignore) {
-            }
-            try {
-                if (insertStmt != null) {
-                    insertStmt.close();
-                }
-            } catch (Exception ignore) {
-            }
-            try {
-                connection.setAutoCommit(true);
-            } catch (Exception ignore) {
-            }
+            return false;
         }
+    }
+
+    /**
+     * Lấy tổng tiền phòng từ BookingRoomType
+     */
+    public double getTotalRoomPriceByBookingId(int bookingId) {
+        double total = 0;
+
+        try {
+            String sql = "SELECT SUM(quantity * price_per_room) as total "
+                    + "FROM BookingRoomType WHERE booking_id = ?";
+
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, bookingId);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        total = rs.getDouble("total");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return total;
+    }
+
+    /**
+     * Lấy danh sách BookingRoomType theo booking ID với đầy đủ thông tin room
+     * type
+     */
+    public List<BookingRoomType> getBookingRoomTypesByBookingId(int bookingId) {
+        List<BookingRoomType> bookingRoomTypes = new ArrayList<>();
+
+        try {
+            String sql = "SELECT brt.booking_id, brt.room_type_id, brt.quantity, brt.price_per_room, "
+                    + "rt.name as room_type_name, rt.description as room_type_description, "
+                    + "rt.image_url as room_type_image_url "
+                    + "FROM BookingRoomType brt "
+                    + "JOIN RoomType rt ON brt.room_type_id = rt.id "
+                    + "WHERE brt.booking_id = ? AND rt.is_deleted = 0 "
+                    + "ORDER BY rt.name";
+
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, bookingId);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        BookingRoomType brt = new BookingRoomType();
+                        brt.setBookingId(rs.getInt("booking_id"));
+                        brt.setRoomTypeId(rs.getInt("room_type_id"));
+                        brt.setQuantity(rs.getInt("quantity"));
+                        brt.setPricePerRoom(rs.getBigDecimal("price_per_room"));
+                        brt.setRoomTypeName(rs.getString("room_type_name"));
+                        brt.setRoomTypeDescription(rs.getString("room_type_description"));
+                        brt.setRoomTypeImageUrl(rs.getString("room_type_image_url"));
+                        bookingRoomTypes.add(brt);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return bookingRoomTypes;
     }
 
     public boolean addBooking(String userId, Timestamp checkIn, Timestamp checkOut,
