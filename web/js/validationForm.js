@@ -353,3 +353,26 @@ Validator.maxFileCount = function (selector, maxCount, message) {
         }
     };
 };
+
+Validator.isSelectRequired = function (selector, message) {
+    return {
+        selector: selector,
+        test: function (value) {
+            return value && value !== "" ? undefined : message || 'Please choose an option';
+        }
+    }
+}
+
+Validator.passwordStrength = function (selector, message) {
+    return {
+        selector: selector,
+        test: function (value) {
+            const hasLetter = /[a-zA-Z]/.test(value);
+            const hasDigit = /[0-9]/.test(value);
+
+            return hasLetter && hasDigit
+                ? undefined
+                : message || 'Password must include at least one letter and one digit.';
+        }
+    };
+};

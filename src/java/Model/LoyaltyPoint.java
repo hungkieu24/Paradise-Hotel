@@ -17,6 +17,7 @@ public class LoyaltyPoint {
     private String level;
     private Date last_updated;
     private Date expired_at;
+    private int discountPercent;
 
     public LoyaltyPoint() {
     }
@@ -29,6 +30,23 @@ public class LoyaltyPoint {
         this.expired_at = expired_at;
     }
 
+    public LoyaltyPoint(String user_id, int points, String level, Date last_updated, Date expired_at, int discountPercent) {
+        this.user_id = user_id;
+        this.points = points;
+        this.level = level;
+        this.last_updated = last_updated;
+        this.expired_at = expired_at;
+        this.discountPercent = discountPercent;
+    }
+
+    public int getDiscountPercent() {
+        return discountPercent;
+    }
+
+    public void setDiscountPercent(int discountPercent) {
+        this.discountPercent = discountPercent;
+    }
+    
     public String getUser_id() {
         return user_id;
     }

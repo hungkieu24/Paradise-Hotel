@@ -138,7 +138,7 @@ public class EditRoomServlet extends HttpServlet {
             List<RoomType> roomTypes = rt.getAllRoomType();
             request.setAttribute("room", room);
             request.setAttribute("roomtypes", roomTypes);
-            request.getRequestDispatcher("editRoom.jsp").forward(request, response);
+            request.getRequestDispatcher("roomManage.jsp").forward(request, response);
             return;
         }
 

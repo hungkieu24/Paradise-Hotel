@@ -4,7 +4,6 @@ import java.sql.Date;
 import Model.Booking;
 import Model.BookingRoomType;
 import Model.Room;
-
 import Model.Service;
 import Model.UserAccount;
 import com.sun.jdi.connect.spi.Connection;
@@ -218,6 +217,7 @@ public class BookingDAO extends DBcontext.DBContext {
         }
         return rooms;
     }
+    // Lấy danh sách roomId theo bookingId và branchId
 
     /**
      * Lấy danh sách ID phòng đã gán cho booking
@@ -316,77 +316,7 @@ public class BookingDAO extends DBcontext.DBContext {
             return false;
         }
     }
-
-//    public Booking getBookingById(int bookingId) {
-//        Booking booking = null;
-//        String sql = "SELECT b.*, u.username, u.email, "
-//                + "STRING_AGG(rt.name, ', ') AS roomTypes "
-//                + "FROM Booking b "
-//                + "LEFT JOIN UserAccount u ON b.user_id = u.id "
-//                + "LEFT JOIN BookingRoom br ON b.id = br.booking_id "
-//                + "LEFT JOIN Room r ON br.room_id = r.id "
-//                + "LEFT JOIN RoomType rt ON r.room_type_id = rt.roomTypeID "
-//                + "WHERE b.id = ? "
-//                + "GROUP BY b.id, b.user_id, b.booking_time, b.check_in, b.check_out, b.status, "
-//                + "b.total_price, b.deposit, b.payment_status, b.cancel_reason, b.cancel_time, "
-//                + "b.promotion_id, u.username, u.email";
-//        try {
-//            PreparedStatement ps = connection.prepareStatement(sql);
-//            ps.setInt(1, bookingId);
-//            ResultSet rs = ps.executeQuery();
-//            if (rs.next()) {
-//                booking = new Booking();
-//                booking.setId(rs.getInt("id"));
-//                booking.setUserId(rs.getString("user_id"));
-//                booking.setBookingTime(rs.getTimestamp("booking_time"));
-//                booking.setCheckIn(rs.getTimestamp("check_in"));
-//                booking.setCheckOut(rs.getTimestamp("check_out"));
-//                booking.setStatus(rs.getString("status"));
-//                booking.setTotalPrice(rs.getDouble("total_price"));
-//                booking.setDeposit(rs.getDouble("deposit"));
-//                booking.setPaymentStatus(rs.getString("payment_status"));
-//                booking.setCancelReason(rs.getString("cancel_reason"));
-//                booking.setCancelTime(rs.getTimestamp("cancel_time"));
-//                booking.setPromotionId(rs.getInt("promotion_id"));
-//                booking.setUserName(rs.getString("username"));
-//                booking.setRoomTypes(rs.getString("roomTypes"));
-//                booking.setRooms(getRoomsByBookingId(bookingId));
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//        return booking;
-//    }
-//
-//    public List<Room> getRoomsByBookingId(int bookingId) {
-//        List<Room> rooms = new ArrayList<>();
-//        String sql = "SELECT r.*, rt.name AS roomTypeName, hb.name AS hotelName "
-//                + "FROM BookingRoom br "
-//                + "JOIN Room r ON br.room_id = r.id "
-//                + "LEFT JOIN RoomType rt ON r.room_type_id = rt.roomTypeID "
-//                + "LEFT JOIN HotelBranch hb ON r.branch_id = hb.id "
-//                + "WHERE br.booking_id = ?";
-//        try {
-//            PreparedStatement ps = connection.prepareStatement(sql);
-//            ps.setInt(1, bookingId);
-//            ResultSet rs = ps.executeQuery();
-//            while (rs.next()) {
-//                Room room = new Room();
-//                room.setId(rs.getInt("id"));
-//                room.setRoomNumber(rs.getString("room_number"));
-//                room.setBranchId(rs.getInt("branch_id"));
-//                room.setRoomTypeId(rs.getInt("room_type_id"));
-//                room.setStatus(rs.getString("status"));
-//                room.setImageUrl(rs.getString("image_url"));
-//                room.setRoomTypeName(rs.getString("roomTypeName"));
-//                room.setHotelName(rs.getString("hotelName"));
-//                rooms.add(room);
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//        return rooms;
-//    }
+  
     // Tìm kiếm booking hôm nay theo customer và branch
     public List<Booking> searchBookingsTodayByCustomerAndBranch(String keyword, int branchId) {
         List<Booking> list = new ArrayList<>();
@@ -464,43 +394,6 @@ public class BookingDAO extends DBcontext.DBContext {
             e.printStackTrace();
         }
         return 0;
-    }
-    // Tìm kiếm booking hôm nay theo customer (username) và branch (paging)
-
-    // Tìm kiếm booking hôm nay theo customer (full name hoặc username) và branch (paging)
-    public List<Booking> searchBookingsTodayByCustomerAndBranchPaging(String keyword, int branchId, int page, int pageSize) {
-        List<Booking> list = new ArrayList<>();
-        String sql = "SELECT b.*, u.username, u.fullname, "
-                + "STRING_AGG(rt.name, ', ') AS roomTypes "
-                + "FROM Booking b "
-                + "LEFT JOIN UserAccount u ON b.user_id = u.id "
-                + "LEFT JOIN BookingRoomType brt ON b.id = brt.booking_id "
-                + "LEFT JOIN RoomType rt ON brt.room_type_id = rt.id "
-                + "WHERE b.branch_id = ? "
-                + "AND (CAST(b.check_in AS date) = CAST(GETDATE() AS date) "
-                + "     OR CAST(b.check_out AS date) = CAST(GETDATE() AS date)) "
-                + "AND (u.fullname LIKE ? OR u.username LIKE ?) "
-                + "GROUP BY b.id, b.user_id, b.booking_time, b.check_in, b.check_out, b.status, "
-                + "b.total_price, b.deposit, b.payment_status, b.cancel_reason, b.cancel_time, "
-                + "b.promotion_id, u.username, u.fullname "
-                + "ORDER BY b.id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, branchId);
-            ps.setString(2, "%" + keyword + "%");
-            ps.setString(3, "%" + keyword + "%");
-            ps.setInt(4, (page - 1) * pageSize);
-            ps.setInt(5, pageSize);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Booking b = mapResultSetToBooking(rs);
-                    b.setRoomTypes(rs.getString("roomTypes"));
-                    list.add(b);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return list;
     }
 
     // Đếm tổng số booking hôm nay theo customer (full name hoặc username) và branch
@@ -1807,4 +1700,84 @@ public List<BookingRoomType> getBookingRoomTypesByBookingId(int bookingId) {
     
     return bookingRoomTypes;
 }
+
+    // Gán danh sách phòng cho booking (xóa phòng cũ, gán mới)
+    public void assignRoomsToBooking(int bookingId, String[] roomIds) {
+        String deleteSQL = "DELETE FROM BookingRoom WHERE booking_id = ?";
+        String insertSQL = "INSERT INTO BookingRoom (booking_id, room_id) VALUES (?, ?)";
+        PreparedStatement deleteStmt = null;
+        PreparedStatement insertStmt = null;
+        try {
+            connection.setAutoCommit(false);
+
+            // Xóa tất cả phòng đã gán trước đó cho booking này
+            deleteStmt = connection.prepareStatement(deleteSQL);
+            deleteStmt.setInt(1, bookingId);
+            deleteStmt.executeUpdate();
+
+            // Gán lại các phòng mới
+            insertStmt = connection.prepareStatement(insertSQL);
+            for (String rid : roomIds) {
+                int roomId = Integer.parseInt(rid.trim());
+                insertStmt.setInt(1, bookingId);
+                insertStmt.setInt(2, roomId);
+                insertStmt.addBatch();
+            }
+            insertStmt.executeBatch();
+
+            connection.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                connection.rollback();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            throw new RuntimeException("Failed to assign rooms to booking", e);
+        } finally {
+            try {
+                if (deleteStmt != null) {
+                    deleteStmt.close();
+                }
+            } catch (Exception ignore) {
+            }
+            try {
+                if (insertStmt != null) {
+                    insertStmt.close();
+                }
+            } catch (Exception ignore) {
+            }
+            try {
+                connection.setAutoCommit(true);
+            } catch (Exception ignore) {
+            }
+        }
+    }
+
+    public boolean addBooking(String userId, Timestamp checkIn, Timestamp checkOut,
+            String status, double totalPrice, String paymentStatus, int branchId,
+            String note, boolean isDeleted) {
+
+        String sql = "INSERT INTO Booking (user_id, check_in, check_out, status, total_price, "
+                + "payment_status, branch_id, note, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setString(1, userId);                // user_id
+            ps.setTimestamp(2, checkIn);            // check_in
+            ps.setTimestamp(3, checkOut);           // check_out
+            ps.setString(4, status);                // status
+            ps.setDouble(5, totalPrice);            // total_price
+            ps.setString(6, paymentStatus);         // payment_status
+            ps.setInt(7, branchId);                 // branch_id
+            ps.setString(8, note);                  // note
+            ps.setBoolean(9, isDeleted);           // is_deleted
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

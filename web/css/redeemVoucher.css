@@ -1,0 +1,528 @@
+/* Voucher Page Styling with #978667 and #c2a680 color scheme */
+
+/* Root Variables */
+:root {
+  --primary-brown: #978667;
+  --secondary-brown: #c2a680;
+  --light-brown: #e8dcc6;
+  --dark-brown: #6b5d4f;
+  --white: #ffffff;
+  --light-gray: #f8f9fa;
+  --text-dark: #2c2c2c;
+  --text-light: #666666;
+  --success: #4caf50;
+  --warning: #f57c00;
+  --error: #e53935;
+  --shadow: rgba(151, 134, 103, 0.15);
+  --shadow-hover: rgba(151, 134, 103, 0.25);
+}
+
+/* General Styling */
+body {
+  font-family: "Montserrat", sans-serif;
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+
+/* Hero Section */
+.hero {
+  position: relative;
+  background: linear-gradient(135deg, var(--primary-brown), var(--secondary-brown));
+  min-height: 400px;
+}
+
+
+.hero h1 {
+  color: var(--white);
+  font-size: 3.5rem;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  margin-bottom: 1rem;
+}
+
+.hero small {
+  color: var(--light-brown);
+  font-size: 1.2rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* Main Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Page Title */
+.container h2 {
+  color: var(--primary-brown);
+  font-size: 2.5rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.container h2::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-brown), var(--secondary-brown));
+  border-radius: 2px;
+}
+
+/* User Info Section */
+.container p {
+  background: linear-gradient(135deg, var(--light-brown), var(--white));
+  padding: 1.5rem;
+  border-radius: 12px;
+  border-left: 5px solid var(--primary-brown);
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 15px var(--shadow);
+}
+
+.container p strong {
+  color: var(--primary-brown);
+  font-weight: 600;
+}
+
+/* Table Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px var(--shadow);
+  margin-bottom: 2rem;
+}
+
+thead {
+  background: linear-gradient(135deg, var(--primary-brown), var(--dark-brown));
+}
+
+thead th {
+  color: var(--white);
+  font-weight: 600;
+  padding: 1.5rem 1rem;
+  text-align: left;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+tbody tr {
+  transition: all 0.3s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+tbody tr:hover {
+  background: linear-gradient(135deg, var(--light-brown), rgba(232, 220, 198, 0.3));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px var(--shadow-hover);
+}
+
+tbody tr:last-child {
+  border-bottom: none;
+}
+
+tbody td {
+  padding: 1.5rem 1rem;
+  vertical-align: middle;
+  font-size: 0.95rem;
+}
+
+tbody td:first-child {
+  font-weight: 600;
+  color: var(--primary-brown);
+  font-family: "Courier New", monospace;
+  background: rgba(151, 134, 103, 0.05);
+}
+
+/* Discount Badge */
+tbody td:nth-child(3) {
+  font-weight: 600;
+  color: var(--success);
+}
+
+/* Required Tier */
+tbody td:nth-child(4) {
+  color: var(--primary-brown);
+  font-weight: 500;
+}
+
+/* Adjusted Cost */
+tbody td:nth-child(5) {
+  font-weight: 600;
+  color: var(--primary-brown);
+}
+
+tbody td:nth-child(5) small {
+  color: var(--success);
+  font-weight: 500;
+}
+
+/* Button Styling */
+button[type="submit"] {
+  background: linear-gradient(135deg, var(--primary-brown), var(--secondary-brown));
+  color: var(--white);
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px var(--shadow);
+}
+
+button[type="submit"]:hover {
+  background: linear-gradient(135deg, var(--dark-brown), var(--primary-brown));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--shadow-hover);
+}
+
+button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+/* Insufficient Status */
+.insufficient {
+  color: var(--error);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  background: rgba(229, 57, 53, 0.1);
+  border-radius: 20px;
+  border: 1px solid rgba(229, 57, 53, 0.2);
+}
+
+/* Toast Notification - Top Center */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  color: var(--white);
+  font-weight: 600;
+  font-size: 0.95rem;
+  z-index: 1000;
+  transition: all 0.4s ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  min-width: 350px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.hidden {
+  transform: translateX(-50%) translateY(-100px);
+}
+
+/* Success Toast - Green */
+.toast.success {
+  background: linear-gradient(135deg, #4caf50, #45a049);
+  border-left: 4px solid #2e7d32;
+}
+
+/* Error Toast - Red */
+.toast.error {
+  background: linear-gradient(135deg, #e53935, #d32f2f);
+  border-left: 4px solid #c62828;
+}
+
+/* Warning Toast - Orange */
+.toast.warning {
+  background: linear-gradient(135deg, #f57c00, #ef6c00);
+  border-left: 4px solid #e65100;
+}
+
+/* Responsive Toast */
+@media (max-width: 768px) {
+  .toast {
+    left: 10px;
+    right: 10px;
+    min-width: auto;
+    transform: translateY(-100px);
+  }
+
+  .toast.show {
+    transform: translateY(0);
+  }
+
+  .toast.hidden {
+    transform: translateY(-100px);
+  }
+}
+
+@media (max-width: 576px) {
+  .toast {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.9rem;
+    min-width: auto;
+  }
+}
+
+/* Footer Styling */
+footer.revealed {
+  background: linear-gradient(135deg, var(--primary-brown), var(--dark-brown));
+  color: var(--white);
+  margin-top: 4rem;
+}
+
+footer .footer_bg .gradient_over {
+  background: linear-gradient(135deg, rgba(151, 134, 103, 0.9), rgba(107, 93, 79, 0.95));
+}
+
+footer h5 {
+  color: var(--light-brown);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+footer a {
+  color: var(--light-brown);
+  transition: color 0.3s ease;
+}
+
+footer a:hover {
+  color: var(--white);
+}
+
+footer .social ul li a {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+footer .social ul li a:hover {
+  background: var(--secondary-brown);
+  transform: translateY(-2px);
+}
+
+/* Newsletter Form */
+#newsletter .form-group {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+#newsletter input[type="email"] {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: var(--white);
+  border-radius: 25px;
+  padding: 0.8rem 1.5rem;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+#newsletter input[type="email"]:focus {
+  border-color: var(--secondary-brown);
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+
+#newsletter input[type="email"]::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+#newsletter button[type="submit"] {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--secondary-brown);
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#newsletter button[type="submit"]:hover {
+  background: var(--primary-brown);
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .hero small {
+    font-size: 1rem;
+  }
+
+  .container h2 {
+    font-size: 2rem;
+  }
+
+  table {
+    font-size: 0.85rem;
+  }
+
+  thead th,
+  tbody td {
+    padding: 1rem 0.5rem;
+  }
+
+  button[type="submit"] {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.8rem;
+  }
+
+  .toast {
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+    transform: translateY(-100px);
+  }
+
+  .toast.show {
+    transform: translateY(0);
+  }
+
+  .toast.hidden {
+    transform: translateY(-100px);
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    padding: 1rem 0.5rem;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .container h2 {
+    font-size: 1.8rem;
+  }
+}
+
+/* Animation Classes */
+.slide-animated {
+  animation: slideInUp 0.8s ease-out;
+}
+
+.slide-animated.one {
+  animation-delay: 0.2s;
+}
+
+.slide-animated.two {
+  animation-delay: 0.4s;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading Animation */
+.loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(151, 134, 103, 0.2), transparent);
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--light-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary-brown), var(--secondary-brown));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--dark-brown), var(--primary-brown));
+}
+
+/* Focus States for Accessibility */
+button:focus,
+input:focus {
+  outline: 2px solid var(--secondary-brown);
+  outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+  .hero,
+  footer,
+  .toast {
+    display: none;
+  }
+
+  table {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+
+  tbody tr:hover {
+    background: none;
+    transform: none;
+    box-shadow: none;
+  }
+}

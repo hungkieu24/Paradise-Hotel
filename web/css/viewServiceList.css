@@ -1,0 +1,344 @@
+/* Định nghĩa kích thước lớn hơn cho mỗi ô */
+.item {
+    width: 400px; /* Chiều rộng tăng lên */
+    height: 400px; /* Chiều cao bằng chiều rộng để ô vuông */
+    margin: 15px; /* Khoảng cách giữa các ô */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 10px; /* Bo góc */
+    overflow: hidden; /* Ngăn nội dung tràn */
+    background-color: #fff; /* Nền trắng */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Hiệu ứng bóng */
+    position: relative; /* Để định vị trạng thái */
+}
+
+/* Định dạng hình ảnh trong ô */
+.item figure {
+    width: 100%;
+    height: 70%; /* Hình ảnh chiếm 70% chiều cao ô */
+    margin: 0;
+    overflow: hidden;
+}
+
+.item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Giữ tỷ lệ và lấp đầy */
+    object-position: center; /* Căn giữa hình ảnh */
+}
+
+/* Định dạng phần nội dung (tiêu đề và nút) */
+.item .wrapper {
+    width: 100%;
+    height: 30%; /* Phần nội dung chiếm 30% chiều cao ô */
+    padding: 15px; /* Tăng padding cho kích thước lớn */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.item h2 {
+    font-size: 1.5em; /* Tăng font-size cho tiêu đề */
+    margin: 5px 0;
+    color: #333;
+    font-weight: bold;
+}
+
+.item em {
+    font-size: 1em; /* Tăng font-size cho "Read more" */
+    color: #8b6f47; /* Màu "Read more" giống hình */
+    text-decoration: none;
+}
+
+/* Định dạng trạng thái (ACTIVE/INACTIVE) */
+.item .status {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9em; /* Tăng font-size cho trạng thái */
+    text-transform: uppercase;
+}
+
+/* Định nghĩa layout cho 3 khung vừa màn hình */
+.row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 1230px; /* 3 x 400px + 2 x 15px margin */
+    margin: 0 auto;
+}
+
+.item.col-xl-4.col-lg-6 {
+    flex: 0 0 400px; /* Đặt chiều rộng cố định */
+    max-width: 400px; /* Đảm bảo không vượt quá */
+}
+
+/* Responsive design */
+@media (max-width: 1260px) {
+    .item {
+        width: 350px;
+        height: 350px;
+    }
+    .item.col-xl-4.col-lg-6 {
+        flex: 0 0 350px;
+        max-width: 350px;
+    }
+    .row {
+        max-width: 1075px; /* 3 x 350px + 2 x 15px */
+    }
+}
+
+@media (max-width: 768px) {
+    .item {
+        width: 300px;
+        height: 300px;
+    }
+    .item.col-xl-4.col-lg-6 {
+        flex: 0 0 300px;
+        max-width: 300px;
+    }
+    .row {
+        max-width: 630px; /* 2 x 300px + 1 x 15px */
+    }
+}
+/* Main form container - điều chỉnh spacing */
+#search {
+  max-width: 1200px;
+  margin: 10px auto 40px auto; /* Giảm margin-top từ 20px xuống 10px, tăng margin-bottom lên 40px */
+  padding: 30px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 25px;
+}
+
+/* Filter sections - hàng đầu tiên */
+.filter-section {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  margin-bottom: 0;
+}
+
+/* Branch filter - cột 1 */
+.filter-section:nth-child(1) {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* Price filter - cột 2 */
+.filter-section:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Keyword search - cột 3 */
+.filter-section:nth-child(3) {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Labels */
+label {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* Select dropdown styling */
+select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 14px;
+  color: #374151;
+  transition: border-color 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+select:focus {
+  outline: none;
+  border-color: #a67c52;
+  box-shadow: 0 0 0 3px rgba(166, 124, 82, 0.1);
+}
+
+/* Input styling */
+.form-control {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #374151;
+  background: #ffffff;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #a67c52;
+  box-shadow: 0 0 0 3px rgba(166, 124, 82, 0.1);
+}
+
+.form-control::placeholder {
+  color: #9ca3af;
+}
+
+/* Form groups */
+.form-group {
+  margin: 0;
+  margin-bottom: 15px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Button styling */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 15px;
+}
+
+.btn-primary {
+  background-color: #a67c52;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(166, 124, 82, 0.3);
+}
+
+.btn-primary:hover {
+  background-color: #8b6a42;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(166, 124, 82, 0.4);
+}
+
+/* Full width buttons */
+.w-100 {
+  width: 100%;
+  display: block;
+}
+
+/* Specific button positioning */
+.filter-section:nth-child(2) .btn {
+  margin-top: auto;
+}
+
+.filter-section:nth-child(3) .btn {
+  margin-top: auto;
+}
+
+/* Error message styling */
+.form_error {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  #search {
+    grid-template-columns: 1fr 1fr;
+    max-width: 900px;
+    margin: 8px auto 35px auto; /* Điều chỉnh cho tablet */
+  }
+
+  .filter-section:nth-child(3) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 768px) {
+  #search {
+    margin: 5px 10px 30px 10px; /* Điều chỉnh cho mobile */
+    padding: 20px;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    max-width: none;
+  }
+
+  .filter-section {
+    padding: 15px;
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+
+  .btn {
+    padding: 14px 20px;
+    font-size: 16px;
+  }
+}
+
+/* Hover effects */
+.form-control:hover {
+  border-color: #d1d5db;
+}
+
+select:hover {
+  border-color: #d1d5db;
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(166, 124, 82, 0.3);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.form-group label {
+  margin-bottom: 6px;
+}
+
+.filter-section:first-child label {
+  margin-bottom: 10px;
+}
+
+/* Reset button styling - để đảm bảo nó span full width */
+.btn.w-100[href="viewServiceList"] {
+  grid-column: 1 / -1;
+  margin-top: 20px;
+}

@@ -17,6 +17,7 @@ public class Booking {
     private Timestamp cancelTime;
     private Integer promotionId;
     private String roomTypes;
+    private boolean isDeleted;
     // Thông tin bổ sung (không bắt buộc)
     private String userName;
     private String roomNumbers; // VD: "101, 102"
@@ -28,7 +29,7 @@ public class Booking {
     private String fullName;
     private String note;
     private int branchId;
-    
+  
     public Booking() {
     }
 
@@ -37,6 +38,14 @@ public class Booking {
     public String getRoomTypeName() {
     return roomTypeName;
 }
+
+    public boolean isIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
 
 public void setRoomTypeName(String roomTypeName) {
     this.roomTypeName = roomTypeName;

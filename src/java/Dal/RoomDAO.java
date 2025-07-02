@@ -208,7 +208,7 @@ public Room getRoomById(int roomId) {
             return false;
         }
     }
-
+  
     //author: Thien
     // Fix theo database moi
     public List<Room> getRooms(String status, String roomTypeId, String search) {

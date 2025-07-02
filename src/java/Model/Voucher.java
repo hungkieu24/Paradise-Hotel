@@ -1,42 +1,45 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package Model;
-
-import java.util.Date;
-
+import java.sql.Date;
+/**
+ *
+ * @author thien
+ */
 public class Voucher {
-
     private int id;
     private String code;
     private String description;
-    private Integer discountPercent; // phần trăm giảm giá (có thể null)
-    private Double discountAmount;   // số tiền giảm giá (có thể null)
-    private Double minPrice;         // giá trị tối thiểu để áp dụng
-    private int totalQuantity;
-    private int usedQuantity;
+    private double discount_percent;
+    private double discount_amount;
+    private double min_price;
+    private int total_quantity;
+    private int used_quantity;
     private int branchId;
-    private Date validFrom;
-    private Date validTo;
+    private Date valid_from;
+    private Date valid_to;
     private String status;
-    private boolean isDeleted;
-
-    // Logic tính giảm giá
-    public double calculateDiscount(double totalPrice) {
-        if (discountPercent != null && discountPercent > 0) {
-            return totalPrice * discountPercent / 100.0;
-        } else if (discountAmount != null && discountAmount > 0) {
-            return discountAmount;
-        }
-        return 0;
-    }
-
-    public boolean isValid() {
-        Date now = new Date();
-        return "Active".equalsIgnoreCase(status)
-                && (validFrom == null || !now.before(validFrom))
-                && (validTo == null || !now.after(validTo))
-                && (totalQuantity == 0 || usedQuantity < totalQuantity);
-    }
+    private boolean is_deleted;
 
     public Voucher() {
+    }
+
+    public Voucher(int id, String code, String description, double discount_percent, double discount_amount, double min_price, int total_quantity, int used_quantity, int branchId, Date valid_from, Date valid_to, String status, boolean is_deleted) {
+        this.id = id;
+        this.code = code;
+        this.description = description;
+        this.discount_percent = discount_percent;
+        this.discount_amount = discount_amount;
+        this.min_price = min_price;
+        this.total_quantity = total_quantity;
+        this.used_quantity = used_quantity;
+        this.branchId = branchId;
+        this.valid_from = valid_from;
+        this.valid_to = valid_to;
+        this.status = status;
+        this.is_deleted = is_deleted;
     }
 
     public int getId() {
@@ -47,6 +50,7 @@ public class Voucher {
         this.id = id;
     }
 
+    
     public String getCode() {
         return code;
     }
@@ -63,44 +67,44 @@ public class Voucher {
         this.description = description;
     }
 
-    public Integer getDiscountPercent() {
-        return discountPercent;
+    public double getDiscount_percent() {
+        return discount_percent;
     }
 
-    public void setDiscountPercent(Integer discountPercent) {
-        this.discountPercent = discountPercent;
+    public void setDiscount_percent(double discount_percent) {
+        this.discount_percent = discount_percent;
     }
 
-    public Double getDiscountAmount() {
-        return discountAmount;
+    public double getDiscount_amount() {
+        return discount_amount;
     }
 
-    public void setDiscountAmount(Double discountAmount) {
-        this.discountAmount = discountAmount;
+    public void setDiscount_amount(double discount_amount) {
+        this.discount_amount = discount_amount;
     }
 
-    public Double getMinPrice() {
-        return minPrice;
+    public double getMin_price() {
+        return min_price;
     }
 
-    public void setMinPrice(Double minPrice) {
-        this.minPrice = minPrice;
+    public void setMin_price(double min_price) {
+        this.min_price = min_price;
     }
 
-    public int getTotalQuantity() {
-        return totalQuantity;
+    public int getTotal_quantity() {
+        return total_quantity;
     }
 
-    public void setTotalQuantity(int totalQuantity) {
-        this.totalQuantity = totalQuantity;
+    public void setTotal_quantity(int total_quantity) {
+        this.total_quantity = total_quantity;
     }
 
-    public int getUsedQuantity() {
-        return usedQuantity;
+    public int getUsed_quantity() {
+        return used_quantity;
     }
 
-    public void setUsedQuantity(int usedQuantity) {
-        this.usedQuantity = usedQuantity;
+    public void setUsed_quantity(int used_quantity) {
+        this.used_quantity = used_quantity;
     }
 
     public int getBranchId() {
@@ -111,20 +115,20 @@ public class Voucher {
         this.branchId = branchId;
     }
 
-    public Date getValidFrom() {
-        return validFrom;
+    public Date getValid_from() {
+        return valid_from;
     }
 
-    public void setValidFrom(Date validFrom) {
-        this.validFrom = validFrom;
+    public void setValid_from(Date valid_from) {
+        this.valid_from = valid_from;
     }
 
-    public Date getValidTo() {
-        return validTo;
+    public Date getValid_to() {
+        return valid_to;
     }
 
-    public void setValidTo(Date validTo) {
-        this.validTo = validTo;
+    public void setValid_to(Date valid_to) {
+        this.valid_to = valid_to;
     }
 
     public String getStatus() {
@@ -135,12 +139,13 @@ public class Voucher {
         this.status = status;
     }
 
-    public void setDeleted(boolean deleted) {
-        this.isDeleted = deleted;
+    public boolean isIs_deleted() {
+        return is_deleted;
     }
 
-    public boolean isDeleted() {
-        return isDeleted;
+    public void setIs_deleted(boolean is_deleted) {
+        this.is_deleted = is_deleted;
     }
-
+    
+    
 }
