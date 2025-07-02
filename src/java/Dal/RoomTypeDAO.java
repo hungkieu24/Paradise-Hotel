@@ -58,7 +58,7 @@ public class RoomTypeDAO extends DBcontext.DBContext {
 
     public List<RoomType> searchAvailableRoomTypes(LocalDate checkInDate, LocalDate checkOutDate, int guests) {
         List<RoomType> roomTypeList = new ArrayList<>();
-        String sql = "SELECT rt.id, rt.name, rt.description, rt.base_price, rt.capacity, rt.image_url "
+        String sql = "SELECT rt.id, rt.name, rt.description, rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url "
                 + "FROM RoomType rt "
                 + "WHERE rt.capacity >= ? "
                 + "AND EXISTS ( "
@@ -85,7 +85,8 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("image_url")
                 );
                 roomTypeList.add(roomType);
@@ -141,6 +142,7 @@ public class RoomTypeDAO extends DBcontext.DBContext {
         SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price,
                         rt.capacity_adult, rt.capacity_child,
                         rt.image_url, rt.branch_id, rt.is_deleted
+
         FROM RoomType rt
         WHERE rt.is_deleted = 0
           AND EXISTS (
@@ -244,6 +246,7 @@ BranchDAO branchDAO = new BranchDAO();
 
         return availableRoomTypes;
     }
+
     // hoang: lay theo id
    public RoomType getRoomTypeById(int id) {
     RoomType roomType = null;
@@ -325,7 +328,7 @@ BranchDAO branchDAO = new BranchDAO();
         List<RoomType> availableRoomTypes = new ArrayList<>();
 
         String sql = """
-            SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price, rt.capacity, rt.image_url
+            SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url
             FROM RoomType rt
             WHERE rt.capacity >= ?
               AND EXISTS (
@@ -358,7 +361,8 @@ BranchDAO branchDAO = new BranchDAO();
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getDouble("base_price"),
-                        rs.getInt("capacity"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
                         rs.getString("image_url")
                 );
                 availableRoomTypes.add(roomType);

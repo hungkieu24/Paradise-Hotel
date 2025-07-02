@@ -3,41 +3,37 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package Model;
-import java.sql.Date;
+
+import java.util.Date;
+
 /**
  *
  * @author thien
  */
-public class Voucher {
+public class SeasonalPromotion {
     private int id;
-    private String code;
+    private String name;
     private String description;
     private double discount_percent;
     private double discount_amount;
-    private double min_price;
-    private int total_quantity;
-    private int used_quantity;
+    private Date startDate;
+    private Date endDate;
     private int branchId;
-    private Date valid_from;
-    private Date valid_to;
     private String status;
     private boolean is_deleted;
 
-    public Voucher() {
+    public SeasonalPromotion() {
     }
 
-    public Voucher(int id, String code, String description, double discount_percent, double discount_amount, double min_price, int total_quantity, int used_quantity, int branchId, Date valid_from, Date valid_to, String status, boolean is_deleted) {
+    public SeasonalPromotion(int id, String name, String description, double discount_percent, double discount_amount, Date startDate, Date endDate, int branchId, String status, boolean is_deleted) {
         this.id = id;
-        this.code = code;
+        this.name = name;
         this.description = description;
         this.discount_percent = discount_percent;
         this.discount_amount = discount_amount;
-        this.min_price = min_price;
-        this.total_quantity = total_quantity;
-        this.used_quantity = used_quantity;
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.branchId = branchId;
-        this.valid_from = valid_from;
-        this.valid_to = valid_to;
         this.status = status;
         this.is_deleted = is_deleted;
     }
@@ -50,13 +46,12 @@ public class Voucher {
         this.id = id;
     }
 
-    
-    public String getCode() {
-        return code;
+    public String getName() {
+        return name;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDescription() {
@@ -83,28 +78,20 @@ public class Voucher {
         this.discount_amount = discount_amount;
     }
 
-    public double getMin_price() {
-        return min_price;
+    public Date getStartDate() {
+        return startDate;
     }
 
-    public void setMin_price(double min_price) {
-        this.min_price = min_price;
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
     }
 
-    public int getTotal_quantity() {
-        return total_quantity;
+    public Date getEndDate() {
+        return endDate;
     }
 
-    public void setTotal_quantity(int total_quantity) {
-        this.total_quantity = total_quantity;
-    }
-
-    public int getUsed_quantity() {
-        return used_quantity;
-    }
-
-    public void setUsed_quantity(int used_quantity) {
-        this.used_quantity = used_quantity;
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
     }
 
     public int getBranchId() {
@@ -113,21 +100,6 @@ public class Voucher {
 
     public void setBranchId(int branchId) {
         this.branchId = branchId;
-    }
-
-    public Date getValid_from() {
-        return valid_from;
-    }
-  public void setValid_from(Date valid_from) {
-        this.valid_from = valid_from;
-    }
-
-    public Date getValid_to() {
-        return valid_to;
-    }
-
-    public void setValid_to(Date valid_to) {
-        this.valid_to = valid_to;
     }
 
     public String getStatus() {
@@ -145,6 +117,5 @@ public class Voucher {
     public void setIs_deleted(boolean is_deleted) {
         this.is_deleted = is_deleted;
     }
-    
     
 }

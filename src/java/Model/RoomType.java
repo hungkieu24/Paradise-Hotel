@@ -16,9 +16,8 @@ public class RoomType {
     private String name;
     private String description;
     private double base_price;
-    private int capacity;
-    private int capacityAdult;
-    private int capacityChild;
+    private int capacity_adult;// sửa thành trẻ em và người lớn
+    private int capacity_child;
     private String image_url;
     private int branchId;
     private boolean isDeleted;
@@ -27,21 +26,23 @@ public class RoomType {
 
     public RoomType() {
     }
-    
-    public RoomType(int roomTypeID, String name, String description, double base_price, int capacity, String image_url) {
+  
+    public RoomType(int roomTypeID, String name, String description, double base_price, int capacity_adult, int capacity_child, String image_url) {
         this.roomTypeID = roomTypeID;
         this.name = name;
         this.description = description;
         this.base_price = base_price;
-        this.capacity = capacity;
+        this.capacity_adult = capacity_adult;
+        this.capacity_child = capacity_child;
         this.image_url = image_url;
     }
 
-    public RoomType(String name, String description, double base_price, int capacity, String image_url) {
+    public RoomType(String name, String description, double base_price, int capacity_adult, int capacity_child, String image_url) {
         this.name = name;
         this.description = description;
         this.base_price = base_price;
-        this.capacity = capacity;
+        this.capacity_adult = capacity_adult;
+        this.capacity_child = capacity_child;
         this.image_url = image_url;
     }
 
@@ -88,13 +89,23 @@ public class RoomType {
         this.base_price = base_price;
     }
 
-    public int getCapacity() {
-        return capacity;
+    public int getCapacity_adult() {
+        return capacity_adult;
     }
 
-    public void setCapacity(int capacity) {
-        this.capacity = capacity;
+    public void setCapacity_adult(int capacity_adult) {
+        this.capacity_adult = capacity_adult;
     }
+
+    public int getCapacity_child() {
+        return capacity_child;
+    }
+
+    public void setCapacity_child(int capacity_child) {
+        this.capacity_child = capacity_child;
+    }
+
+    
 
     public String getImage_url() {
         return image_url;
@@ -146,7 +157,9 @@ public class RoomType {
     
     @Override
     public String toString() {
-        return "RoomType{" + "roomTypeID=" + roomTypeID + ", name=" + name + ", description=" + description + ", base_price=" + base_price + ", capacity=" + capacity + ", image_url=" + image_url + '}';
+        return "RoomType{" + "roomTypeID=" + roomTypeID + ", name=" + name + ", description=" + description + ", base_price=" + base_price + ", capacity_adult=" + capacity_adult + ", capacity_child=" + capacity_child + ", image_url=" + image_url + '}';
     }
+
+    
    
 }

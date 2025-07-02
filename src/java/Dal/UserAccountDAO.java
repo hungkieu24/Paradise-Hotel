@@ -618,5 +618,600 @@ public class UserAccountDAO extends DBContext {
         }
         return false;
     }
-    
+  
+    // author : hung
+    // Content: get all user account
+    public List<UserAccount> getAllUsersAccount() {
+        List<UserAccount> userList = new ArrayList<>();
+        String sql = "SELECT ua.*, hb.name AS branch_name "
+                + "FROM UserAccount ua "
+                + "LEFT JOIN HotelBranch hb ON ua.branch_id = hb.id";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+            while (rs.next()) {
+                Timestamp ts = rs.getTimestamp("created_at");
+                String createdAt = (ts != null) ? sdf.format(ts) : null;
+                Timestamp ts2 = rs.getTimestamp("last_login_at");
+                String lastLogin = (ts2 != null) ? sdf.format(ts2) : null;
+
+                UserAccount user = new UserAccount(
+                        rs.getString("id"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getString("email"),
+                        rs.getString("avatar_url"),
+                        rs.getString("role"),
+                        rs.getString("status"),
+                        createdAt,
+                        rs.getString("phonenumber"),
+                        rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null,
+                        rs.getString("branch_name"),
+                        rs.getString("fullname"),
+                        rs.getString("login_type"),
+                        rs.getBoolean("is_deleted"),
+                        lastLogin
+                );
+
+                userList.add(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return userList;
+    }
+
+    // author : hung
+    // Content: get all user account's role
+    public List<String> getAllRoles() {
+        List<String> roles = new ArrayList<>();
+        String sql = "SELECT DISTINCT role FROM UserAccount WHERE is_deleted = 0";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                roles.add(rs.getString("role"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return roles;
+    }
+
+    // author : hung
+    // Content: get all user account's status
+    public List<String> getAllStatuses() {
+        List<String> statuses = new ArrayList<>();
+        String sql = "SELECT DISTINCT status FROM UserAccount WHERE is_deleted = 0";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                statuses.add(rs.getString("status"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return statuses;
+    }
+
+    // author : hung
+    // Content: get all user account by page
+    public List<UserAccount> getAllUsersAccountByPage(int page, int pageSize) {
+        List<UserAccount> userList = new ArrayList<>();
+
+        String sql = "SELECT ua.*, hb.name AS branch_name "
+                + "FROM UserAccount ua "
+                + "LEFT JOIN HotelBranch hb ON ua.branch_id = hb.id "
+                + "ORDER BY ua.id "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, (page - 1) * pageSize);
+            ps.setInt(2, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+                while (rs.next()) {
+                    Timestamp ts = rs.getTimestamp("created_at");
+                    String createdAt = (ts != null) ? sdf.format(ts) : null;
+                    Timestamp ts2 = rs.getTimestamp("last_login_at");
+                    String lastLogin = (ts2 != null) ? sdf.format(ts2) : null;
+
+                    UserAccount user = new UserAccount(
+                            rs.getString("id"),
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            rs.getString("email"),
+                            rs.getString("avatar_url"),
+                            rs.getString("role"),
+                            rs.getString("status"),
+                            createdAt,
+                            rs.getString("phonenumber"),
+                            rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null,
+                            rs.getString("branch_name"),
+                            rs.getString("fullname"),
+                            rs.getString("login_type"),
+                            rs.getBoolean("is_deleted"),
+                            lastLogin
+                    );
+
+                    userList.add(user);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return userList;
+    }
+
+    // author : hung
+    // Content: search user account 
+    public List<UserAccount> searchUserAccounts(String keyword, int page, int pageSize) {
+        List<UserAccount> userList = new ArrayList<>();
+
+        String sql = "SELECT ua.*, hb.name AS branch_name "
+                + "FROM UserAccount ua "
+                + "LEFT JOIN HotelBranch hb ON ua.branch_id = hb.id "
+                + "WHERE ua.username LIKE ? OR ua.fullname LIKE ? OR ua.email LIKE ? OR ua.phonenumber LIKE ? "
+                + "OR ua.role LIKE ? OR ua.status LIKE ? OR ua.login_type LIKE ? "
+                + "ORDER BY ua.id "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            String wildcardKeyword = "%" + keyword + "%";
+            for (int i = 1; i <= 7; i++) {
+                stmt.setString(i, wildcardKeyword);
+            }
+            stmt.setInt(8, (page - 1) * pageSize);
+            stmt.setInt(9, pageSize);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+                while (rs.next()) {
+                    Timestamp ts = rs.getTimestamp("created_at");
+                    String createdAt = (ts != null) ? sdf.format(ts) : null;
+                    Timestamp ts2 = rs.getTimestamp("last_login_at");
+                    String lastLogin = (ts2 != null) ? sdf.format(ts2) : null;
+
+                    UserAccount user = new UserAccount(
+                            rs.getString("id"),
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            rs.getString("email"),
+                            rs.getString("avatar_url"),
+                            rs.getString("role"),
+                            rs.getString("status"),
+                            createdAt,
+                            rs.getString("phonenumber"),
+                            rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null,
+                            rs.getString("branch_name"),
+                            rs.getString("fullname"),
+                            rs.getString("login_type"),
+                            rs.getBoolean("is_deleted"),
+                            lastLogin
+                    );
+
+                    userList.add(user);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return userList;
+    }
+
+    // author : hung
+    // Content: count account after search
+    public int getTotalUserAccountAfterSearching(String keyword) {
+        String sql = "SELECT COUNT(*) FROM UserAccount "
+                + "WHERE username LIKE ? OR fullname LIKE ? OR email LIKE ? OR phonenumber LIKE ? OR role LIKE ? OR status LIKE ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            String wildcardKeyword = "%" + keyword + "%";
+            for (int i = 1; i <= 6; i++) {
+                stmt.setString(i, wildcardKeyword);
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    // author : hung
+    // Content: count account after select filer by status
+    public int getTotalUserAccountByStatus(String status) {
+        // Nếu là Active thì cần thêm điều kiện is_deleted = 0
+        boolean filterDeleted = "Active".equalsIgnoreCase(status);
+
+        String sql = "SELECT COUNT(*) FROM UserAccount WHERE status = ? "
+                + (filterDeleted ? "AND is_deleted = 0" : "");
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, status);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    // author : hung
+    // Content: get account after select filer by status
+    public List<UserAccount> getUserAccountsByStatus(String status, int page, int pageSize) {
+        List<UserAccount> userList = new ArrayList<>();
+
+        String sql = """
+        SELECT ua.*, hb.name AS branch_name
+        FROM UserAccount ua
+        LEFT JOIN HotelBranch hb ON ua.branch_id = hb.id
+        WHERE ua.status = ?
+        %s
+        ORDER BY ua.id
+        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+    """;
+
+        // Thêm điều kiện is_deleted nếu status là Active
+        boolean filterDeleted = "Active".equalsIgnoreCase(status);
+        String whereDeletedClause = filterDeleted ? "AND ua.is_deleted = 0" : "";
+
+        sql = String.format(sql, whereDeletedClause);
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, (page - 1) * pageSize);
+            ps.setInt(3, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+                while (rs.next()) {
+                    Timestamp ts = rs.getTimestamp("created_at");
+                    String createdAt = (ts != null) ? sdf.format(ts) : null;
+                    Timestamp ts2 = rs.getTimestamp("last_login_at");
+                    String lastLogin = (ts2 != null) ? sdf.format(ts2) : null;
+
+                    UserAccount user = new UserAccount(
+                            rs.getString("id"),
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            rs.getString("email"),
+                            rs.getString("avatar_url"),
+                            rs.getString("role"),
+                            rs.getString("status"),
+                            createdAt,
+                            rs.getString("phonenumber"),
+                            rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null,
+                            rs.getString("branch_name"),
+                            rs.getString("fullname"),
+                            rs.getString("login_type"),
+                            rs.getBoolean("is_deleted"),
+                            lastLogin
+                    );
+
+                    userList.add(user);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return userList;
+    }
+
+    // author : hung
+    // Content: get account after select status is deleted
+    public int getTotalDeletedUserAccounts() {
+        String sql = "SELECT COUNT(*) FROM UserAccount WHERE is_deleted = 1";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    // author : hung
+    // Content: get total account after select status is deleted
+    public List<UserAccount> getDeletedUserAccounts(int page, int pageSize) {
+        List<UserAccount> userList = new ArrayList<>();
+
+        String sql = """
+        SELECT ua.*, hb.name AS branch_name
+        FROM UserAccount ua
+        LEFT JOIN HotelBranch hb ON ua.branch_id = hb.id
+        WHERE ua.is_deleted = 1
+        ORDER BY ua.id
+        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+    """;
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, (page - 1) * pageSize);
+            ps.setInt(2, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+                while (rs.next()) {
+                    Timestamp ts = rs.getTimestamp("created_at");
+                    String createdAt = (ts != null) ? sdf.format(ts) : null;
+                    Timestamp ts2 = rs.getTimestamp("last_login_at");
+                    String lastLogin = (ts2 != null) ? sdf.format(ts2) : null;
+
+                    UserAccount user = new UserAccount(
+                            rs.getString("id"),
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            rs.getString("email"),
+                            rs.getString("avatar_url"),
+                            rs.getString("role"),
+                            rs.getString("status"),
+                            createdAt,
+                            rs.getString("phonenumber"),
+                            rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null,
+                            rs.getString("branch_name"),
+                            rs.getString("fullname"),
+                            rs.getString("login_type"),
+                            rs.getBoolean("is_deleted"),
+                            lastLogin
+                    );
+
+                    userList.add(user);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return userList;
+    }
+
+    // author: hung
+    // Content: Cập nhật giá trị bất kỳ cột nào trong bảng UserAccount
+    public boolean updateUserField(String fieldName, Object newValue, String userId) {
+        String sql = "UPDATE UserAccount SET " + fieldName + " = ? WHERE id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            if (newValue instanceof String) {
+                ps.setString(1, (String) newValue);
+            } else if (newValue instanceof Integer) {
+                ps.setInt(1, (Integer) newValue);
+            } else if (newValue instanceof Boolean) {
+                ps.setBoolean(1, (Boolean) newValue);
+            } else if (newValue instanceof Timestamp) {
+                ps.setTimestamp(1, (Timestamp) newValue);
+            } else {
+                ps.setObject(1, newValue);
+            }
+
+            ps.setString(2, userId);
+
+            int rowsUpdated = ps.executeUpdate();
+            return rowsUpdated > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // author : hung
+    // Content: get useraccount by id follow new constructor
+    public UserAccount getUserAccountById(String userId) {
+        String sql = "SELECT ua.*, hb.name AS branch_name "
+                + "FROM UserAccount ua "
+                + "LEFT JOIN HotelBranch hb ON ua.branch_id = hb.id "
+                + "WHERE ua.id = ? ";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, userId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    Timestamp ts = rs.getTimestamp("created_at");
+                    String createdAt = (ts != null) ? sdf.format(ts) : null;
+                    Timestamp ts2 = rs.getTimestamp("last_login_at");
+                    String lastLogin = (ts2 != null) ? sdf.format(ts2) : null;
+
+                    return new UserAccount(
+                            rs.getString("id"),
+                            rs.getString("username"),
+                            rs.getString("password"),
+                            rs.getString("email"),
+                            rs.getString("avatar_url"),
+                            rs.getString("role"),
+                            rs.getString("status"),
+                            createdAt,
+                            rs.getString("phonenumber"),
+                            rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null,
+                            rs.getString("branch_name"),
+                            rs.getString("fullname"),
+                            rs.getString("login_type"),
+                            rs.getBoolean("is_deleted"),
+                            lastLogin
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null; // Không tìm thấy user
+    }
+
+    // author : hung
+    // Content: get useraccount by id follow new constructor
+    public boolean insertHotelOwner(UserAccount user) {
+        try {
+            // 1. Tạo ID mới
+            String getMaxIdSql = "SELECT MAX(CAST(SUBSTRING(id, 2, LEN(id)) AS INT)) AS maxId FROM UserAccount";
+            PreparedStatement ps1 = connection.prepareStatement(getMaxIdSql);
+            ResultSet rs = ps1.executeQuery();
+
+            String newId = "U001";
+            if (rs.next()) {
+                int maxId = rs.getInt("maxId");
+                newId = String.format("U%03d", maxId + 1);
+            }
+
+            // 2. Chỉ insert user mới (role = HotelOwner)
+            String insertUserSql = "INSERT INTO UserAccount (id, username, password, email, avatar_url, fullname, phonenumber, role) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement ps2 = connection.prepareStatement(insertUserSql);
+            ps2.setString(1, newId);
+            ps2.setString(2, user.getUsername());
+            ps2.setString(3, user.getPassword());
+            ps2.setString(4, user.getEmail());
+            ps2.setString(5, user.getAvatar_url());
+            ps2.setString(6, user.getFullname());
+            ps2.setString(7, user.getPhonenumber());
+            ps2.setString(8, user.getRole());
+
+            int rows = ps2.executeUpdate();
+            return rows > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    // author : hung
+    // Content: insert account for staff
+    public boolean insertUser(UserAccount user) {
+        String newId = "U001";
+
+        try {
+            // 1. Lấy ID lớn nhất hiện tại để sinh ID mới
+            String getMaxIdSql = "SELECT MAX(CAST(SUBSTRING(id, 2, LEN(id)) AS INT)) AS maxId FROM UserAccount";
+            PreparedStatement ps1 = connection.prepareStatement(getMaxIdSql);
+            ResultSet rs = ps1.executeQuery();
+            if (rs.next()) {
+                int maxId = rs.getInt("maxId");
+                newId = String.format("U%03d", maxId + 1);
+            }
+
+            // 2. Câu lệnh INSERT (chỉ insert các trường do bạn cung cấp)
+            String sql = """
+            INSERT INTO UserAccount (
+                id, username, password, email, avatar_url,
+                role, phonenumber, branch_id, fullname
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """;
+
+            PreparedStatement ps2 = connection.prepareStatement(sql);
+            ps2.setString(1, newId);
+            ps2.setString(2, user.getUsername());
+            ps2.setString(3, user.getPassword());
+            ps2.setString(4, user.getEmail());
+            ps2.setString(5, user.getAvatar_url());
+            ps2.setString(6, user.getRole());
+            ps2.setString(7, user.getPhonenumber());
+
+            if (user.getBranchId() != null) {
+                ps2.setInt(8, user.getBranchId());
+            } else {
+                ps2.setNull(8, java.sql.Types.INTEGER);
+            }
+
+            ps2.setString(9, user.getFullname());
+
+            int rows = ps2.executeUpdate();
+            return rows > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // author : hung
+    // Content: Check the last account
+    public boolean isLastActiveAccountOfRole(String role) {
+        String sql = "SELECT COUNT(*) AS total FROM UserAccount WHERE role = ?";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, role);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                int total = rs.getInt("total");
+                return total == 1;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // author : hung
+    // Content: Check is Admin Or HotelOwner
+    public boolean isAdminOrHotelOwner(String userId) {
+        String sql = "SELECT role FROM UserAccount WHERE id = ?";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, userId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                String role = rs.getString("role");
+                return "Admin".equalsIgnoreCase(role) || "HotelOwner".equalsIgnoreCase(role);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public static void main(String[] args) {
+        UserAccountDAO userAccountDAO = new UserAccountDAO();
+        List<String> userList = userAccountDAO.getAllStatuses();
+        for (String userAccount : userList) {
+            System.out.println(userAccount);
+        }
+
+//        List<UserAccount> userList = userAccountDAO.getAllUsersAccount();
+//        for (UserAccount userAccount : userList) {
+//            System.out.println(userAccount);
+//        }
+    }
 }
