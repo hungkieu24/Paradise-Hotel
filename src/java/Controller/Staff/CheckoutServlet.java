@@ -48,7 +48,6 @@ public class CheckoutServlet extends HttpServlet {
             response.sendRedirect("access-denied.jsp");
             return;
         }
-
         String bookingIdParam = request.getParameter("bookingId");
         String errorMessage = null;
         
@@ -59,7 +58,6 @@ public class CheckoutServlet extends HttpServlet {
                 request.getRequestDispatcher("staff-checkout.jsp").forward(request, response);
                 return;
             }
-
             int bookingId = Integer.parseInt(bookingIdParam);
             
             // Get booking information
@@ -72,7 +70,7 @@ public class CheckoutServlet extends HttpServlet {
                 return;
             }
 
-            // Security check
+            // Security  check
             if (booking.getBranchId() != staffUser.getBranchId()) {
                 errorMessage = "You don't have permission to checkout this booking";
                 request.setAttribute("errorMessage", errorMessage);

@@ -12,6 +12,7 @@
     SimpleDateFormat sdfDateTime = new SimpleDateFormat("dd/MM/yyyy HH:mm");
     int currentPage = request.getAttribute("currentPage") != null ? (Integer)request.getAttribute("currentPage") : 1;
     int totalPage = request.getAttribute("totalPage") != null ? (Integer)request.getAttribute("totalPage") : 1;
+   
     String staffName = "";
     if (session.getAttribute("user") != null) {
         staffName = ((UserAccount)session.getAttribute("user")).getUsername();

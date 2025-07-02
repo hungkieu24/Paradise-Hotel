@@ -23,7 +23,7 @@ public class StaffBookingActionServlet extends HttpServlet {
 
         // Authentication check
         if (session == null || session.getAttribute("user") == null) {
-            response.sendRedirect("login.jsp");
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
         
@@ -33,7 +33,7 @@ public class StaffBookingActionServlet extends HttpServlet {
         // Validate branch ID
         if (branchId == null || branchId <= 0) {
             session.setAttribute("errorMessage", "Staff branch information is invalid.");
-            response.sendRedirect("staff-bookings-list");
+            response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
             return;
         }
 
@@ -45,7 +45,7 @@ public class StaffBookingActionServlet extends HttpServlet {
             // Validate booking ID
             if (idParam == null || idParam.trim().isEmpty()) {
                 session.setAttribute("errorMessage", "Booking ID is required.");
-                response.sendRedirect("staff-bookings-list");
+                response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
                 return;
             }
             
@@ -55,7 +55,7 @@ public class StaffBookingActionServlet extends HttpServlet {
             Booking booking = bookingDAO.getBookingByIdAndBranch(bookingId, branchId);
             if (booking == null) {
                 session.setAttribute("errorMessage", "The booking does not belong to your branch or does not exist.");
-                response.sendRedirect("staff-bookings-list");
+                response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
                 return;
             }
 
@@ -63,13 +63,13 @@ public class StaffBookingActionServlet extends HttpServlet {
             java.util.Date now = new java.util.Date();
             java.util.Date checkInTime = booking.getCheckIn();
            
-            // ----------- CHECK-IN ACTION: redirect to room assignment -----------
+            // ----------- CHECK-IN ACTION: Only update booking status to CheckedIn -----------
             if ("checkin".equalsIgnoreCase(action)) {
                 // Validate booking status for check-in
                 if (!"Paid".equalsIgnoreCase(status) && !"Pending".equalsIgnoreCase(status)) {
                     session.setAttribute("errorMessage", 
                         "Only bookings with status 'Paid' or 'Pending' can be checked in. Current status: " + status);
-                    response.sendRedirect("staff-bookings-list");
+                    response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
                     return;
                 }
                 
@@ -77,16 +77,40 @@ public class StaffBookingActionServlet extends HttpServlet {
                 if (checkInTime != null && now.before(checkInTime)) {
                     session.setAttribute("errorMessage", 
                         "Cannot check-in before scheduled check-in time: " + checkInTime);
-                    response.sendRedirect("staff-bookings-list");
+                    response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
                     return;
                 }
                 
-                // Check if rooms are already assigned
-                List<Room> assignedRooms = roomDAO.getAssignedRoomsByBookingId(bookingId);
+                // Update booking status to CheckedIn
+                boolean updated = bookingDAO.updateBookingStatus(bookingId, "CheckedIn");
+                if (updated) {
+                    // Check if there are assigned rooms and update their status to Occupied
+                    List<Room> assignedRooms = roomDAO.getAssignedRoomsByBookingId(bookingId);
+                    int roomsUpdated = 0;
+                    
+                    if (assignedRooms != null && !assignedRooms.isEmpty()) {
+                        for (Room room : assignedRooms) {
+                            boolean roomUpdated = roomDAO.updateRoomStatus(room.getId(), "Occupied");
+                            if (roomUpdated) {
+                                roomsUpdated++;
+                            }
+                        }
+                        
+                        String roomNumbers = getRoomNumbers(assignedRooms);
+                        session.setAttribute("successMessage", 
+                            "Check-in successful! Customer can now use rooms: " + roomNumbers);
+                    } else {
+                        session.setAttribute("successMessage", 
+                            "Check-in completed successfully. No rooms were assigned yet.");
+                    }
+                    
+                    System.out.println("Booking " + bookingId + " checked in by staff " + staff.getUsername() + 
+                                 ". Updated " + roomsUpdated + " rooms to Occupied status.");
+                } else {
+                    session.setAttribute("errorMessage", "Failed to update booking status to CheckedIn.");
+                }
                 
-                // Modified: Always redirect to room assignment page
-                // This ensures that the staff can verify room assignments before check-in
-                response.sendRedirect("staff-room-assignment?action=assign&bookingId=" + bookingId);
+                response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
                 return;
             }
             // ----------- CHECK-OUT ACTION -----------
@@ -95,7 +119,7 @@ public class StaffBookingActionServlet extends HttpServlet {
                 if (!"CheckedIn".equalsIgnoreCase(status)) {
                     session.setAttribute("errorMessage", 
                         "Only bookings with status 'CheckedIn' can be checked out. Current status: " + status);
-                    response.sendRedirect("staff-bookings-list");
+                    response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
                     return;
                 }
                 
@@ -105,13 +129,13 @@ public class StaffBookingActionServlet extends HttpServlet {
                 
                 if (customer == null) {
                     session.setAttribute("errorMessage", "Customer information not found.");
-                    response.sendRedirect("staff-bookings-list");
+                    response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
                     return;
                 }
                 
                 if (bookingRoomList == null || bookingRoomList.isEmpty()) {
                     session.setAttribute("errorMessage", "No rooms found for this booking.");
-                    response.sendRedirect("staff-bookings-list");
+                    response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
                     return;
                 }
                 
@@ -119,7 +143,7 @@ public class StaffBookingActionServlet extends HttpServlet {
                 request.setAttribute("booking", booking);
                 request.setAttribute("customer", customer);
                 request.setAttribute("bookingRoomList", bookingRoomList);
-                request.getRequestDispatcher("staff-checkout.jsp").forward(request, response);
+                request.getRequestDispatcher("/staff-checkout.jsp").forward(request, response);
                 return;
             }
             // ----------- CONFIRM CHECK-OUT ACTION -----------
@@ -127,7 +151,7 @@ public class StaffBookingActionServlet extends HttpServlet {
                 // Validate booking status
                 if (!"CheckedIn".equalsIgnoreCase(status)) {
                     session.setAttribute("errorMessage", "Only checked-in bookings can be completed.");
-                    response.sendRedirect("staff-bookings-list");
+                    response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
                     return;
                 }
                 
@@ -158,24 +182,24 @@ public class StaffBookingActionServlet extends HttpServlet {
                 } else {
                     session.setAttribute("errorMessage", "Failed to complete check-out. Please try again.");
                 }
-                response.sendRedirect("staff-bookings-list");
+                response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
                 return;
             }
             // ----------- INVALID ACTION -----------
             else {
                 session.setAttribute("errorMessage", "Invalid action: " + action);
-                response.sendRedirect("staff-bookings-list");
+                response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
                 return;
             }
             
         } catch (NumberFormatException e) {
             session.setAttribute("errorMessage", "Invalid booking ID format: " + idParam);
-            response.sendRedirect("staff-bookings-list");
+            response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
         } catch (Exception e) {
             System.err.println("Error in StaffBookingActionServlet: " + e.getMessage());
             e.printStackTrace();
             session.setAttribute("errorMessage", "An unexpected error occurred: " + e.getMessage());
-            response.sendRedirect("staff-bookings-list");
+            response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
         }
     }
     

@@ -23,13 +23,14 @@
     NumberFormat currencyFormat = NumberFormat.getInstance(new Locale("vi", "VN"));
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm");
     
-    String staffName = "hieu1235";
+    String staffName = "";
     if (session.getAttribute("user") != null) {
         UserAccount user = (UserAccount) session.getAttribute("user");
         if (user.getUsername() != null && !user.getUsername().isEmpty()) {
             staffName = user.getUsername();
         }
     }
+    
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -772,58 +773,21 @@
                         
                         <!-- Payment Methods -->
                         <div class="payment-methods">
-                            <h4 class="section-title">
-                                <i class="bi bi-credit-card"></i>
-                                Select Payment Method:
-                            </h4>
                             
-                            <form action="process-checkout" method="post" id="checkoutForm">
+                            <form action="vnpayajax" method="post" id="checkoutForm">
                                 <input type="hidden" name="bookingId" value="<%= booking.getId() %>">
                                 <input type="hidden" name="amountToPay" value="<%= checkoutDetails.get("amountToPay") %>">
                                 
-                                <div class="methods-grid">
-                                    <label>
-                                        <input type="radio" name="paymentMethod" value="cash" checked style="display: none;">
-                                        <div class="payment-option selected" onclick="selectPayment(this, 'cash')">
-                                            <div class="payment-icon">
-                                                <i class="bi bi-cash-stack"></i>
-                                            </div>
-                                            <div class="payment-title">Cash Payment</div>
-                                            <div class="payment-desc">Pay with cash</div>
-                                        </div>
-                                    </label>
-                                    
-                                    <label>
-                                        <input type="radio" name="paymentMethod" value="card" style="display: none;">
-                                        <div class="payment-option" onclick="selectPayment(this, 'card')">
-                                            <div class="payment-icon">
-                                                <i class="bi bi-credit-card"></i>
-                                            </div>
-                                            <div class="payment-title">Card Payment</div>
-                                            <div class="payment-desc">Credit/Debit card</div>
-                                        </div>
-                                    </label>
-                                    
-                                    <label>
-                                        <input type="radio" name="paymentMethod" value="transfer" style="display: none;">
-                                        <div class="payment-option" onclick="selectPayment(this, 'transfer')">
-                                            <div class="payment-icon">
-                                                <i class="bi bi-bank"></i>
-                                            </div>
-                                            <div class="payment-title">Bank Transfer</div>
-                                            <div class="payment-desc">Wire transfer</div>
-                                        </div>
-                                    </label>
-                                </div>
+                               
                                 
                                 <div class="checkout-actions">
                                     <a href="view-booking-detail?bookingId=<%= booking.getId() %>" class="btn-back">
                                         <i class="bi bi-arrow-left"></i>
                                         Back to Details
                                     </a>
-                                    <button type="button" class="btn-checkout" onclick="confirmCheckout()">
+                                        <button type="submit" class="btn-checkout">
                                         <i class="bi bi-check-circle"></i>
-                                        Complete Checkout
+                                        Checkout
                                     </button>
                                 </div>
                             </form>

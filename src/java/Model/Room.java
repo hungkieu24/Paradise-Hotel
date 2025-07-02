@@ -11,6 +11,7 @@ public class Room {
     private String roomTypeName;
     private String hotelName;
     private boolean isDeleted;
+    private boolean isAssigned;
 
     public Room() {
     }
@@ -125,5 +126,13 @@ public class Room {
                 + ", status='" + status + '\''
                 + ", imageUrl='" + imageUrl + '\''
                 + '}';
+    }
+    
+    public boolean isAssigned() {
+        return isAssigned;
+    }
+
+    public void setAssigned(boolean isAssigned) {
+        this.isAssigned = isAssigned;
     }
 }
