@@ -40,6 +40,10 @@
                         <i class="fas fa-upload"></i>
                         <span>Upload Reports</span>
                     </a>
+                    <a href="./manageBranch" class="nav-item " data-page="upload">
+                        <i class="fa-solid fa-hotel"></i>
+                        <span>Manage Branch</span>
+                    </a>
                 </nav>
             </aside>
 
@@ -281,137 +285,9 @@
                         </c:if>
                     </div>
                 </div>
-
-                <!-- Upload Reports Page -->
-                <div class="page-content" id="upload">
-                    <div class="page-header">
-                        <h2>Upload Reports</h2>
-                        <p>Upload Excel files containing revenue and expense data from hotel branches</p>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-upload"></i> Upload Revenue & Expense Reports</h3>
-                        </div>
-                        <div class="upload-area" id="uploadArea">
-                            <div class="upload-icon">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                            </div>
-                            <p>Drag and drop Excel files here or click to browse</p>
-                            <input type="file" id="fileInput" accept=".xlsx,.xls" multiple style="display: none" />
-                            <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
-                                Choose Files
-                            </button>
-                        </div>
-                        <div class="file-list" id="fileList"></div>
-                    </div>
-
-                    <!-- Upload History -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-history"></i> Recent Uploads</h3>
-                        </div>
-                        <div class="upload-history" id="uploadHistory">
-                            <div class="empty-state">
-                                <i class="fas fa-folder-open"></i>
-                                <p>No files uploaded yet</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Generate Template Page -->
-                <div class="page-content" id="template">
-                    <div class="page-header">
-                        <h2>Generate Template</h2>
-                        <p>Create standardized Excel templates for managers to fill in financial data</p>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-file-excel"></i> Generate Excel Template</h3>
-                        </div>
-
-                        <form class="template-form" id="templateForm">
-                            <div class="form-group">
-                                <label for="branchName">Branch Name</label>
-                                <input type="text" id="branchName" placeholder="Enter branch name" required />
-                            </div>
-
-                            <div class="form-group">
-                                <label for="reportMonth">Report Month</label>
-                                <input type="month" id="reportMonth" required />
-                            </div>
-
-                            <div class="form-group">
-                                <label>Cost Categories</label>
-                                <div class="cost-categories" id="costCategories">
-                                    <div class="category-item">
-                                        <input type="text" placeholder="Cost category name" value="Staff Salaries" />
-                                        <button type="button" class="btn-remove" onclick="removeCategory(this)">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                    <div class="category-item">
-                                        <input type="text" placeholder="Cost category name" value="Utilities" />
-                                        <button type="button" class="btn-remove" onclick="removeCategory(this)">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                    <div class="category-item">
-                                        <input type="text" placeholder="Cost category name" value="Maintenance" />
-                                        <button type="button" class="btn-remove" onclick="removeCategory(this)">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn-secondary" onclick="addCategory()">
-                                    <i class="fas fa-plus"></i> Add Category
-                                </button>
-                            </div>
-
-                            <button type="submit" class="btn-primary">
-                                <i class="fas fa-download"></i> Generate & Download Template
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Financial Reports Page -->
-                <div class="page-content" id="reports">
-                    <div class="page-header">
-                        <h2>Financial Reports</h2>
-                        <p>Detailed financial analysis and historical data</p>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-chart-bar"></i> Coming Soon</h3>
-                        </div>
-                        <div class="empty-state">
-                            <i class="fas fa-chart-bar"></i>
-                            <p>Advanced reporting features will be available soon</p>
-                        </div>
-                    </div>
-                </div>
-
             </main>
         </div>
 
-        <!-- Modal for viewing original files -->
-        <div class="modal" id="fileModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>Original Excel File</h3>
-                    <button class="modal-close" onclick="closeModal()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body" id="modalBody">
-                    <!-- File content will be displayed here -->
-                </div>
-            </div>
-        </div>
 
         <script src="../js/hotelOwner.js">
         </script>

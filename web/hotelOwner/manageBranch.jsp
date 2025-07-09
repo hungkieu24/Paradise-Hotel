@@ -1,26 +1,25 @@
 <%-- 
-    Document   : branch
-    Created on : Jun 4, 2025, 11:11:49 PM
+    Document   : test
+    Created on : Jul 9, 2025, 3:58:09 PM
     Author     : hungk
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<fmt:setLocale value="vi_VN" />
 <!DOCTYPE html>
 <html lang="en">
-
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Branch</title>
-        <link rel="stylesheet" href="../css/themeAdmin.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Manage Branch</title>
+        <link rel="stylesheet" href="../css/hotelOwnerStyle.css" />
         <link rel="stylesheet" href="../css/custom.css">
         <link rel="stylesheet" href="../css/branchStyle.css">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
 
     </head>
-
     <body>
         <c:if test="${not empty sessionScope.message}">
             <div id="toastMessage" class="toast-message ${sessionScope.messageType}">
@@ -39,33 +38,72 @@
             <c:remove var="message" scope="session" />
             <c:remove var="messageType" scope="session" />
         </c:if>
-        <div class="app-container">
-            <%@ include file="./sidebarHotelOwner.jsp"%>
-            <!-- Main Content -->
-            <main class="main-content">
-                <header class="content-header">
+        <div class="app-layout">
+            <!-- Left Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <img src="../img/logoHotelOwner.svg" alt="Hotel Management" class="sidebar-logo" />
+                    <span class="sidebar-title">Hotel Manager</span>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <a href="./financialDashboard" class="nav-item " data-page="dashboard">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="./uploadReports.jsp" class="nav-item " data-page="upload">
+                        <i class="fas fa-upload"></i>
+                        <span>Upload Reports</span>
+                    </a>
+                    <a href="./manageBranch" class="nav-item active" data-page="upload">
+                        <i class="fa-solid fa-hotel"></i>
+                        <span>Manage Branch</span>
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="main-content" id="mainContent">
+                <!-- Header -->
+                <header class="header">
                     <div class="header-left">
-                        <h1 class="page-title">Manage Branch</h1>
+                        <a href="./financialDashboard" style="text-decoration: none">
+                            <h1 id="page-title">Manage Branch</h1>
+                        </a>
+                        <p id="page-description">View branches, add and adjust for all hotel branche</p>
                     </div>
                     <div class="header-right">
-                        <!-- <button class="theme-toggle" id="themeToggle">
-                            <i class="fas fa-moon"></i>
-                        </button> -->
-                        <!-- Có thể thêm một số icon như thông báo hay light or dark -->
-                        <div class="user-info"> <!-- thể hiện user info -->
-                            <a href="../editProfile"> 
-                                <i class="fas fa-user-circle"></i>
-                                <span>Admin</span>
-                            </a>
+                        <div class="notification-bell">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </div>
+                        <div class="admin-profile">
+                            <div class="profile-dropdown">
+                                <div class="profile-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="dropdown-content">
+                                    <div class="dropdown-header">
+                                        <strong>Hotel owner</strong>
+                                        <small>admin@system.com</small>
+                                    </div>
+                                    <a href="#">Profile Settings</a>
+                                    <a href="#">Account Security</a>
+                                    <a href="#">Preferences</a>
+                                    <hr />
+                                    <a href="#" class="sign-out">Sign Out</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </header>
 
-                <div class="flash-messages" id="flashMessages"></div>
+                <!-- Dashboard Page -->
+                <div class="page-content active" id="dashboard">
 
-                <div class="content-body">
-                    <div class="rooms-container">
-                        <div class="page-actions">
+                    <!-- Filters -->
+                    <div class="card">
+                        <div class="filters">
                             <form action="">
                                 <input type="hidden" name="action" value="search">
                                 <div class="search-box">
@@ -78,11 +116,17 @@
                                 Add new branch
                             </button>
                         </div>
+                    </div>
 
-                        <div class="rooms-table" id="roomsTable">
-                            <p class="cart-info__desc profile__desc">Quantity: <strong>${brancheListSize}</strong></p>
-                            <p class="cart-info__desc profile__desc">Hotel Owner: <strong>${owner.getUsername()}</strong> </p>
-                            <table>
+                    <!-- Detailed Table -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-table"></i>Initial Investment</h3>
+
+                        </div>
+                        <p>Quantity: <strong>${brancheListSize}</strong></p>
+                        <div class="table-container">
+                            <table class="financial-table" id="financialTable">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
@@ -94,6 +138,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <c:if test="${empty brancheList}">
+                                        <tr class="empty-state">
+                                            <td colspan="8">
+                                                <i class="fas fa-chart-line"></i>
+                                                <p>No data available. Let create your branch</p>
+                                            </td>
+                                        </tr>
+                                    </c:if>
                                     <c:forEach items="${brancheList}" var="b" >
                                         <tr data-room-id="1">
                                             <td>${b.getId()}</td>
@@ -119,6 +171,7 @@
                             </table>
                         </div>
                     </div>
+
                     <div class="pagination">
                         <c:set var="queryParams" value="" />
                         <c:if test="${not empty action and not empty keyword}">
@@ -551,7 +604,7 @@
         <script src="../js/validationForm.js"></script>
         <script src="../js/imageGallery.js"></script>
 
-
+        <!--JS điền thông tin-->
         <script>
                 // Gọi hàm với class
                 createLocationSelectorByClass({
@@ -697,5 +750,4 @@
             })
         </script>
     </body>
-
 </html>

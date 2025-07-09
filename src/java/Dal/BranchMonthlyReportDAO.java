@@ -39,9 +39,7 @@ public class BranchMonthlyReportDAO extends DBcontext.DBContext {
                         rs.getDouble("Revenue"),
                         rs.getDouble("Expenses"),
                         rs.getDouble("Profit"),
-                        rs.getDouble("ProfitRate"),
-                        rs.getString("FilePath"),
-                        rs.getTimestamp("CreatedAt")
+                        rs.getDouble("ProfitRate")
                 );
                 reports.add(report);
             }
@@ -71,9 +69,7 @@ public class BranchMonthlyReportDAO extends DBcontext.DBContext {
                         rs.getDouble("Revenue"),
                         rs.getDouble("Expenses"),
                         rs.getDouble("Profit"),
-                        rs.getDouble("ProfitRate"),
-                        rs.getString("FilePath"),
-                        rs.getTimestamp("CreatedAt")
+                        rs.getDouble("ProfitRate")
                 );
 
                 HotelBranch branch = new HotelBranch(
@@ -121,9 +117,7 @@ public class BranchMonthlyReportDAO extends DBcontext.DBContext {
                         rs.getDouble("Revenue"),
                         rs.getDouble("Expenses"),
                         rs.getDouble("Profit"),
-                        rs.getDouble("ProfitRate"),
-                        rs.getString("FilePath"),
-                        rs.getTimestamp("CreatedAt")
+                        rs.getDouble("ProfitRate")
                 );
 
                 HotelBranch branch = new HotelBranch(
@@ -190,9 +184,7 @@ public class BranchMonthlyReportDAO extends DBcontext.DBContext {
                         rs.getDouble("Revenue"),
                         rs.getDouble("Expenses"),
                         rs.getDouble("Profit"),
-                        rs.getDouble("ProfitRate"),
-                        rs.getString("FilePath"),
-                        rs.getTimestamp("CreatedAt")
+                        rs.getDouble("ProfitRate")
                 );
 
                 HotelBranch branch = new HotelBranch(
@@ -265,9 +257,7 @@ public class BranchMonthlyReportDAO extends DBcontext.DBContext {
                         rs.getDouble("Revenue"),
                         rs.getDouble("Expenses"),
                         rs.getDouble("Profit"),
-                        rs.getDouble("ProfitRate"),
-                        rs.getString("FilePath"),
-                        rs.getTimestamp("CreatedAt")
+                        rs.getDouble("ProfitRate")
                 );
 
                 HotelBranch branch = new HotelBranch(
@@ -338,9 +328,7 @@ public class BranchMonthlyReportDAO extends DBcontext.DBContext {
                         rs.getDouble("Revenue"),
                         rs.getDouble("Expenses"),
                         rs.getDouble("Profit"),
-                        rs.getDouble("ProfitRate"),
-                        rs.getString("FilePath"),
-                        rs.getTimestamp("CreatedAt")
+                        rs.getDouble("ProfitRate")
                 );
 
                 HotelBranch branch = new HotelBranch(
@@ -780,7 +768,7 @@ public class BranchMonthlyReportDAO extends DBcontext.DBContext {
             e.printStackTrace();
         }
 
-        return 0; 
+        return 0;
     }
 
     public int getMonthDifference(Date start, Date end) {
@@ -793,6 +781,58 @@ public class BranchMonthlyReportDAO extends DBcontext.DBContext {
         int monthDiff = calEnd.get(Calendar.MONTH) - calStart.get(Calendar.MONTH);
 
         return yearDiff * 12 + monthDiff;
+    }
+
+    public BranchMonthlyReport getLatestBranchMonthlyReportByBranchId(int branchId) {
+        String sql = "SELECT TOP 1 * FROM BranchMonthlyReport "
+                + "WHERE BranchId = ? "
+                + "ORDER BY ReportMonth DESC";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new BranchMonthlyReport(
+                            rs.getInt("Id"),
+                            rs.getInt("BranchId"),
+                            rs.getDate("ReportMonth"),
+                            rs.getDouble("Revenue"),
+                            rs.getDouble("Expenses"),
+                            rs.getDouble("Profit"),
+                            rs.getDouble("ProfitRate")
+                    );
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null; // Không có báo cáo
+    }
+
+    public boolean insertBranchMonthlyReport(BranchMonthlyReport report) {
+        String sql = "INSERT INTO BranchMonthlyReport "
+                + "(BranchId, ReportMonth, Revenue, Expenses, Profit, ProfitRate) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, report.getBranchId());
+            ps.setDate(2, report.getReportMonth());
+            ps.setDouble(3, report.getRevenue());
+            ps.setDouble(4, report.getExpenses());
+            ps.setDouble(5, report.getProfit());
+            ps.setDouble(6, report.getProfitRate());
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 
 }

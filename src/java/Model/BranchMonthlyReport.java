@@ -19,15 +19,13 @@ public class BranchMonthlyReport {
     private double Expenses;
     private double Profit;
     private double ProfitRate;
-    private String FilePath;
-    private Timestamp CreatedAt; 
     
     private HotelBranch hotelBranch;
 
     public BranchMonthlyReport() {
     }
 
-    public BranchMonthlyReport(int Id, int BranchId, Date ReportMonth, double Revenue, double Expenses, double Profit, double ProfitRate, String FilePath, Timestamp CreatedAt) {
+    public BranchMonthlyReport(int Id, int BranchId, Date ReportMonth, double Revenue, double Expenses, double Profit, double ProfitRate) {
         this.Id = Id;
         this.BranchId = BranchId;
         this.ReportMonth = ReportMonth;
@@ -35,19 +33,15 @@ public class BranchMonthlyReport {
         this.Expenses = Expenses;
         this.Profit = Profit;
         this.ProfitRate = ProfitRate;
-        this.FilePath = FilePath;
-        this.CreatedAt = CreatedAt;
     }
 
-    public BranchMonthlyReport(int Id, Date ReportMonth, double Revenue, double Expenses, double Profit, double ProfitRate, String FilePath, Timestamp CreatedAt, HotelBranch hotelBranch) {
+    public BranchMonthlyReport(int Id, Date ReportMonth, double Revenue, double Expenses, double Profit, double ProfitRate, HotelBranch hotelBranch) {
         this.Id = Id;
         this.ReportMonth = ReportMonth;
         this.Revenue = Revenue;
         this.Expenses = Expenses;
         this.Profit = Profit;
         this.ProfitRate = ProfitRate;
-        this.FilePath = FilePath;
-        this.CreatedAt = CreatedAt;
         this.hotelBranch = hotelBranch;
     }
 
@@ -107,22 +101,6 @@ public class BranchMonthlyReport {
         this.ProfitRate = ProfitRate;
     }
 
-    public String getFilePath() {
-        return FilePath;
-    }
-
-    public void setFilePath(String FilePath) {
-        this.FilePath = FilePath;
-    }
-
-    public Timestamp getCreatedAt() {
-        return CreatedAt;
-    }
-
-    public void setCreatedAt(Timestamp CreatedAt) {
-        this.CreatedAt = CreatedAt;
-    }
-
     public HotelBranch getHotelBranch() {
         return hotelBranch;
     }
@@ -133,6 +111,6 @@ public class BranchMonthlyReport {
 
     @Override
     public String toString() {
-        return "BranchMonthlyReport{" + "Id=" + Id + ", BranchId=" + BranchId + ", ReportMonth=" + ReportMonth + ", Revenue=" + Revenue + ", Expenses=" + Expenses + ", Profit=" + Profit + ", ProfitRate=" + ProfitRate + ", FilePath=" + FilePath + ", CreatedAt=" + CreatedAt + '}';
+        return "BranchMonthlyReport{" + "Id=" + Id + ", BranchId=" + BranchId + ", ReportMonth=" + ReportMonth + ", Revenue=" + Revenue + ", Expenses=" + Expenses + ", Profit=" + Profit + ", ProfitRate=" + ProfitRate + '}';
     }
 }

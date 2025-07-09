@@ -280,4 +280,62 @@ public class InitialInvestmentDAO extends DBcontext.DBContext {
         return total;
     }
 
+    public double getTotalCapitalByBranchId(int branchId) {
+        String sql = "SELECT SUM(Capital) AS TotalCapital FROM InitialInvestment WHERE BranchId = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("TotalCapital");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0.0; // Nếu không có khoản đầu tư nào
+    }
+
+    public InitialInvestment getLatestInitialInvestmentByBranchId(int branchId) {
+        String sql = "SELECT TOP 1 * FROM InitialInvestment "
+                + "WHERE BranchId = ? "
+                + "ORDER BY InvestedDate DESC";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new InitialInvestment(
+                            rs.getInt("BranchId"),
+                            rs.getDouble("Capital"),
+                            rs.getDate("InvestedDate")
+                    );
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null; // nếu không có kết quả
+    }
+
+    public boolean insertInitialInvestment(InitialInvestment investment) {
+        String sql = "INSERT INTO InitialInvestment (BranchId, Capital, InvestedDate) VALUES (?, ?, ?)";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, investment.getBranchId());
+            ps.setDouble(2, investment.getCapital());
+            ps.setDate(3, investment.getInvestedDate());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }

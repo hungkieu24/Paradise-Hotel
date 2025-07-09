@@ -20,7 +20,7 @@ import java.util.List;
  *
  * @author hungk
  */
-@WebServlet(name = "ManageBranchServlet", urlPatterns = {"/hotelOwner/branch"})
+@WebServlet(name = "ManageBranchServlet", urlPatterns = {"/hotelOwner/manageBranch"})
 public class BranchServlet extends HttpServlet {
 
     @Override
@@ -69,7 +69,7 @@ public class BranchServlet extends HttpServlet {
         request.setAttribute("staffList", staffList);
         request.setAttribute("brancheListSize", brancheListSize);
         request.setAttribute("brancheList", brancheList);
-        request.getRequestDispatcher("./branch.jsp").forward(request, response);
+        request.getRequestDispatcher("./manageBranch.jsp").forward(request, response);
     }
 
 }
