@@ -112,6 +112,10 @@
                         <i class="fas fa-bed"></i>
                         <span class="menu-text">Manage room</span>
                     </a>
+                    <a href="./manager/roomType" class="menu-item">
+                        <i class="fas fa-bed"></i>
+                        <span class="menu-text">Manage room type</span>
+                    </a>
                     <a href="#" class="menu-item">
                         <i class="fas fa-comments"></i>
                         <span class="menu-text">Manage feedback</span>

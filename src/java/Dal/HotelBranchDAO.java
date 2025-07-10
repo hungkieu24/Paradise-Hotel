@@ -353,4 +353,32 @@ public class HotelBranchDAO extends DBcontext.DBContext {
         return false;
     }
 
+    //Hung: Lay theo manager id
+    public HotelBranch getBranchByManagerId(String managerId) {
+        String sql = "SELECT * FROM HotelBranch WHERE manager_id = ? AND is_deleted = 0";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, managerId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return new HotelBranch(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("address"),
+                        rs.getString("phone"),
+                        rs.getString("email"),
+                        rs.getString("image_url"),
+                        rs.getString("owner_id"),
+                        rs.getString("manager_id")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
 }

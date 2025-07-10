@@ -1,0 +1,322 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : Jul 10, 2025, 2:13:06 PM
+    Author     : hungk
+*/
+:root {
+    --modal-bg: #fff;
+    --modal-shadow: rgba(237, 237, 246, 0.2);
+    --filter-btn-color: #6c6c72;
+    --filter-btn-bg: #fff;
+    --check-out-border-color: #d2d1d6;
+}
+
+/* ----------------- Modal ------------------------*/
+.modal__overlay, .modal {
+    position: fixed;
+    inset: 0;
+}
+
+.modal {
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity, visibility;
+    transition-duration: 0.2s;
+}
+.modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+.modal__close {
+    position: absolute;
+    top: 0;
+    right: 30px;
+    z-index: 2;
+    font-size: 3.5rem;
+    padding: 3px 20px;
+    opacity: 0.7;
+}
+.modal__close:hover {
+    opacity: 1;
+}
+.modal__overlay {
+    background: rgba(0, 0, 0, 0.4);
+}
+.modal__heading {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 141.667%;
+}
+.modal__body {
+    max-height: calc(100vh - 180px);
+    padding-right: 20px;
+    overflow-y: auto;
+}
+.modal__content {
+    position: relative;
+    z-index: 1;
+    width: min(var(--content-width, 800px), 100% - 40px);
+    max-height: 90vh;
+    overflow: auto;
+    padding: 30px 10px 30px 30px;
+    border-radius: 20px;
+    background: var(--modal-bg);
+    box-shadow: 0px 20px 60px 10px var(--modal-shadow);
+}
+
+@media (max-width: 575.98px) {
+    .modal__content {
+        padding: 20px 0 20px 20px;
+    }
+}
+
+.modal--bigest .modal__content {
+    --content-width: 1300px;
+}
+
+.modal--small .modal__content {
+    --content-width: 400px;
+}
+.modal--large .modal__content {
+    --content-width: 1100px;
+}
+.modal--fill .modal__content {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+}
+.modal__text {
+    font-size: 1.8rem;
+    line-height: 1.5;
+}
+.modal__bottom {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 50px;
+    justify-content: flex-end;
+    padding-right: 20px;
+}
+@media (max-width: 767.98px) {
+    .modal__bottom {
+        gap: 20px;
+    }
+}
+@media (max-width: 575.98px) {
+    .modal__bottom {
+        margin-top: 20px;
+    }
+}
+@media (max-width: 767.98px) {
+    .modal__btn {
+        flex: 1;
+    }
+}
+
+/* ----------------- Form ------------------------*/
+.form__row {
+    display: flex;
+    gap: 30px;
+}
+
+.form__row > * {
+    flex: 1;
+}
+
+.form__row.hide {
+    display: none;
+}
+.form__group {
+    margin-top: 30px;
+}
+@media (max-width: 767.98px) {
+    .form__group {
+        margin-top: 20px;
+    }
+}
+.form__group .form__avatar-preview {
+    display: flex;
+    justify-content: center;
+}
+
+.form__avatar-preview {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.form__avatar-preview .avatar-preview {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.form__text-area, .form__text-input {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid #d2d1d6;
+
+}
+
+.form__text-input input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    outline: none;
+}
+
+.form__text-input input:focus-within {
+    border: none;
+}
+
+.form__text-area:focus-within, .form__text-input:focus-within {
+    border-color: #77dae6;
+}
+
+.form__select {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    min-width: var(--width, 108px);
+    background: transparent;
+    cursor: pointer;
+    border: none;
+    outline: none;
+}
+
+.form-card__label {
+    font-size: 16px;
+}
+
+.form-card__bottom {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+.form-card__bottom a{
+    color: #fff;
+    padding: 0;
+    margin-right: 10px;
+}
+
+.form-card__bottom .btn-normal{
+    background: #dc2828;
+    padding: 10px 15px;
+    border-radius: 0.375rem;
+}
+
+.form-card__bottom .btn-primary{
+    padding: 0 40px;
+}
+
+.form__error {
+    text-align: left;
+    font-weight: 500;
+    margin-top: 10px;
+    color: #ff5a5a;
+}
+
+.form__nochange {
+    background: #dedede;
+    cursor: context-menu;
+}
+
+.cart-info__separate {
+    margin: 30px 0;
+    height: 1px;
+    background: var(--check-out-border-color);
+}
+
+.cart-info__desc {
+    margin-top: 6px;
+    font-size: 16px;
+}
+
+textarea {
+    background: transparent;
+    padding: 0;
+    font-family: inherit;
+    color: inherit;
+    outline: none;
+    border: none;
+}
+
+.form__text-area:focus-within, .form__text-input:focus-within {
+    border-color: #77dae6;
+}
+.form__text-area {
+    height: 150px;
+    padding: 12px;
+}
+.form__text-area-input {
+    resize: none;
+}
+
+.form__text-area-input, .form__input {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    font-style: normal;
+    font-weight: 500;
+}
+
+.amenity-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px 24px;
+}
+
+.amenity-checkboxes label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    background-color: #f9f9f9;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.checkbox-label:has(input[type="checkbox"]:checked) {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.tab-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+}
+.tab-button {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    background: none;
+    color: hsl(var(--muted-foreground));
+    transition: all 0.2s ease;
+}
+.tab-button.active {
+    border-color: hsl(var(--border));
+    border-bottom: 2px solid hsl(var(--primary));
+    color: hsl(var(--primary));
+    font-weight: 600;
+}
+
+.tab-button__link {
+    text-decoration: none;
+}
