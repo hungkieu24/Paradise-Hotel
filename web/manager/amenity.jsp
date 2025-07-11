@@ -4,12 +4,6 @@
     Author     : hungk
 --%>
 
-<%-- 
-    Document   : roomType
-    Created on : Jul 10, 2025, 8:37:42 AM
-    Author     : hungk
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
@@ -67,7 +61,7 @@
                         <i class="fas fa-bed"></i>
                         <span class="menu-text">Manage room type</span>
                     </a>
-                    <a href="#" class="menu-item">
+                    <a href="./feedback" class="menu-item">
                         <i class="fas fa-comments"></i>
                         <span class="menu-text">Manage feedback</span>
                     </a>

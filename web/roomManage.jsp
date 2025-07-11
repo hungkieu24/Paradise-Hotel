@@ -116,7 +116,7 @@
                         <i class="fas fa-bed"></i>
                         <span class="menu-text">Manage room type</span>
                     </a>
-                    <a href="#" class="menu-item">
+                    <a href="./manager/feedback" class="menu-item">
                         <i class="fas fa-comments"></i>
                         <span class="menu-text">Manage feedback</span>
                     </a>

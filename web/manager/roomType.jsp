@@ -57,11 +57,11 @@
                         <i class="fas fa-bed"></i>
                         <span class="menu-text">Manage room</span>
                     </a>
-                    <a href="roomType" class="menu-item active">
+                    <a href="./roomType" class="menu-item active">
                         <i class="fas fa-bed"></i>
                         <span class="menu-text">Manage room type</span>
                     </a>
-                    <a href="#" class="menu-item">
+                    <a href="./feedback" class="menu-item">
                         <i class="fas fa-comments"></i>
                         <span class="menu-text">Manage feedback</span>
                     </a>
