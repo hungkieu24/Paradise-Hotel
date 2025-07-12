@@ -1,18 +1,20 @@
 <%-- 
-    Document   : amenity
-    Created on : Jul 10, 2025, 8:37:49 PM
+    Document   : expense
+    Created on : Jul 12, 2025, 4:36:30 PM
     Author     : hungk
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<fmt:setLocale value="vi_VN" />
 
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Manager Amenity</title>
+        <title>Manager Revenue</title>
         <link rel="stylesheet" href="../css/managerStyle.css">
         <link rel="stylesheet" href="../css/custom.css"/>
         <link rel="stylesheet" href="../css/customManagerStyle.css"/>
@@ -57,11 +59,11 @@
                         <i class="fas fa-bed"></i>
                         <span class="menu-text">Manage room</span>
                     </a>
-                    <a href="roomType" class="menu-item active">
+                    <a href="roomType" class="menu-item ">
                         <i class="fas fa-bed"></i>
                         <span class="menu-text">Manage room type</span>
                     </a>
-                    <a href="./revenue" class="menu-item ">
+                    <a href="./revenue" class="menu-item active">
                         <i class="fa-solid fa-dollar-sign"></i>
                         <span class="menu-text">Manage Revenue & Expense</span>
                     </a>
@@ -91,7 +93,7 @@
             <main class="main-content">
                 <header class="content-header">
                     <div class="header-left">
-                        <h1 class="page-title">Manage Amenity</h1>
+                        <h1 class="page-title">Manage Revenue</h1>
                     </div>
                     <div class="header-right">
                         <!-- <button class="theme-toggle" id="themeToggle">
@@ -112,53 +114,74 @@
                 <div class="content-body">
                     <div class="rooms-container">
                         <div class="tab-buttons">
-                            <a href="./roomType" class="tab-button__link">
-                                <div class="tab-button ">Room Type</div>
+                            <a href="./revenue" class="tab-button__link">
+                                <div class="tab-button ">Revenue</div>
                             </a>
-                            <a href="./amenity" class="tab-button__link">
-                                <div class="tab-button active">Amenity</div>
+                            <a href="./expense" class="tab-button__link">
+                                <div class="tab-button active">Expense</div>
                             </a>
                         </div>
                         <div class="page-actions">
                             <form action="">
-                                <input type="hidden" name="action" value="search">
-                                <div class="search-box">
-                                    <i class="fas fa-search"></i>
-                                    <input type="text" name="searchKeyword" id="roomSearch" value="${param.searchKeyword}" placeholder="Search branch..." >
+                                <input type="hidden" name="action" value="filterByMonthYear">
+                                <div class="page-action-wrapper">
+                                    <div class="page-action">
+                                        <label class="page-actions-label">Month: </label>
+                                        <select name="month" class="page-actions-select" required>
+                                            <c:forEach var="i" begin="1" end="12">
+                                                <option value="${i}" ${i == month ? 'selected' : ''}>
+                                                    ${monthNames[i - 1]}
+                                                </option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="page-action">
+                                        <label class="page-actions-label">Year: </label>
+                                        <input type="text" name="year" class="page-actions-input" value="${year}" required />
+                                    </div>
+                                    <div class="page-action">
+                                        <button type="submit" class="btn btn-primary btn-filter">Filter</button>
+                                    </div>
                                 </div>
                             </form>
                             <button id="add-branch-btn" class="btn btn-primary js-toggle" toggle-target="#add-modal">
                                 <i class="fas fa-plus"></i>
-                                Add new amenity
+                                Add Expense
                             </button>
                         </div>
 
                         <div class="rooms-table" id="roomsTable">
-                            <p class="cart-info__desc profile__desc">Quantity: <strong>${amenitySize}</strong></p>
+                            <p class="cart-info__desc profile__desc">
+                                Total Expense:  <strong> <fmt:formatNumber value="${totalExpense}" type="currency"/> </strong>
+                            </p>
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
+                                        <th>Expense type</th>
+                                        <th>Amount</th>
+                                        <th>Expense date</th>
                                         <th>Description</th>
+                                        <th>Created by</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <c:forEach items="${allAmenities}" var="a" >
-                                        <tr>
-                                            <td>${a.getId()}</td>
-                                            <td>${a.getName()}</td>
-                                            <td>${a.getDescription()}</td>
+                                    <c:forEach items="${expenseList}" var="e" >
+                                        <tr >
+                                            <td>${e.getExpense_type()}</td>
+                                            <td><fmt:formatNumber value="${e.getAmount()}" type="currency"/></td>
+                                            <td>${e.getExpense_date()}</td>
+                                            <td>${e.getDescription()}</td>
+                                            <td>${e.getCreated_by() == user.id ? "Me": ""}</td>
                                             <td>
                                                 <button class="btn btn-sm btn-secondary edit js-toggle" 
                                                         toggle-target="#edit-modal" 
-                                                        data-actor-id="${a.getId()}">
+                                                        data-actor-id="${e.getId()}">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
                                                 <button class="btn btn-sm btn-danger delete js-toggle" 
                                                         toggle-target="#delete-modal" 
-                                                        data-actor-id="${a.getId()}">
+                                                        data-actor-id="${e.getId()}">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
@@ -173,23 +196,42 @@
         </div>
 
         <!-- Modal: Edit -->
-        <div id="edit-modal" class="modal modal--small hide">
+        <div id="edit-modal" class="modal hide">
             <div class="modal__content" style="padding: 30px">
-                <div class="modal__heading">Edit Amenity</div>
-                <form action="amenityEventHandler" method="post" id="edit-form" class="form form-card">
-                    <input type="hidden" name="amenityID" id="amenityID">
+                <div class="modal__heading">Edit Expense</div>
+                <form action="expenseEventHandler" method="post" id="edit-form" class="form form-card">
+                    <input type="hidden" name="expenseID" id="expenseID">
                     <input type="hidden" name="branchID" value="${branch.id}">
                     <input type="hidden" name="action" value="edit">
                     <!-- Form row 1 -->
                     <div class="form__row">
                         <div class="form__group">
-                            <label for="amenityName" class="form__label form-card__label">Amenity Name</label>
+                            <label for="expenseType" class="form__label form-card__label">Expense Type</label>
                             <div class="form__text-input">
-                                <input type="text" name="amenityName" id="amenityName" class="form__input" placeholder="Amenity Name"/>
+                                <input type="text" name="expenseType" id="expenseType" class="form__input" placeholder="Expense Type"/>
                             </div>
                             <p class="form__error"></p>
                         </div>
                     </div>
+
+                    <!-- Form row 2 -->
+                    <div class="form__row">
+                        <div class="form__group">
+                            <label for="expenseDate" class="form__label form-card__label">Expense Date</label>
+                            <div class="form__text-input">
+                                <input type="date" name="expenseDate" id="expenseDate" class="form__input" placeholder="Expense Date"/>
+                            </div>
+                            <p class="form__error"></p>
+                        </div>
+                        <div class="form__group">
+                            <label for="amount" class="form__label form-card__label">Amount</label>
+                            <div class="form__text-input">
+                                <input type="text" name="amount" id="amount" class="form__input" placeholder="Amount"/>₫
+                            </div>
+                            <p class="form__error"></p>
+                        </div>
+                    </div>
+
 
                     <!-- Form row 4 -->
                     <div class="form__row">
@@ -215,18 +257,37 @@
         </div>
 
         <!-- Modal: Add -->
-        <div id="add-modal" class="modal modal--small hide">
+        <div id="add-modal" class="modal hide">
             <div class="modal__content" style="padding: 30px">
-                <div class="modal__heading">Add Amenity</div>
-                <form action="amenityEventHandler" method="post" id="add-form" class="form form-card">
+                <div class="modal__heading">Add Expense</div>
+                <form action="expenseEventHandler" method="post" id="add-form" class="form form-card">
                     <input type="hidden" name="action" value="add">
                     <input type="hidden" name="branchID" value="${branch.id}">
                     <!-- Form row 1 -->
                     <div class="form__row">
                         <div class="form__group">
-                            <label for="amenityName" class="form__label form-card__label">Amenity Name</label>
+                            <label for="expenseType" class="form__label form-card__label">Expense Type</label>
                             <div class="form__text-input">
-                                <input type="text" name="amenityName" id="amenityName-add" class="form__input" placeholder="Amenity Name"/>
+                                <input type="text" name="expenseType" id="expenseType-add" class="form__input" placeholder="Expense Type"/>
+                            </div>
+                            <p class="form__error"></p>
+                        </div>
+                    </div>
+
+                    <!-- Form row 2 -->
+                    <div class="form__row">
+                        <div class="form__group">
+                            <label for="expenseDate" class="form__label form-card__label">Expense Date</label>
+                            <div class="form__text-input">
+                                <input type="date" name="expenseDate" id="expenseDate-add" class="form__input" placeholder="Expense Date"/>
+                            </div>
+                            <p class="form__error"></p>
+                        </div>
+                        <div class="form__group">
+                            <label for="amount" class="form__label form-card__label">Amount</label>
+                            <div class="form__text-input">
+                                <input type="text" name="amount" id="amount-add" class="form__input" placeholder="Amount"/>
+                                ₫
                             </div>
                             <p class="form__error"></p>
                         </div>
@@ -254,7 +315,6 @@
             <div class="modal__overlay js-toggle" toggle-target="#add-modal"></div>
         </div>
 
-
         <!-- Modal delete -->
         <div id="delete-modal" class="modal modal--small hide">
             <div class="modal__content">
@@ -264,7 +324,7 @@
                             toggle-target="#delete-modal">
                         Cancel
                     </button>
-                    <form action="amenityEventHandler" method="post">
+                    <form action="expenseEventHandler" method="post">
                         <input type="hidden" name="IdDelete" id="IdDelete" value="">
                         <input type="hidden" name="action" value="delete">
                         <button type="submit" class="btn btn--small btn-danger btn--primary modal__btn btn--no-margin" >
@@ -283,25 +343,65 @@
         <script src="../js/api.js"></script>
         <script src="../js/validationForm.js"></script>
 
+        <script>
+            function formatCurrencyVND(value) {
+                // Loại bỏ tất cả ký tự không phải số
+                let number = value.replace(/\D/g, '');
+
+                if (!number)
+                    return '';
+
+                // Chuyển về dạng số nguyên rồi format
+                return Number(number).toLocaleString('vi-VN');
+            }
+
+            document.getElementById('amount-add').addEventListener('input', function (e) {
+                const caretPosition = this.selectionStart;
+
+                const rawValue = this.value;
+                const formattedValue = formatCurrencyVND(rawValue);
+
+                this.value = formattedValue;
+
+                // Đặt lại con trỏ cuối chuỗi (hoặc bạn có thể xử lý chính xác hơn nếu muốn)
+                this.setSelectionRange(this.value.length, this.value.length);
+            });
+            document.getElementById('amount').addEventListener('input', function (e) {
+                const caretPosition = this.selectionStart;
+
+                const rawValue = this.value;
+                const formattedValue = formatCurrencyVND(rawValue);
+
+                this.value = formattedValue;
+
+                // Đặt lại con trỏ cuối chuỗi (hoặc bạn có thể xử lý chính xác hơn nếu muốn)
+                this.setSelectionRange(this.value.length, this.value.length);
+            });
+
+        </script>
         <!--Js điền dữ liệu vào Edit admin modal -->
         <script>
-            function fillModalEdit(amenityID) {
-                fetch("/ParadiseHotel/manager/amenityEventHandler?amenityID=" + amenityID)
+            function fillModalEdit(ID) {
+                fetch("/ParadiseHotel/manager/expenseEventHandler?expenseID=" + ID)
                         .then(res => res.json())
                         .then(data => {
-                            if (!data) return;
-                            document.getElementById("amenityID").value = data.id;
-                            document.getElementById("amenityName").value = data.name;
-                            document.getElementById("description").value = data.description;
+                            if (!data)
+                                return;
+                            document.getElementById("expenseID").value = data.id;
+                            document.getElementById("expenseType").value = data.expense_type;
+                            document.getElementById("expenseDate").value = data.expense_date;
+                            document.getElementById("amount").value = Number(data.amount).toLocaleString('vi-VN');
+                            document.getElementById("description").value = data.description ? data.description : "";
                         })
                         .catch(err => console.error("Lỗi fetch:", err));
             }
 
-            function fillModalDelete(amenityID) {
-                fetch("/ParadiseHotel/manager/amenityEventHandler?amenityID=" + amenityID)
+            function fillModalDelete(ID) {
+                fetch("/ParadiseHotel/manager/expenseEventHandler?expenseID=" + ID)
                         .then(res => res.json())
                         .then(data => {
-                            if (!data) return;
+                            if (!data)
+                                return;
                             document.getElementById("IdDelete").value = data.id;
                         })
                         .catch(err => console.error("Lỗi fetch:", err));
@@ -316,7 +416,9 @@
                 formGroupSelector: '.form__group',
                 errorSelector: '.form__error',
                 rules: [
-                    Validator.isRequired('#amenityName-add', 'Please enter room type name'),
+                    Validator.isRequired('#expenseType-add', 'Please enter expense type'),
+                    Validator.isRequired('#expenseDate-add', 'Please enter expense date'),
+                    Validator.isRequired('#amount-add', 'Please enter amount'),
                     Validator.isRequired('#description-add', 'Please enter description')
                 ],
                 onsubmit: function (formValue) {
@@ -329,7 +431,9 @@
                 formGroupSelector: '.form__group',
                 errorSelector: '.form__error',
                 rules: [
-                    Validator.isRequired('#amenityName', 'Please enter room type name'),
+                    Validator.isRequired('#expenseType', 'Please enter expense type'),
+                    Validator.isRequired('#expenseDate', 'Please enter expense date'),
+                    Validator.isRequired('#amount', 'Please enter amount'),
                     Validator.isRequired('#description', 'Please enter description'),
                 ],
                 onsubmit: function (formValue) {
@@ -339,4 +443,6 @@
         </script>
     </body>
 </html>
+
+
 

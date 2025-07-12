@@ -104,7 +104,7 @@
                     </button>
                 </div>
                 <div class="sidebar-menu">
-                    <a href="#" class="menu-item ">
+                    <a href="./manager/dashboard.jsp" class="menu-item ">
                         <i class="fas fa-chart-line"></i>
                         <span class="menu-text">Dashboard</span>
                     </a>
@@ -115,6 +115,10 @@
                     <a href="./manager/roomType" class="menu-item">
                         <i class="fas fa-bed"></i>
                         <span class="menu-text">Manage room type</span>
+                    </a>
+                    <a href="./manager/revenue" class="menu-item">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                        <span class="menu-text">Manage Revenue & Expense</span>
                     </a>
                     <a href="./manager/feedback" class="menu-item">
                         <i class="fas fa-comments"></i>

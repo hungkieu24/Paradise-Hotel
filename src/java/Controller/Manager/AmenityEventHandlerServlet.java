@@ -8,14 +8,12 @@ import Dal.AmenityDAO;
 import Model.Amenity;
 import com.google.gson.Gson;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.util.List;
 
 /**
  *
@@ -63,8 +61,8 @@ public class AmenityEventHandlerServlet extends HttpServlet {
             }
             Amenity amenity = new Amenity(amenityName, description, branchID);
             if (action.equals("add")) {
-                response.sendRedirect(AMENITY_PAGE);
                 handleAddAmenity(request, session, amenity);
+                response.sendRedirect(AMENITY_PAGE);
                 return;
             }
 

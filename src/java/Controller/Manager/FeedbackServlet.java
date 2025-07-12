@@ -87,7 +87,7 @@ public class FeedbackServlet extends HttpServlet {
 
         } else {
             setSessionMessage(session, "You need to login!", "error");
-            response.sendRedirect("../login");
+            response.sendRedirect("../login.jsp");
         }
     }
 

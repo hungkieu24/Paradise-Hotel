@@ -62,7 +62,7 @@ public class AmenityServlet extends HttpServlet {
             request.getRequestDispatcher("./amenity.jsp").forward(request, response);
         } else {
             setSessionMessage(session, "You need to login!", "error");
-            response.sendRedirect("../login");
+            response.sendRedirect("../login.jsp");
         }
     }
 

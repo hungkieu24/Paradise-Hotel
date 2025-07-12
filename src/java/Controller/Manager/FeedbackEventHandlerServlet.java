@@ -87,7 +87,7 @@ public class FeedbackEventHandlerServlet extends HttpServlet {
         UserAccount user = (UserAccount) session.getAttribute("user");
         if (user == null) {
             setSessionMessage(session, "You need to login!", "error");
-            response.sendRedirect("../login");
+            response.sendRedirect("../login.jsp");
             return;
         }
 

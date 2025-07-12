@@ -12,7 +12,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Manager room type</title>
+        <title>Manager Room Type</title>
         <link rel="stylesheet" href="../css/managerStyle.css">
         <link rel="stylesheet" href="../css/custom.css"/>
         <link rel="stylesheet" href="../css/customManagerStyle.css"/>
@@ -61,6 +61,10 @@
                         <i class="fas fa-bed"></i>
                         <span class="menu-text">Manage room type</span>
                     </a>
+                    <a href="./revenue" class="menu-item">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                        <span class="menu-text">Manage Revenue & Expense</span>
+                    </a>
                     <a href="./feedback" class="menu-item">
                         <i class="fas fa-comments"></i>
                         <span class="menu-text">Manage feedback</span>
@@ -87,7 +91,7 @@
             <main class="main-content">
                 <header class="content-header">
                     <div class="header-left">
-                        <h1 class="page-title">Manage Branch</h1>
+                        <h1 class="page-title">Manage Room Type</h1>
                     </div>
                     <div class="header-right">
                         <!-- <button class="theme-toggle" id="themeToggle">

@@ -12,7 +12,6 @@ import Model.HotelBranch;
 import Model.RoomType;
 import Model.UserAccount;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -70,7 +69,7 @@ public class RoomTypeServlet extends HttpServlet {
             request.getRequestDispatcher("./roomType.jsp").forward(request, response);
         } else {
             setSessionMessage(session, "You need to login!", "error");
-            response.sendRedirect("../login");
+            response.sendRedirect("../login.jsp");
         }
     }
 
