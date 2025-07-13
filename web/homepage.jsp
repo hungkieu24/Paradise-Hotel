@@ -458,6 +458,8 @@
                 </svg>
             </div>
             <!-- /back to top -->
+            <!--chat AI-->
+            <jsp:include page="chatUi.jsp"/>
 
             <!-- COMMON SCRIPTS -->
             <script src="js/common_scripts.js"></script>

@@ -1830,5 +1830,56 @@ public class BookingDAO extends DBcontext.DBContext {
 
         return totalBooking;
     }
+    
+    public Integer addBooking2(String userId, Timestamp checkIn, Timestamp checkOut,
+            String status, double totalPrice, String paymentStatus, int branchId,
+            String note, boolean isDeleted) {
+
+        String sql = "INSERT INTO Booking (user_id, check_in, check_out, status, total_price, "
+                   + "payment_status, branch_id, note, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, userId);
+            ps.setTimestamp(2, checkIn);
+            ps.setTimestamp(3, checkOut);
+            ps.setString(4, status);
+            ps.setDouble(5, totalPrice);
+            ps.setString(6, paymentStatus);
+            ps.setInt(7, branchId);
+            ps.setString(8, note);
+            ps.setBoolean(9, isDeleted);
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Creating booking failed, no rows affected.");
+            }
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);  // return booking_id
+                } else {
+                    throw new SQLException("Creating booking failed, no ID obtained.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;  // or throw custom exception if you prefer
+        }
+    }
+    
+    public boolean updateBookingPrice(int bookingId, double newTotalPrice) {
+        try {
+            String sql = "UPDATE Booking SET total_price = ? WHERE id = ?";
+
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setDouble(1, newTotalPrice);
+                ps.setInt(2, bookingId);
+
+                int rowsAffected = ps.executeUpdate();
+                return rowsAffected > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
 }

@@ -1,90 +1,62 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Model;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
 
-/**
- *
- * @author KTC
- */
+
 public class LoyaltyPoint {
 
-    private String user_id;
+    private String userId;
     private int points;
     private String level;
-    private Date last_updated;
-    private Date expired_at;
+    private Timestamp lastUpdated;
+    private Timestamp expiredAt;
+    private BigDecimal totalSpending;
+    private int lifetimePoints;
+    private int pointsUsed;
+    private Timestamp lastTierCheck;
+    private BigDecimal nextTierSpendingNeeded;
     private int discountPercent;
-
+    
     public LoyaltyPoint() {
     }
+    
+    public int getDiscountPercent() { return discountPercent; }
 
-    public LoyaltyPoint(String user_id, int points, String level, Date last_updated, Date expired_at) {
-        this.user_id = user_id;
-        this.points = points;
-        this.level = level;
-        this.last_updated = last_updated;
-        this.expired_at = expired_at;
-    }
-
-    public LoyaltyPoint(String user_id, int points, String level, Date last_updated, Date expired_at, int discountPercent) {
-        this.user_id = user_id;
-        this.points = points;
-        this.level = level;
-        this.last_updated = last_updated;
-        this.expired_at = expired_at;
-        this.discountPercent = discountPercent;
-    }
-
-    public int getDiscountPercent() {
-        return discountPercent;
-    }
-
+    // Getters and Setters
     public void setDiscountPercent(int discountPercent) {
         this.discountPercent = discountPercent;
     }
-    
-    public String getUser_id() {
-        return user_id;
-    }
 
-    public void setUser_id(String user_id) {
-        this.user_id = user_id;
+    public String getUserId() {
+        return userId;
     }
+    public void setUserId(String userId) { this.userId = userId; }
 
-    public int getPoints() {
-        return points;
-    }
+    public int getPoints() { return points; }
+    public void setPoints(int points) { this.points = points; }
 
-    public void setPoints(int points) {
-        this.points = points;
-    }
+    public String getLevel() { return level; }
+    public void setLevel(String level) { this.level = level; }
 
-    public String getLevel() {
-        return level;
-    }
+    public Timestamp getLastUpdated() { return lastUpdated; }
+    public void setLastUpdated(Timestamp lastUpdated) { this.lastUpdated = lastUpdated; }
 
-    public void setLevel(String level) {
-        this.level = level;
-    }
+    public Timestamp getExpiredAt() { return expiredAt; }
+    public void setExpiredAt(Timestamp expiredAt) { this.expiredAt = expiredAt; }
 
-    public Date getLast_updated() {
-        return last_updated;
-    }
+    public BigDecimal getTotalSpending() { return totalSpending; }
+    public void setTotalSpending(BigDecimal totalSpending) { this.totalSpending = totalSpending; }
 
-    public void setLast_updated(Date last_updated) {
-        this.last_updated = last_updated;
-    }
+    public int getLifetimePoints() { return lifetimePoints; }
+    public void setLifetimePoints(int lifetimePoints) { this.lifetimePoints = lifetimePoints; }
 
-    public Date getExpired_at() {
-        return expired_at;
-    }
+    public int getPointsUsed() { return pointsUsed; }
+    public void setPointsUsed(int pointsUsed) { this.pointsUsed = pointsUsed; }
 
-    public void setExpired_at(Date expired_at) {
-        this.expired_at = expired_at;
-    }
+    public Timestamp getLastTierCheck() { return lastTierCheck; }
+    public void setLastTierCheck(Timestamp lastTierCheck) { this.lastTierCheck = lastTierCheck; }
 
+    public BigDecimal getNextTierSpendingNeeded() { return nextTierSpendingNeeded; }
+    public void setNextTierSpendingNeeded(BigDecimal nextTierSpendingNeeded) { this.nextTierSpendingNeeded = nextTierSpendingNeeded; }
 }

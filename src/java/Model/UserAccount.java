@@ -1,5 +1,7 @@
 package Model;
 
+import java.util.List;
+
 /**
  *
  * @author thien
@@ -22,7 +24,11 @@ public class UserAccount {
     private boolean is_deleted;
     private String last_login_at;
     private String rank;
-  
+
+    private LoyaltyPoint loyaltyPoint; // Contains current points, level, etc.
+    private List<PointTransaction> pointHistory; // List of all point transactions
+    private List<MemberTierHistory> tierHistory; // List of all tier changes
+
     public UserAccount() {
     }
 
@@ -111,7 +117,7 @@ public class UserAccount {
         this.is_deleted = is_deleted;
         this.last_login_at = last_login_at;
     }
-    
+  
     public String getBranchName() {
         return branchName;
     }
@@ -209,7 +215,7 @@ public class UserAccount {
     public void setRank(String rank) {
         this.rank = rank;
     }
-  
+
     public String getFullname() {
         return fullname;
     }
@@ -241,6 +247,15 @@ public class UserAccount {
     public void setLast_login_at(String last_login_at) {
         this.last_login_at = last_login_at;
     }
+    // Getters and Setters for nested objects
+    public LoyaltyPoint getLoyaltyPoint() { return loyaltyPoint; }
+    public void setLoyaltyPoint(LoyaltyPoint loyaltyPoint) { this.loyaltyPoint = loyaltyPoint; }
+
+    public List<PointTransaction> getPointHistory() { return pointHistory; }
+    public void setPointHistory(List<PointTransaction> pointHistory) { this.pointHistory = pointHistory; }
+
+    public List<MemberTierHistory> getTierHistory() { return tierHistory; }
+    public void setTierHistory(List<MemberTierHistory> tierHistory) { this.tierHistory = tierHistory; }
 
     @Override
     public String toString() {
