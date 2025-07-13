@@ -698,6 +698,7 @@ public class BookingDAO extends DBcontext.DBContext {
                     booking.setCancelTime(rs.getTimestamp("cancel_time"));
                     booking.setPromotionId(rs.getObject("promotion_id") != null ? rs.getInt("promotion_id") : null);
                     booking.setBranchId(rs.getInt("branch_id"));
+                    booking.setNote(rs.getString("note"));
                     booking.setBranchName(rs.getString("branch_name"));
                     booking.setRoomTypeImage(rs.getString("room_type_image"));
                     booking.setRoomTypeName(rs.getString("room_type_name"));
@@ -1924,6 +1925,18 @@ public class BookingDAO extends DBcontext.DBContext {
             ps.setInt(2, serviceId);
             ps.setInt(3, quantity);
             ps.setString(4, paidStatus); // e.g., "Unpaid"
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean updateSpecialRequest(int bookingId, String note) {
+        String sql = "UPDATE Booking SET note = ? WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, note);
+            ps.setInt(2, bookingId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

@@ -60,6 +60,8 @@
             </li>
         </c:forEach>
     </ul>
+    <hr>
+    <p><strong>Special Request:</strong> ${booking.note}</p>
 
     <p><strong>Discount:</strong> <span class="discount">${sessionScope.loyaltyPoint.discountPercent}%</span></p>
     <p class="total">Total: 

@@ -81,9 +81,27 @@ public class MyBookingServlet extends HttpServlet {
             boolean success = bd.cancelBooking(bookingId, cancelReason);
 
             if (success) {
-                request.setAttribute("message", "Booking cancelled successfully.");
+                session.setAttribute("message", "Booking cancelled successfully.");
+                session.setAttribute("messageType", "success");
             } else {
-                request.setAttribute("error", "Reservation cannot be canceled. Please try again.");
+                session.setAttribute("message", "Reservation cannot be canceled. Please try again.");
+                session.setAttribute("messageType", "error");
+            }
+        }
+
+        if ("editSpecialRequest".equals(action)) {
+            int bookingId = Integer.parseInt(request.getParameter("bookingId"));
+            String specialRequest = request.getParameter("specialRequest");
+
+            BookingDAO bd = new BookingDAO();
+            boolean success = bd.updateSpecialRequest(bookingId, specialRequest);
+
+            if (success) {
+                session.setAttribute("message", "Special request updated successfully.");
+                session.setAttribute("messageType", "success");
+            } else {
+                session.setAttribute("message", "Unable to update special request.");
+                session.setAttribute("messageType", "error");
             }
         }
 
