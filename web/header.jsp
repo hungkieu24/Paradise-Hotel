@@ -30,12 +30,7 @@
                                                                         <li><a href="index-6.html">Home Parallax 2</a></li>
                                                                     </ul>
                                                                 </li>-->
-                            <li class="submenu">
-                                <a href="#0" class="show-submenu">Home</a>
-                                <ul>
-                                    <li><a href="branchReport.jsp">branch report</a></li>
-                                </ul>
-                            </li>
+                            
                             <li class="submenu">
                                 <a href="viewRoomTypeList" class="show-submenu">View Room Type List</a>
 <!--                                <ul>

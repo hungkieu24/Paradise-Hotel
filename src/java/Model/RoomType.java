@@ -57,6 +57,17 @@ public class RoomType {
         this.branchId = branchId;
         this.isDeleted = isDeleted;
     }
+
+    public RoomType(String name, String description, double base_price, int capacity_adult, int capacity_child, String image_url, int branchId) {
+        this.name = name;
+        this.description = description;
+        this.base_price = base_price;
+        this.capacity_adult = capacity_adult;
+        this.capacity_child = capacity_child;
+        this.image_url = image_url;
+        this.branchId = branchId;
+    }
+    
     public int getRoomTypeID() {
         return roomTypeID;
     }

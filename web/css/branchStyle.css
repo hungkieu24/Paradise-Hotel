@@ -298,3 +298,31 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     color: #000;
     text-decoration: none;
 }
+
+.search-box {
+    position: relative;
+    flex: 1;
+    max-width: 300px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: hsl(var(--muted-foreground));
+}
+
+.search-box input {
+    width: 160%;
+    padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+    border: 1px solid #ccc;
+    border-radius: 0.375rem;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+}
+
+.filters {
+    display: flex;
+    justify-content: space-between;
+}

@@ -20,7 +20,7 @@ public class HotelBranchDAO extends DBcontext.DBContext {
 
     public List<HotelBranch> getAllHotelBranchesSimple() {
         List<HotelBranch> branches = new ArrayList<>();
-        String sql = "SELECT * FROM HotelBranch";
+        String sql = "SELECT * FROM HotelBranch where is_deleted = 0";
 
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
@@ -36,68 +36,6 @@ public class HotelBranchDAO extends DBcontext.DBContext {
                         rs.getString("image_url"),
                         rs.getString("owner_id"),
                         rs.getString("manager_id")
-                );
-
-                branches.add(branch);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return branches;
-    }
-
-    public List<HotelBranch> getAllHotelBranches() {
-        List<HotelBranch> branches = new ArrayList<>();
-
-        String sql = "SELECT hb.*, "
-                + "owner.id AS owner_id, owner.username AS owner_username, owner.password AS owner_password, owner.email AS owner_email, "
-                + "owner.avatar_url AS owner_avatar, owner.role AS owner_role, owner.status AS owner_status, owner.created_at AS owner_created, owner.phonenumber AS owner_phone, "
-                + "manager.id AS manager_id, manager.username AS manager_username, manager.password AS manager_password, manager.email AS manager_email, "
-                + "manager.avatar_url AS manager_avatar, manager.role AS manager_role, manager.status AS manager_status, manager.created_at AS manager_created, manager.phonenumber AS manager_phone "
-                + "FROM HotelBranch hb "
-                + "LEFT JOIN UserAccount owner ON hb.owner_id = owner.id "
-                + "LEFT JOIN UserAccount manager ON hb.manager_id = manager.id";
-
-        try {
-            PreparedStatement st = connection.prepareStatement(sql);
-            ResultSet rs = st.executeQuery();
-
-            while (rs.next()) {
-                // Tạo owner
-                UserAccount owner = new UserAccount(
-                        rs.getString("owner_id"),
-                        rs.getString("owner_username"),
-                        rs.getString("owner_password"),
-                        rs.getString("owner_email"),
-                        rs.getString("owner_avatar"),
-                        rs.getString("owner_role"),
-                        rs.getString("owner_status"),
-                        (rs.getTimestamp("owner_created") != null) ? rs.getTimestamp("owner_created").toString() : null
-                );
-
-                // Tạo manager
-                UserAccount manager = new UserAccount(
-                        rs.getString("manager_id"),
-                        rs.getString("manager_username"),
-                        rs.getString("manager_password"),
-                        rs.getString("manager_email"),
-                        rs.getString("manager_avatar"),
-                        rs.getString("manager_role"),
-                        rs.getString("manager_status"),
-                        (rs.getTimestamp("manager_created") != null) ? rs.getTimestamp("manager_created").toString() : null
-                );
-
-                // Tạo branch
-                HotelBranch branch = new HotelBranch(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getString("address"),
-                        rs.getString("phone"),
-                        rs.getString("email"),
-                        rs.getString("image_url"),
-                        owner,
-                        manager
                 );
 
                 branches.add(branch);
@@ -247,68 +185,14 @@ public class HotelBranchDAO extends DBcontext.DBContext {
     }
 
     public boolean deleteHotelBranch(int branchID) {
-        String checkBookingSql = "SELECT COUNT(*) AS total "
-                + "FROM Room r "
-                + "JOIN BookingRoom br ON r.id = br.room_id "
-                + "JOIN Booking b ON br.booking_id = b.id "
-                + "WHERE r.branch_id = ? AND b.status IN ('Pending', 'Confirmed', 'CheckedIn', 'Locked')";
+        String softDeleteBranchSql = "UPDATE HotelBranch SET is_deleted = 1 WHERE id = ?";
 
-        String deleteBookingRoomSql = "DELETE br "
-                + "FROM BookingRoom br "
-                + "JOIN Room r ON br.room_id = r.id "
-                + "WHERE r.branch_id = ?";
-
-        String deleteRoomsSql = "DELETE FROM Room WHERE branch_id = ?";
-        String deleteBranchSql = "DELETE FROM HotelBranch WHERE id = ?";
-
-        try {
-            connection.setAutoCommit(false); // Bắt đầu transaction
-
-            // 1. Kiểm tra trạng thái Booking
-            try (PreparedStatement ps = connection.prepareStatement(checkBookingSql)) {
-                ps.setInt(1, branchID);
-                ResultSet rs = ps.executeQuery();
-                if (rs.next() && rs.getInt("total") > 0) {
-                    connection.rollback();
-                    System.out.println("Khong the xoa chi nhanh: Co phong dang duoc dat.");
-                    return false;
-                }
-            }
-
-            // 2. Xóa BookingRoom liên quan
-            try (PreparedStatement ps = connection.prepareStatement(deleteBookingRoomSql)) {
-                ps.setInt(1, branchID);
-                ps.executeUpdate();
-            }
-
-            // 3. Xóa các phòng trong Room
-            try (PreparedStatement ps = connection.prepareStatement(deleteRoomsSql)) {
-                ps.setInt(1, branchID);
-                ps.executeUpdate();
-            }
-
-            // 4. Xóa HotelBranch
-            try (PreparedStatement ps = connection.prepareStatement(deleteBranchSql)) {
-                ps.setInt(1, branchID);
-                ps.executeUpdate();
-            }
-
-            connection.commit(); // Hoàn tất giao dịch
-            return true;
-
+        try (PreparedStatement ps = connection.prepareStatement(softDeleteBranchSql)) {
+            ps.setInt(1, branchID);
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
         } catch (SQLException e) {
-            try {
-                connection.rollback(); // Trả lại nếu lỗi
-            } catch (SQLException rollbackEx) {
-                rollbackEx.printStackTrace();
-            }
             e.printStackTrace();
-        } finally {
-            try {
-                connection.setAutoCommit(true); // Bật lại auto-commit
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
 
         return false;
@@ -316,7 +200,7 @@ public class HotelBranchDAO extends DBcontext.DBContext {
 
     public List<HotelBranch> getListHotelBranchByPage(int page, int pageSize) {
         List<HotelBranch> branchList = new ArrayList<>();
-        String sql = "SELECT * FROM HotelBranch ORDER BY id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        String sql = "SELECT * FROM HotelBranch where is_deleted = 0 ORDER BY id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         try {
             PreparedStatement stmt = connection.prepareStatement(sql);
@@ -346,7 +230,8 @@ public class HotelBranchDAO extends DBcontext.DBContext {
 
     public int getTotalHotelBranchAfterSearching(String keyword) {
         String sql = "SELECT COUNT(*) FROM HotelBranch "
-                + "WHERE name LIKE ? OR address LIKE ? OR phone LIKE ? OR email LIKE ? OR owner_id LIKE ? OR manager_id LIKE ?";
+                + "WHERE is_deleted = 0 AND ("
+                + "name LIKE ? OR address LIKE ? OR phone LIKE ? OR email LIKE ? OR owner_id LIKE ? OR manager_id LIKE ?)";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             String wildcardKeyword = "%" + keyword + "%";
@@ -369,7 +254,8 @@ public class HotelBranchDAO extends DBcontext.DBContext {
     public List<HotelBranch> searchHotelBranches(String keyword, int page, int pageSize) {
         List<HotelBranch> branchList = new ArrayList<>();
         String sql = "SELECT * FROM HotelBranch "
-                + "WHERE name LIKE ? OR address LIKE ? OR phone LIKE ? OR email LIKE ? OR owner_id LIKE ? OR manager_id LIKE ? "
+                + "WHERE is_deleted = 0 AND ("
+                + "name LIKE ? OR address LIKE ? OR phone LIKE ? OR email LIKE ? OR owner_id LIKE ? OR manager_id LIKE ?) "
                 + "ORDER BY id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -401,21 +287,20 @@ public class HotelBranchDAO extends DBcontext.DBContext {
 
         return branchList;
     }
-    
-    
-   public String getBranchNameById(int branchId) {
-    String sql = "SELECT name FROM HotelBranch WHERE id = ?";
-    try (PreparedStatement ps = connection.prepareStatement(sql)) {
-        ps.setInt(1, branchId);
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            return rs.getString("name");
+
+    public String getBranchNameById(int branchId) {
+        String sql = "SELECT name FROM HotelBranch WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("name");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
+        return "";
     }
-    return "";
-}
 
     public boolean isPhoneExists(String phone) {
         String sql = "SELECT 1 FROM HotelBranch WHERE phone = ?";
@@ -466,6 +351,34 @@ public class HotelBranchDAO extends DBcontext.DBContext {
             e.printStackTrace();
         }
         return false;
+    }
+
+    //Hung: Lay theo manager id
+    public HotelBranch getBranchByManagerId(String managerId) {
+        String sql = "SELECT * FROM HotelBranch WHERE manager_id = ? AND is_deleted = 0";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, managerId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return new HotelBranch(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("address"),
+                        rs.getString("phone"),
+                        rs.getString("email"),
+                        rs.getString("image_url"),
+                        rs.getString("owner_id"),
+                        rs.getString("manager_id")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
 }
