@@ -1,8 +1,10 @@
-    package Controller.Manager;
+package Controller.Manager;
 
 import Dal.MembershipDAO;
 import Dal.BranchDAO;
+import Dal.HotelBranchDAO;
 import Model.Branch;
+import Model.HotelBranch;
 import Model.UserAccount;
 import Model.PointTransaction;
 
@@ -21,16 +23,16 @@ import java.util.stream.Collectors;
 public class ManagerMembershipServlet extends HttpServlet {
 
     private final MembershipDAO membershipDAO = new MembershipDAO();
-    private final BranchDAO branchDAO = new BranchDAO();
-
+    private final HotelBranchDAO branchDAO = new HotelBranchDAO();
+    
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         UserAccount manager = (UserAccount) session.getAttribute("user");
 
-        if (manager == null || !"Manager".equals(manager.getRole()) || manager.getBranchId() == null) {
-            response.sendRedirect(request.getContextPath() + "/login.jsp");
+        if (manager == null) {
+            response.sendRedirect("./login.jsp");
             return;
         }
 
@@ -73,7 +75,9 @@ public class ManagerMembershipServlet extends HttpServlet {
         try {
             switch (action) {
                 case "search":
-                    searchCustomers(request, response, manager.getBranchId());
+                    HotelBranch branch = branchDAO.getBranchByManagerId(manager.getId());
+                    int branchId = branch.getId();
+                    searchCustomers(request, response, branchId);
                     break;
                 case "adjustPoints":
                     adjustPoints(request, response, manager.getId());
@@ -98,19 +102,19 @@ public class ManagerMembershipServlet extends HttpServlet {
         String rankFilter = request.getParameter("rankFilter");
 
         List<UserAccount> searchResults;
-        if ((searchTerm == null || searchTerm.trim().isEmpty()) &&
-            (rankFilter == null || rankFilter.trim().isEmpty())) {
+        if ((searchTerm == null || searchTerm.trim().isEmpty())
+                && (rankFilter == null || rankFilter.trim().isEmpty())) {
             // Nếu không nhập gì thì show all
             searchResults = membershipDAO.getAllCustomers();
         } else {
             List<UserAccount> baseResults = membershipDAO.searchCustomers(
-                searchTerm != null ? searchTerm.trim() : "",
-                branchId
+                    searchTerm != null ? searchTerm.trim() : "",
+                    branchId
             );
             if (rankFilter != null && !rankFilter.trim().isEmpty()) {
                 searchResults = baseResults.stream()
-                    .filter(c -> c.getLoyaltyPoint() != null && rankFilter.equalsIgnoreCase(c.getLoyaltyPoint().getLevel()))
-                    .collect(Collectors.toList());
+                        .filter(c -> c.getLoyaltyPoint() != null && rankFilter.equalsIgnoreCase(c.getLoyaltyPoint().getLevel()))
+                        .collect(Collectors.toList());
             } else {
                 searchResults = baseResults;
             }
@@ -169,8 +173,8 @@ public class ManagerMembershipServlet extends HttpServlet {
         String pointsStr = request.getParameter("points");
         String reason = request.getParameter("reason");
 
-        if (userId == null || pointsStr == null || reason == null ||
-            userId.trim().isEmpty() || pointsStr.trim().isEmpty() || reason.trim().isEmpty()) {
+        if (userId == null || pointsStr == null || reason == null
+                || userId.trim().isEmpty() || pointsStr.trim().isEmpty() || reason.trim().isEmpty()) {
             session.setAttribute("error", "All fields are required.");
             response.sendRedirect(request.getContextPath() + "/manager-membership?action=view&userId=" + userId);
             return;
@@ -195,7 +199,6 @@ public class ManagerMembershipServlet extends HttpServlet {
     }
 
     // ĐÃ BỎ: Hàm changeTier và isValidTierLevel
-
     private void setCommonAttributes(HttpServletRequest request) throws SQLException {
         UserAccount manager = (UserAccount) request.getSession().getAttribute("user");
         if (manager != null) {
@@ -204,8 +207,8 @@ public class ManagerMembershipServlet extends HttpServlet {
                 displayName = manager.getUsername();
             }
             request.setAttribute("username", displayName);
-
-            Branch currentBranch = branchDAO.getBranchById(manager.getBranchId());
+            
+            HotelBranch currentBranch = branchDAO.getBranchByManagerId(manager.getId());
             if (currentBranch != null) {
                 request.setAttribute("branchname", currentBranch.getName());
             } else {

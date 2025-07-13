@@ -86,7 +86,7 @@ public class BookingDAO extends DBcontext.DBContext {
                 + "LEFT JOIN BookingRoomType brt ON b.id = brt.booking_id "
                 + "LEFT JOIN RoomType rt ON brt.room_type_id = rt.id "
                 + "WHERE b.user_id = ? AND b.branch_id = ? "
-                + "GROUP BY b.id, b.user_id, b.booking_time, b.check_in, b.check_out, b.status, "
+                + "GROUP BY b.id, b.user_id, b.booking_time, b.check_in, b.check_out, b.status, b.exported_to_revenue, "
                 + "b.total_price, b.deposit, b.payment_status, b.cancel_reason, b.cancel_time, "
                 + "b.promotion_id, u.username";
         try {
@@ -335,7 +335,7 @@ public class BookingDAO extends DBcontext.DBContext {
                 + "AND u.username LIKE ? "
                 + "AND b.branch_id = ? "
                 + "GROUP BY b.id, b.user_id, b.booking_time, b.check_in, b.check_out, b.status, "
-                + "b.total_price, b.deposit, b.payment_status, b.cancel_reason, b.cancel_time, "
+                + "b.total_price, b.deposit, b.payment_status, b.cancel_reason, b.cancel_time, b.exported_to_revenue, "
                 + "b.promotion_id, u.username";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, "%" + keyword + "%");
@@ -976,7 +976,7 @@ public class BookingDAO extends DBcontext.DBContext {
         }
 
         sql.append("GROUP BY b.id, b.user_id, b.booking_time, b.check_in, b.check_out, b.status, "
-                + "b.total_price, b.deposit, b.payment_status, b.cancel_reason, b.cancel_time, "
+                + "b.total_price, b.deposit, b.payment_status, b.cancel_reason, b.cancel_time, b.exported_to_revenue, "
                 + "b.promotion_id, u.username, u.fullname, lp.level ");
         sql.append("ORDER BY b.id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
         params.add((page - 1) * pageSize);
@@ -1186,7 +1186,9 @@ public class BookingDAO extends DBcontext.DBContext {
                 .append("b.id, b.user_id, b.created_by, b.booking_time, b.check_in, b.check_out, ")
                 .append("b.status, b.total_price, b.refund_amount, b.payment_status, b.cancel_reason, ")
                 .append("b.cancel_time, b.promotion_id, b.branch_id, b.note, b.is_deleted, ")
+                .append("b.exported_to_revenue, ") // ✅ THÊM DÒNG NÀY
                 .append("u.fullname, u.username, lp.level ");
+
         sql.append("ORDER BY b.check_in DESC");
 
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
@@ -1558,7 +1560,7 @@ public class BookingDAO extends DBcontext.DBContext {
                 + "WHERE b.id = ? AND b.user_id = ? AND b.is_deleted = 0 "
                 + "GROUP BY b.id, b.user_id, b.created_by, b.booking_time, b.check_in, b.check_out, "
                 + "b.status, b.total_price, b.refund_amount, b.payment_status, b.cancel_reason, "
-                + "b.cancel_time, b.promotion_id, b.branch_id, b.note, b.is_deleted, "
+                + "b.cancel_time, b.promotion_id, b.branch_id, b.note, b.is_deleted, b.exported_to_revenue, "
                 + "u.username, u.fullname";
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -2029,13 +2031,13 @@ public class BookingDAO extends DBcontext.DBContext {
 
         return totalBooking;
     }
-    
+
     public Integer addBooking2(String userId, Timestamp checkIn, Timestamp checkOut,
             String status, double totalPrice, String paymentStatus, int branchId,
             String note, boolean isDeleted) {
 
         String sql = "INSERT INTO Booking (user_id, check_in, check_out, status, total_price, "
-                   + "payment_status, branch_id, note, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "payment_status, branch_id, note, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, userId);
@@ -2063,7 +2065,7 @@ public class BookingDAO extends DBcontext.DBContext {
             return null;  // or throw custom exception if you prefer
         }
     }
-    
+
     public boolean updateBookingPrice(int bookingId, double newTotalPrice) {
         try {
             String sql = "UPDATE Booking SET total_price = ? WHERE id = ?";
@@ -2081,4 +2083,13 @@ public class BookingDAO extends DBcontext.DBContext {
         }
     }
 
+    public static void main(String[] args) {
+        BookingDAO bookingDAO = new BookingDAO();
+        List<Booking> bookings = bookingDAO.searchBookingsByBranchWithFilter(
+                1, "J", "Pending", "2025-05-01", "2025-07-31"
+        );
+        for (Booking booking : bookings) {
+            System.out.println(booking);
+        }
+    }
 }
