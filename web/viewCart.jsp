@@ -51,93 +51,13 @@
 
         <div class="layer"></div><!-- Opacity Mask -->
 
-        <header class="reveal_header">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-6">
-                        <a href="homepage" class="logo_normal"><img src="img/logo.png" width="135" height="45" alt=""></a>
-                        <a href="index.html" class="logo_sticky"><img src="img/logo_sticky.png" width="135" height="45" alt=""></a>
-                    </div>
-                    <div class="col-6">
-                        <nav>
-                            <ul>
-
-                                <li>
-                                    <div class="hamburger_2 open_close_nav_panel">
-                                        <div class="hamburger__box">
-                                            <div class="hamburger__inner"></div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-            </div><!-- /container -->
-        </header><!-- /Header -->
+        <%@ include file="./header.jsp"%>
 
         <div class="nav_panel">
             <a href="#" class="closebt open_close_nav_panel"><i class="bi bi-x"></i></a>
             <div class="logo_panel"><img src="img/logo_sticky.png" width="135" height="45" alt=""></div>
-            <div class="sidebar-navigation">
-                <nav>
-                    <ul class="level-1">
-                        <li class="parent"><a href="#0">Home</a>
-                            <ul class="level-2">
-                                <li class="back"><a href="#0">Back</a></li>
-                                <li><a href="index.html">Home Video Bg</a></li>
-                                <li><a href="index-2.html">Home Carousel</a></li>
-                                <li><a href="index-3.html">Home FlexSlider</a></li>
-                                <li><a href="index-4.html">Home Youtube/Vimeo</a></li>
-                                <li><a href="index-5.html">Home Parallax</a></li>
-                                <li><a href="index-6.html">Home Parallax 2</a></li>
-                            </ul>
-                        </li>
-                        <li class="parent"><a href="#0">Rooms & Suites</a>
-                            <ul class="level-2">
-                                <li class="back"><a href="#0">Back</a></li>
-                                <li><a href="room-list-1.html">Room list 1</a></li>
-                                <li><a href="room-list-2.html">Room list 2</a></li>
-                                <li><a href="room-list-3.html">Room list 3</a></li>
-                                <li><a href="room-details.html">Room details</a></li>
-                                <li><a href="room-details-booking.html">Working Booking Request</a></li>
-                            </ul>
-                        </li>
-                        <li><a href="about.html">About</a></li>
-                        <li><a href="restaurant.html">Restaurant</a></li>
-                        <li><a href="news-1.html">News & events</a></li>
-                        <li><a href="contacts.html">Contact</a></li>
-                        <li class="parent"><a href="#0">Other Pages</a>
-                            <ul class="level-2">
-                                <li class="back"><a href="#0">Back</a></li>
-                                <li><a href="404.html">Error Page</a></li>
-                                <li><a href="gallery.html">Masonry Gallery</a></li>
-                                <li><a href="menu-of-the-day.html">Menu of the day</a></li>
-                                <li><a href="modal-advertise-1.html">Modal Advertise</a></li>
-                                <li><a href="cookie-bar.html">GDPR Cookie Bar</a></li>
-                                <li><a href="coming-soon.html">Coming Soon</a></li>
-                            </ul>
-                        </li>
-                        <li class="parent"><a href="#0">Menu Versions</a>
-                            <ul class="level-2">
-                                <li class="back"><a href="#0">Back</a></li>
-                                <li><a href="menu-2.html">Menu Version 2 <span class="custom_badge">Hot</span></a></li>
-                                <li><a href="menu-3.html">Menu Version 3</a></li>
-                                <li><a href="menu-4.html">Menu Version 4</a></li>
-                                <li><a href="menu-5.html">Menu Version 5</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                    <div class="panel_footer">
-                        <div class="phone_element"><a href="tel://423424234"><i class="bi bi-telephone"></i><span><em>Info and bookings</em>+41 934 121 1334</span></a></div>
-                    </div>
-                    <!-- /panel_footer -->
-                </nav>
-            </div>
-            <!-- /sidebar-navigation -->
         </div>
         <!-- /nav_panel -->
-
 
         <main style="padding-bottom: 1px;">
             <div class="hero medium-height jarallax" data-jarallax data-speed="0.2">
@@ -369,7 +289,7 @@
                         const selectedBranchId = checked[0].dataset.branchid;
                         checkboxes.forEach(cb => {
                             if (cb.dataset.branchid !== selectedBranchId) {
-                                cb.disabled = true;
+//                                cb.disabled = true;
                                 cb.checked = false;
                             } else {
                                 cb.disabled = false;
@@ -387,8 +307,7 @@
                             const selectedBranchId = checked[0].dataset.branchid;
                             if (cb.dataset.branchid !== selectedBranchId) {
                                 e.preventDefault(); // Ngăn không cho chọn
-                                showToast("❌ You can only choose rooms from the same branch!", "#e53935");
-                                alert("❌ Bạn chỉ có thể chọn phòng từ cùng một chi nhánh.");
+                                showToast("❌ You can only choose rooms from one branch!", "#e53935");
                             }
                         }
                     });
@@ -509,19 +428,29 @@
                 const input = document.getElementById("selectedRoomList");
                 const quanlitySend = document.getElementById("quanlitySend");
 
-                if (selectedRoom.size === 0) {
+                const selectedCheckboxes = document.querySelectorAll(".roomtype-checkbox:checked");
+
+                if (selectedCheckboxes.length === 0) {
                     showToast("❌ Vui lòng chọn ít nhất một phòng để tiếp tục!", "#e53935");
-                    return; // Ngăn submit form
+                    return;
                 }
 
-                const roomIds = Array.from(selectedRoom);
-                const quantities = roomIds.map(id => selectedQuantity.get(id));
+                const roomIds = [];
+                const quantities = [];
+
+                selectedCheckboxes.forEach(cb => {
+                    const roomId = cb.dataset.roomtypeid;
+                    const quantity = cb.dataset.quantity || "1";
+                    roomIds.push(roomId);
+                    quantities.push(quantity);
+                });
 
                 input.value = roomIds.join(",");
                 quanlitySend.value = quantities.join(",");
 
                 document.getElementById("proceed").submit();
             }
+
 
 
 

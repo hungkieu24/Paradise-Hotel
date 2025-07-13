@@ -47,91 +47,11 @@
 
         <div class="layer"></div><!-- Opacity Mask -->
 
-        <header class="reveal_header">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-6">
-                        <a href="homepage" class="logo_normal"><img src="img/logo.png" width="135" height="45" alt=""></a>
-                        <a href="index.html" class="logo_sticky"><img src="img/logo_sticky.png" width="135" height="45" alt=""></a>
-                    </div>
-
-                    <div class="col-6">
-                        <nav class="second_nav">
-                            <ul>
-                                <li><a href="#booking_section" class="btn_1 btn_scrollto">Book Now</a></li>
-                                <li>
-                                    <div class="hamburger_2 open_close_nav_panel">
-                                        <div class="hamburger__box">
-                                            <div class="hamburger__inner"></div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-            </div><!-- container -->
-        </header><!-- End Header -->
+        <%@ include file="./header.jsp"%>
 
         <div class="nav_panel">
             <a href="#" class="closebt open_close_nav_panel"><i class="bi bi-x"></i></a>
             <div class="logo_panel"><img src="img/logo_sticky.png" width="135" height="45" alt=""></div>
-            <div class="sidebar-navigation">
-                <nav>
-                    <ul class="level-1">
-                        <li class="parent"><a href="#0">Home</a>
-                            <ul class="level-2">
-                                <li class="back"><a href="#0">Back</a></li>
-                                <li><a href="index.html">Home Video Bg</a></li>
-                                <li><a href="index-2.html">Home Carousel</a></li>
-                                <li><a href="index-3.html">Home FlexSlider</a></li>
-                                <li><a href="index-4.html">Home Youtube/Vimeo</a></li>
-                                <li><a href="index-5.html">Home Parallax</a></li>
-                                <li><a href="index-6.html">Home Parallax 2</a></li>
-                            </ul>
-                        </li>
-                        <li class="parent"><a href="#0">Rooms & Suites</a>
-                            <ul class="level-2">
-                                <li class="back"><a href="#0">Back</a></li>
-                                <li><a href="room-list-1.html">Room list 1</a></li>
-                                <li><a href="room-list-2.html">Room list 2</a></li>
-                                <li><a href="room-list-3.html">Room list 3</a></li>
-                                <li><a href="room-details.html">Room details</a></li>
-                                <li><a href="room-details-booking.html">Working Booking Request</a></li>
-                            </ul>
-                        </li>
-                        <li><a href="about.html">About</a></li>
-                        <li><a href="restaurant.html">Restaurant</a></li>
-                        <li><a href="news-1.html">News & events</a></li>
-                        <li><a href="contacts.html">Contact</a></li>
-                        <li class="parent"><a href="#0">Other Pages</a>
-                            <ul class="level-2">
-                                <li class="back"><a href="#0">Back</a></li>
-                                <li><a href="404.html">Error Page</a></li>
-                                <li><a href="gallery.html">Masonry Gallery</a></li>
-                                <li><a href="menu-of-the-day.html">Menu of the day</a></li>
-                                <li><a href="modal-advertise-1.html">Modal Advertise</a></li>
-                                <li><a href="cookie-bar.html">GDPR Cookie Bar</a></li>
-                                <li><a href="coming-soon.html">Coming Soon</a></li>
-                            </ul>
-                        </li>
-                        <li class="parent"><a href="#0">Menu Versions</a>
-                            <ul class="level-2">
-                                <li class="back"><a href="#0">Back</a></li>
-                                <li><a href="menu-2.html">Menu Version 2 <span class="custom_badge">Hot</span></a></li>
-                                <li><a href="menu-3.html">Menu Version 3</a></li>
-                                <li><a href="menu-4.html">Menu Version 4</a></li>
-                                <li><a href="menu-5.html">Menu Version 5</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                    <div class="panel_footer">
-                        <div class="phone_element"><a href="tel://423424234"><i class="bi bi-telephone"></i><span><em>Info and bookings</em>+41 934 121 1334</span></a></div>
-                    </div>
-                    <!-- /panel_footer -->
-                </nav>
-            </div>
-            <!-- /sidebar-navigation -->
         </div>
         <!-- /nav_panel -->
 
@@ -166,36 +86,32 @@
             <div class="bg_white" id="first_section">
                 <div class="container margin_120_95">
                     <div class="row justify-content-between">
+                        <!-- Left: Description -->
                         <div class="col-lg-4">
                             <div class="title">
                                 <small>Luxury Experience</small>
                                 <h2>${roomType.getDescription()}</h2>
                             </div>
-                            <p>The dark wood panelling and furnishings, deluxe red-draped four-poster bed, and magnificent black stone bathroom evoke the charm of a secluded Sierra Nevada getaway. The intimate scale and finish give the room a distinctly personal feel.</p>
-                            <p>The dark wood panelling and furnishings, deluxe red-draped four-poster bed, and magnificent black stone bathroom evoke the charm.</p>
+                            <br>
+                            <h5>Capacity Adult: ${roomType.capacity_adult}</h5>
+                            <h5>Capacity Child: ${roomType.capacity_child}</h5>
                         </div>
+
+                        <!-- Right: Services -->
                         <div class="col-lg-6">
                             <div class="room_facilities_list">
+                                <h3>Services that this room type has:</h3>
                                 <ul data-cues="slideInLeft">
-                                    <li><i class="icon-hotel-double_bed_2"></i> King Size Bed</li>
-                                    <li><i class="icon-hotel-safety_box"></i> Safety Box</li>
-                                    <li><i class="icon-hotel-patio"></i>Balcony</li>
-                                    <li><i class="icon-hotel-tv"></i> 32 Inch TV</li>
-                                    <li><i class="icon-hotel-disable"></i> Disable Access</li>
-                                    <li><i class="icon-hotel-dog"></i> Pet Allowed</li>
-                                    <li><i class="icon-hotel-bottle"></i> Welcome Bottle</li>
-                                    <li><i class="icon-hotel-wifi"></i> Wifi / Netflix access</li>
-                                    <li><i class="icon-hotel-hairdryer"></i> Air Dryer</li>
-                                    <li><i class="icon-hotel-condition"></i> Air Condition</li>
-                                    <li><i class="icon-hotel-loundry"></i>Loundry Service</li>
+                                    <c:forEach items="${listServices}" var="ls">
+                                        <li><h4>${ls.name}</h4></li>
+                                            </c:forEach>
                                 </ul>
                             </div>
                         </div>
                     </div>
-                    <!-- /row -->
                 </div>
-                <!-- /container -->
             </div>
+
             <!-- /bg_white -->
 
             <div class="bg_white add_bottom_120">
@@ -285,7 +201,7 @@
 
                                         <c:if test="${not empty user and user.id eq feedback.user_id}">
 
-                                            <div class="feedback-actions" style="padding-left: 920px; padding-bottom: 30px;">
+                                            <div class="feedback-actions" style="padding-left: 900px; padding-bottom: 30px;">
                                                 <button type="button"
                                                         class="btn btn-warning btn-sm"
                                                         onclick="openEditModal('${feedback.id}', '${feedback.rating}', `${feedback.comment}`, '${feedback.image_url}')">
@@ -317,62 +233,62 @@
                                 <form id="editFeedbackForm" action="EditFeedbackServlet" method="post">
                                     <input type="hidden" name="feedbackId" id="editFeedbackId" />
                                     <input type="hidden" name="roomTypeId" value="${roomTypeId}" />
-                                    
+
                                     <label>Overall Rating (1-5 Stars)</label>
                                     <div class="row">
-                                <div class="col-sm-6">
-                                    <div class="form-floating mb-4">
-                                        
-                                    <input
-                                        class="form-control"
-                                        type="range"
-                                        id="editRating"
-                                        name="rating"
-                                        min="1"
-                                        max="5"
-                                        step="1"
-                                        value="3"    
-                                        required
-                                        />
-                                    <label for="star_rating">Rating (stars)</label>
-                                    </div>
-                                </div>
+                                        <div class="col-sm-6">
+                                            <div class="form-floating mb-4">
 
-                                <div class="col-sm-6">
-                                    <div class="form-floating mb-4">
-                                        <div
-                                            id="star_display"
-                                            style="font-size: 1.5rem; color: gold; cursor: context-menu"
-                                            ></div>
-                                    </div>
-                                </div>
+                                                <input
+                                                    class="form-control"
+                                                    type="range"
+                                                    id="editRating"
+                                                    name="rating"
+                                                    min="1"
+                                                    max="5"
+                                                    step="1"
+                                                    value="3"    
+                                                    required
+                                                    />
+                                                <label for="star_rating">Rating (stars)</label>
+                                            </div>
+                                        </div>
 
-                                    <label>Detailed Comments</label>
-                                    <textarea class="form-control" placeholder="Message" id="editComment" name="comment" required></textarea>
+                                        <div class="col-sm-6">
+                                            <div class="form-floating mb-4">
+                                                <div
+                                                    id="star_display"
+                                                    style="font-size: 1.5rem; color: gold; cursor: context-menu"
+                                                    ></div>
+                                            </div>
+                                        </div>
 
-                                    <div style="margin-top: 20px; text-align: right;">
-                                        <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Close</button>
-                                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                                    </div>
+                                        <label>Detailed Comments</label>
+                                        <textarea class="form-control" placeholder="Message" id="editComment" name="comment" required></textarea>
+
+                                        <div style="margin-top: 20px; text-align: right;">
+                                            <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Close</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </div>
                                 </form>
                             </div>
                         </div>
 
-                        
+
                     </div>
-                                    <div class="pagination">
-                            <c:if test="${currentPage > 1}">
-                                <a href="?roomTypeId=${roomTypeId}&&page=${currentPage - 1}"  class="prev"> Previous</a>
-                            </c:if>
+                    <div class="pagination">
+                        <c:if test="${currentPage > 1}">
+                            <a href="?roomTypeId=${roomTypeId}&&page=${currentPage - 1}"  class="prev"> Previous</a>
+                        </c:if>
 
-                            <c:forEach var="i" begin="1" end="${totalPages}">
-                                <a href="?roomTypeId=${roomTypeId}&&page=${i}" class="${i == currentPage ? 'active' : ''}">${i}</a>
-                            </c:forEach>
+                        <c:forEach var="i" begin="1" end="${totalPages}">
+                            <a href="?roomTypeId=${roomTypeId}&&page=${i}" class="${i == currentPage ? 'active' : ''}">${i}</a>
+                        </c:forEach>
 
-                            <c:if test="${currentPage < totalPages}">
-                                <a href="?roomTypeId=${roomTypeId}&&page=${currentPage + 1}" class="next">Next</a>
-                            </c:if>
-                        </div>
+                        <c:if test="${currentPage < totalPages}">
+                            <a href="?roomTypeId=${roomTypeId}&&page=${currentPage + 1}" class="next">Next</a>
+                        </c:if>
+                    </div>
                 </div>
                 <!-- /row -->
             </div>
@@ -454,21 +370,21 @@
         <script src="js/datepicker_inline.js"></script>
         <script src="phpmailer/validate.js"></script>
         <script>
-                                            // Progress bars animation
-                                            $(function () {
-                                                "use strict";
-                                                var $section = $('#reviews');
-                                                $(window).on('scroll', function (ev) {
-                                                    var scrollOffset = $(window).scrollTop();
-                                                    var containerOffset = $section.offset().top - window.innerHeight;
-                                                    if (scrollOffset > containerOffset) {
-                                                        $(".progress-bar").each(function () {
-                                                            var each_bar_width = $(this).attr('aria-valuenow');
-                                                            $(this).width(each_bar_width + '%');
-                                                        });
-                                                    }
+                                                // Progress bars animation
+                                                $(function () {
+                                                    "use strict";
+                                                    var $section = $('#reviews');
+                                                    $(window).on('scroll', function (ev) {
+                                                        var scrollOffset = $(window).scrollTop();
+                                                        var containerOffset = $section.offset().top - window.innerHeight;
+                                                        if (scrollOffset > containerOffset) {
+                                                            $(".progress-bar").each(function () {
+                                                                var each_bar_width = $(this).attr('aria-valuenow');
+                                                                $(this).width(each_bar_width + '%');
+                                                            });
+                                                        }
+                                                    });
                                                 });
-                                            });
         </script>
         <script>
             $(document).ready(function () {
@@ -506,26 +422,26 @@
             }
         </script>
         <script>
-                            $(document).ready(function () {
-                                
+            $(document).ready(function () {
 
-                                // Khởi tạo hiển thị sao ban đầu
-                                updateStars($("#editRating").val());
 
-                                // Cập nhật khi thay đổi
-                                $("#editRating").on("input change", function () {
-                                    updateStars($(this).val());
-                                });
-                            });
-    </script>
-    <script>
-        function updateStars(value) {
-                                    let stars = "";
-                                    for (let i = 0; i < value; i++) {
-                                        stars += "⭐";
-                                    }
-                                    $("#star_display").html(stars);
-                                }
-    </script>
+                // Khởi tạo hiển thị sao ban đầu
+                updateStars($("#editRating").val());
+
+                // Cập nhật khi thay đổi
+                $("#editRating").on("input change", function () {
+                    updateStars($(this).val());
+                });
+            });
+        </script>
+        <script>
+            function updateStars(value) {
+                let stars = "";
+                for (let i = 0; i < value; i++) {
+                    stars += "⭐";
+                }
+                $("#star_display").html(stars);
+            }
+        </script>
     </body>
 </html>

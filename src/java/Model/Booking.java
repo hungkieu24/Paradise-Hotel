@@ -29,15 +29,17 @@ public class Booking {
     private String fullName;
     private String note;
     private int branchId;
-  
+    private String branchName;
+    private String roomTypeImage;
+
     public Booking() {
     }
 
     // Nếu cần, bạn có thể thêm constructor có đủ thông tin
     // Getters and Setters
     public String getRoomTypeName() {
-    return roomTypeName;
-}
+        return roomTypeName;
+    }
 
     public boolean isIsDeleted() {
         return isDeleted;
@@ -47,9 +49,9 @@ public class Booking {
         this.isDeleted = isDeleted;
     }
 
-public void setRoomTypeName(String roomTypeName) {
-    this.roomTypeName = roomTypeName;
-}
+    public void setRoomTypeName(String roomTypeName) {
+        this.roomTypeName = roomTypeName;
+    }
 
     public List<Service> getServices() {
         return services;
@@ -209,5 +211,21 @@ public void setRoomTypeName(String roomTypeName) {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public String getBranchName() {
+        return branchName;
+    }
+
+    public void setBranchName(String branchName) {
+        this.branchName = branchName;
+    }
+
+    public String getRoomTypeImage() {
+        return roomTypeImage;
+    }
+
+    public void setRoomTypeImage(String roomTypeImage) {
+        this.roomTypeImage = roomTypeImage;
     }
 }

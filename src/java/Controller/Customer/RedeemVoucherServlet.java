@@ -44,6 +44,10 @@ public class RedeemVoucherServlet extends HttpServlet {
         List<Voucher> listVoucher = voucherDAO.getAllVouchers();
 
         request.setAttribute("listVoucher", listVoucher);
+        
+        PointRedeemVoucherDAO pointRedeemVoucherDAO = new PointRedeemVoucherDAO();
+        List<Integer> redeemedVoucherIds = pointRedeemVoucherDAO.getRedeemedVoucherIdsByUser(user.getId());
+        request.setAttribute("redeemedVoucherIds", redeemedVoucherIds);
 
         request.setAttribute("tierRankHelper", new TierUtil());
         request.setAttribute("discountRateHelper", new TierUtil());
@@ -85,7 +89,7 @@ public class RedeemVoucherServlet extends HttpServlet {
 
         if (redeemDAO.hasAlreadyRedeemed(user.getId(), voucherId)) {
             request.setAttribute("error", "⚠️ You have already redeemed this voucher.");
-             response.sendRedirect("redeemVoucher?success=false");
+            response.sendRedirect("redeemVoucher?success=false");
             return;
         }
 

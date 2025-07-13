@@ -21,7 +21,7 @@ public class BookingRoomTypeDAO extends DBContext {
         String sql = """
             SELECT brt.booking_id, brt.room_type_id, brt.quantity, brt.price_per_room,
                    rt.name as room_type_name, rt.description as room_type_description, 
-                   rt.image_url as room_type_image_url, hb.name as branch_name
+                   rt.image_url as room_type_image_url, hb.name as branch_name, rt.base_price as base_price
             FROM BookingRoomType brt
             INNER JOIN RoomType rt ON brt.room_type_id = rt.id
             INNER JOIN Booking b ON brt.booking_id = b.id
@@ -46,7 +46,7 @@ public class BookingRoomTypeDAO extends DBContext {
                 brt.setRoomTypeDescription(rs.getString("room_type_description"));
                 brt.setRoomTypeImageUrl(rs.getString("room_type_image_url"));
                 brt.setBranchName(rs.getString("branch_name"));
-                
+                brt.setBase_price(rs.getDouble("base_price"));
                 bookingRoomTypes.add(brt);
             }
             
@@ -376,4 +376,21 @@ public class BookingRoomTypeDAO extends DBContext {
     }
     return remainingMap;
 }
+    public Integer getRoomTypeIdByBookingId(int bookingId) {
+        Integer roomTypeId = null;
+        String sql = "SELECT room_type_Id FROM BookingRoomType WHERE booking_id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setInt(1, bookingId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                roomTypeId = rs.getInt("roomTypeId");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return roomTypeId;
+    }
 }

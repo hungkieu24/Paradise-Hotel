@@ -64,3 +64,76 @@
     padding: 8px;
     margin-top: 4px;
 }
+
+.bg_white {
+    background-color: #fff;
+    padding: 60px 0;
+}
+
+.title small {
+    font-size: 14px;
+    color: #aaa;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.title h2 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-top: 10px;
+    color: #333;
+}
+
+h5 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #444;
+}
+
+.room_facilities_list {
+    background-color: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.room_facilities_list h3 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #222;
+}
+
+.room_facilities_list ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.room_facilities_list ul li {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    color: #333;
+}
+
+.room_facilities_list ul li::before {
+    content: '✓';
+    color: #2ecc71;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .title h2 {
+        font-size: 24px;
+    }
+
+    .room_facilities_list {
+        padding: 15px;
+    }
+
+    .room_facilities_list h3 {
+        font-size: 18px;
+    }
+}

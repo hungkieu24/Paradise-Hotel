@@ -67,10 +67,10 @@ public class BookingServlet extends HttpServlet {
             listServices = serviceDAO.getServicesByBranchId(room.getBranchId());
             totalRoom = room.getBase_price();
 
-            session.setAttribute("singleRoom", room);
-            session.setAttribute("listServices", listServices);
+            request.setAttribute("singleRoom", room);
+            request.setAttribute("listServices", listServices);
             session.setAttribute("totalRoomQuantity", 1);
-
+            request.setAttribute("totalRoom", totalRoom);
         } else {
             session.removeAttribute("singleRoom");
 
@@ -140,7 +140,17 @@ public class BookingServlet extends HttpServlet {
             session.setAttribute("listCartItem", listCartItem);
             session.setAttribute("services", listServices);
         } else {
-            session.removeAttribute("listCartItem");
+            String isRebook = request.getParameter("rebook");
+
+            if ((selectedIds == null || strQuanlity == null) && !"1".equals(isRebook)) {
+                session.removeAttribute("listCartItem");
+                session.removeAttribute("singleRoom");
+                session.removeAttribute("listServices");
+                session.removeAttribute("totalRoomQuantity");
+                session.removeAttribute("totalRoom");
+                session.removeAttribute("selectedServiceMap");
+                session.removeAttribute("preNote");
+            }
         }
 
         LoyaltyPointDAO loyaltyPointDAO = new LoyaltyPointDAO();
@@ -169,21 +179,30 @@ public class BookingServlet extends HttpServlet {
         String totalServiceCostStr = request.getParameter("totalServiceCost");
         double totalServiceCost = 0;
 
+// Danh sách serviceId - quantity
+        Map<Integer, Integer> serviceMap = new HashMap<>();
+
         if (serviceIdList != null && !serviceIdList.trim().isEmpty()) {
-            String[] idArray = serviceIdList.split(",");
-            for (String id : idArray) {
-                if (!id.trim().isEmpty()) {
+            String[] entries = serviceIdList.split(",");
+            for (String entry : entries) {
+                String[] parts = entry.trim().split(":");
+                if (parts.length == 2) {
                     try {
-                        int serviceId = Integer.parseInt(id.trim());
-                        // Lấy service theo ID, xử lý gì đó
+                        int serviceId = Integer.parseInt(parts[0].trim());
+                        int quantity = Integer.parseInt(parts[1].trim());
+                        if (quantity < 0) {
+                            quantity = 0;
+                        }
+                        serviceMap.put(serviceId, quantity);
                     } catch (NumberFormatException ex) {
-                        response.getWriter().write("{\"status\":\"error\", \"message\":\"Invalid service ID\"}");
+                        response.getWriter().write("{\"status\":\"error\", \"message\":\"Invalid service ID or quantity\"}");
                         return;
                     }
                 }
             }
         }
 
+// Parse tổng tiền dịch vụ
         if (totalServiceCostStr != null && !totalServiceCostStr.isEmpty()) {
             try {
                 totalServiceCost = Double.parseDouble(totalServiceCostStr);
@@ -258,14 +277,61 @@ public class BookingServlet extends HttpServlet {
             return;
         }
 
-        boolean success = bookingDAO.addBooking(user.getId(),
+        Integer bookingId = bookingDAO.addBookingReturnId(user.getId(),
                 checkInTimestamp, checkOutTimestamp, "Pending", totalPrice,
                 "Unpaid", branchId, note, false);
-        if (success) {
-            response.getWriter().write("{\"status\":\"success\"}");
+
+        if (bookingId != null) {
+            boolean allInserted = true;
+
+            // Insert BookingRoomType
+            if (singleRoom != null) {
+                allInserted = bookingDAO.insertBookingRoomType(bookingId,
+                        singleRoom.getRoomTypeID(), 1, singleRoom.getBase_price());
+            } else if (cartItems != null) {
+                for (CartItem item : cartItems) {
+                    boolean inserted = bookingDAO.insertBookingRoomType(bookingId,
+                            item.getRoomType().getRoomTypeID(), item.getQuantity(),
+                            item.getRoomType().getBase_price());
+                    if (!inserted) {
+                        allInserted = false;
+                        break;
+                    }
+                }
+            }
+
+            // Insert BookingService
+            if (allInserted && !serviceMap.isEmpty()) {
+                for (Map.Entry<Integer, Integer> entry : serviceMap.entrySet()) {
+                    int serviceId = entry.getKey();
+                    int quantity = entry.getValue();
+
+                    boolean serviceInserted = bookingDAO.insertBookingService(bookingId, serviceId, quantity, "Unpaid");
+                    if (!serviceInserted) {
+                        allInserted = false;
+                        break;
+                    }
+                }
+            }
+
+            if (allInserted) {
+                HttpSession session = request.getSession();
+                session.removeAttribute("listCartItem");
+                session.removeAttribute("singleRoom");
+                session.removeAttribute("listServices");
+                session.removeAttribute("totalRoomQuantity");
+                session.removeAttribute("totalRoom");
+                session.removeAttribute("services");
+
+                response.getWriter().write("{\"status\":\"success\"}");
+            } else {
+                response.getWriter().write("{\"status\":\"error\", \"message\":\"Failed to save booking details\"}");
+            }
+
         } else {
             response.getWriter().write("{\"status\":\"fail\"}");
         }
+
     }
 
 }

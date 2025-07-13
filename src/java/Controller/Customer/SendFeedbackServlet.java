@@ -42,41 +42,6 @@ import java.util.stream.Collectors;
 )
 public class SendFeedbackServlet extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet SendFeedbackServlet1</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet SendFeedbackServlet1 at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -90,14 +55,6 @@ public class SendFeedbackServlet extends HttpServlet {
         request.getRequestDispatcher("sendFeedback.jsp").forward(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -108,9 +65,11 @@ public class SendFeedbackServlet extends HttpServlet {
             response.sendRedirect("./login.jsp");
             return;
         }
-        BookingDAO bkd = new BookingDAO();
-        Booking bk = (Booking) session.getAttribute("bk");
-//        bk = bkd.getBookingByUserId(user.getId());
+
+        String bookingIdRaw = request.getParameter("bookingId");
+        
+        int bookingId = Integer.parseInt(bookingIdRaw);
+        
         FeedbackDAO feedbackDAO = new FeedbackDAO();
 
         if (user == null) {
@@ -143,12 +102,12 @@ public class SendFeedbackServlet extends HttpServlet {
         uploader.uploadImages(request, "images", uploadPath2);
         //Upload anh
 
-        Feedback feedback = new Feedback(user.getId(), bk.getId(), rating, comment, UPLOAD_DIR, createdAt, "Visible", "None");
+        Feedback feedback = new Feedback(user.getId(), bookingId, rating, comment, UPLOAD_DIR, createdAt, "Visible", "None");
         try {
             feedbackDAO.addFeedback(feedback);
-            setSessionMessage(session, "Information updated successfully!", "success");
+            setSessionMessage(session, "Send feedback successfully!", "success");
         } catch (Exception e) {
-            setSessionMessage(session, "Update information failed!!", "error");
+            setSessionMessage(session, "Send feedback failed!!", "error");
         }
 
         request.getRequestDispatcher("sendFeedback.jsp").forward(request, response);
@@ -159,11 +118,6 @@ public class SendFeedbackServlet extends HttpServlet {
         session.setAttribute("messageType", type);
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
         return "Short description";

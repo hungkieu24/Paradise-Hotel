@@ -1,0 +1,415 @@
+.container.margin_120_95 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.form-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.form-wrapper h3 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+/* Override Bootstrap row to remove negative margins */
+.form-wrapper .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Transform cards into horizontal list items */
+.form-wrapper .col-lg-4,
+.form-wrapper .col-md-6 {
+    width: 100% !important;
+    flex: none !important;
+    max-width: 100% !important;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.form-wrapper .card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    height: auto !important;
+    min-height: 120px;
+}
+
+/* Image styling */
+.form-wrapper .card-img-top {
+    width: 210px !important;
+    height: 210px !important;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-right: 20px;
+}
+
+/* Card body takes up remaining space */
+.form-wrapper .card-body {
+    flex: 1;
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Title styling */
+.form-wrapper .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+/* Text content styling */
+.form-wrapper .card-text {
+    font-size: 14px;
+    color: black;
+    margin-bottom: 4px !important;
+    line-height: 1.4;
+}
+
+/* Status text styling */
+.form-wrapper .card-text[style*="font-weight: bold"] {
+    font-size: 14px;
+    margin-top: 8px !important;
+}
+
+/* Button container */
+.form-wrapper .d-flex.justify-content-between {
+    margin-top: 12px !important;
+    gap: 12px;
+}
+
+/* Button styling */
+.form-wrapper .btn_1.small {
+    padding: 8px 16px;
+    font-size: 13px;
+    text-decoration: none;
+    border-radius: 4px;
+    display: inline-block;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+
+}
+
+/* Primary button (Chi tiết) */
+.form-wrapper .btn_1.small:not(.outline) {
+    background-color: #007bff;
+    color: white;
+}
+
+.form-wrapper .btn_1.small:not(.outline):hover {
+    background-color: #0056b3;
+}
+
+/* Secondary button (Đặt lại) */
+.form-wrapper .btn_1.small.outline {
+    background-color: transparent;
+    color: #007bff;
+    border: 1px solid #007bff;
+}
+
+.form-wrapper .btn_1.small.outline:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.form-wrapper .btn_1.small.danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.form-wrapper .btn_1.small.danger:hover {
+    background-color: #b02a37;
+}
+
+
+/* Pagination styling */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    font-family: Arial, sans-serif;
+}
+
+.pagination a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.pagination a:hover {
+    background-color: #f5f5f5;
+    border-color: #ccc;
+    color: #000;
+}
+
+.pagination a.active {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: #fff;
+    font-weight: 600;
+}
+
+.pagination a.active:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Adjusted Previous and Next buttons */
+.pagination a.prev,
+.pagination a.next {
+    font-weight: 500;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px; /* Make it consistent with other buttons */
+    font-size: 14px;
+}
+
+.pagination a.prev:hover,
+.pagination a.next:hover {
+    background-color: #e9ecef;
+}
+
+.pagination a:disabled {
+    color: #aaa;
+    border-color: #ddd;
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .pagination {
+        gap: 4px;
+    }
+
+    .pagination a {
+        min-width: 28px;
+        height: 28px;
+        font-size: 13px;
+    }
+
+    .pagination a.prev,
+    .pagination a.next {
+        min-width: 28px;
+        height: 28px;
+        font-size: 13px;
+        padding: 0 6px;
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .form-wrapper .card {
+        flex-direction: column;
+        text-align: center;
+        padding: 16px;
+    }
+
+    .form-wrapper .card-img-top {
+        width: 100% !important;
+        height: 200px !important;
+        margin-right: 0;
+        margin-bottom: 16px;
+    }
+
+    .form-wrapper .d-flex.justify-content-between {
+        justify-content: center !important;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-wrapper {
+        padding: 15px;
+    }
+
+    .form-wrapper .card {
+        padding: 12px;
+    }
+
+    .form-wrapper .btn_1.small {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: white;
+    padding: 20px;
+    width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: 8px;
+    position: relative;
+}
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #888;
+}
+
+/* Modal Overlay */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1050; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+    justify-content: center;
+    align-items: center;
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: #fff;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    max-width: 500px; /* Limit width for larger screens */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+/* Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Modal Header */
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    text-align: center;
+    color: #333;
+}
+
+/* Modal Paragraph */
+.modal-content p {
+    margin-bottom: 15px;
+    text-align: center;
+    color: #555;
+}
+
+/* Label */
+.modal-content label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Textarea */
+.modal-content textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.modal-content textarea:focus {
+    border-color: #007bff; /* Bootstrap primary color */
+    outline: none;
+}
+
+/* Buttons */
+.modal-content button {
+    padding: 10px 20px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.modal-content button[type="submit"] {
+    background-color: #dc3545; /* Danger color for cancel */
+    color: white;
+}
+
+.modal-content button[type="submit"]:hover {
+    background-color: #c82333;
+}
+
+.modal-content button[type="button"] {
+    background-color: #6c757d; /* Secondary color */
+    color: white;
+}
+
+.modal-content button[type="button"]:hover {
+    background-color: #5a6268;
+}
+
+/* Center buttons */
+.modal-content form {
+    text-align: center;
+}

@@ -28,14 +28,6 @@ public class VerifyCodeForChangePasswordServlet extends HttpServlet {
             throws ServletException, IOException {
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -63,12 +55,12 @@ public class VerifyCodeForChangePasswordServlet extends HttpServlet {
         UserAccountDAO useraccountdao = new UserAccountDAO();
         UserAccount user = (UserAccount) session.getAttribute("user");
         String newPassword = (String) session.getAttribute("newPassword");
-        String hashedNewPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+//        String hashedNewPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
 
-        boolean updated = useraccountdao.updatePassword1(user.getUsername(), hashedNewPassword);
+        boolean updated = useraccountdao.updatePassword1(user.getUsername(), newPassword);
 
         if (updated) {
-            user.setPassword(hashedNewPassword);
+            user.setPassword(newPassword);
             setSessionMessage(session, "Your password has been updated.", "success");
         } else {
             setSessionMessage(session, "Password updated failed!", "error");

@@ -6,6 +6,7 @@ package Dal;
 
 import Model.Branch;
 import Model.RoomType;
+import java.sql.Timestamp;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -45,7 +46,7 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                         rs.getBoolean("is_deleted") // isDeleted
                 );
                 Branch branch = branchDAO.getBranchByRoomTypeId(roomtype.getRoomTypeID());
-                roomtype.setBranch(branch); 
+                roomtype.setBranch(branch);
                 roomTypeList.add(roomtype);
             }
 
@@ -121,7 +122,7 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                             rs.getBoolean("is_deleted")
                     );
                     Branch branch = branchDAO.getBranchByRoomTypeId(roomType.getRoomTypeID());
-            roomType.setBranch(branch); 
+                    roomType.setBranch(branch);
                     roomTypeList.add(roomType);
                 }
             }
@@ -138,31 +139,34 @@ public class RoomTypeDAO extends DBcontext.DBContext {
     public List<RoomType> getAvailableRoomTypesByDate(LocalDate checkIn, LocalDate checkOut) {
         List<RoomType> availableRoomTypes = new ArrayList<>();
         BranchDAO branchDAO = new BranchDAO();
+
+        // Chuyển LocalDate -> Timestamp (bắt đầu ngày)
+        Timestamp checkInTimestamp = Timestamp.valueOf(checkIn.atStartOfDay());
+        Timestamp checkOutTimestamp = Timestamp.valueOf(checkOut.atStartOfDay());
+
         String sql = """
-        SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price,
-                        rt.capacity_adult, rt.capacity_child,
-                        rt.image_url, rt.branch_id, rt.is_deleted
-        FROM RoomType rt
-        WHERE rt.is_deleted = 0
-          AND EXISTS (
-              SELECT 1
-              FROM Room r
-              WHERE r.room_type_id = rt.id
-                AND r.status NOT IN ('Maintenance', 'Locked')
-                AND r.id NOT IN (
-                    SELECT br.room_id
-                    FROM BookingRoom br
-                    JOIN Booking b ON br.booking_id = b.id
-                    WHERE b.status NOT IN ('Cancelled', 'Locked')
-                      AND b.check_in < ?
-                      AND b.check_out > ?
-                )
-          )
+        SELECT DISTINCT rt.*
+          FROM RoomType rt
+          WHERE rt.is_deleted = 0
+            AND EXISTS (
+                SELECT 1
+                FROM Room r
+                WHERE r.room_type_id = rt.id
+                  AND r.status NOT IN ('Maintenance', 'Booked')
+                  AND r.id NOT IN (
+                      SELECT br.room_type_id
+                      FROM BookingRoomType br
+                      JOIN Booking b ON br.booking_id = b.id
+                      WHERE b.status NOT IN ('Cancelled', 'Locked')
+                        AND b.check_in < ?
+                        AND b.check_out > ?
+                  )
+            )
     """;
 
         try (PreparedStatement st = connection.prepareStatement(sql)) {
-            st.setDate(1, Date.valueOf(checkOut));
-            st.setDate(2, Date.valueOf(checkIn));
+            st.setTimestamp(1, checkOutTimestamp); // b.check_in < checkOut
+            st.setTimestamp(2, checkInTimestamp);  // b.check_out > checkIn
 
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
@@ -177,8 +181,10 @@ public class RoomTypeDAO extends DBcontext.DBContext {
                         rs.getInt("branch_id"),
                         rs.getBoolean("is_deleted")
                 );
+                // Lấy thông tin chi nhánh
                 Branch branch = branchDAO.getBranchByRoomTypeId(roomType.getRoomTypeID());
-            roomType.setBranch(branch); 
+                roomType.setBranch(branch);
+
                 availableRoomTypes.add(roomType);
             }
         } catch (SQLException e) {
@@ -192,7 +198,7 @@ public class RoomTypeDAO extends DBcontext.DBContext {
     // hoang: lay theo khoang gia va ngay
     public List<RoomType> getAvailableRoomTypesByPriceAndDate(double minPrice, double maxPrice, LocalDate checkIn, LocalDate checkOut) {
         List<RoomType> availableRoomTypes = new ArrayList<>();
-BranchDAO branchDAO = new BranchDAO();
+        BranchDAO branchDAO = new BranchDAO();
         String sql = """
         SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price,
                         rt.capacity_adult, rt.capacity_child,
@@ -204,14 +210,14 @@ BranchDAO branchDAO = new BranchDAO();
               SELECT 1
               FROM Room r
               WHERE r.room_type_id = rt.id
-                AND r.status NOT IN ('Maintenance', 'Locked')
-                AND r.id NOT IN (
-                    SELECT br.room_id
-                    FROM BookingRoom br
-                    JOIN Booking b ON br.booking_id = b.id
-                    WHERE b.status NOT IN ('Cancelled', 'Locked')
-                      AND b.check_in < ?
-                      AND b.check_out > ?
+                AND r.status NOT IN ('Maintenance', 'Booked')
+                                        AND r.id NOT IN (
+                                            SELECT br.room_type_id
+                                            FROM BookingRoomType br
+                                            JOIN Booking b ON br.booking_id = b.id
+                                            WHERE b.status NOT IN ('Cancelled', 'Locked')
+                                              AND b.check_in < ?
+                                              AND b.check_out > ?
                 )
           )
     """;
@@ -236,7 +242,7 @@ BranchDAO branchDAO = new BranchDAO();
                         rs.getBoolean("is_deleted")
                 );
                 Branch branch = branchDAO.getBranchByRoomTypeId(roomType.getRoomTypeID());
-            roomType.setBranch(branch); 
+                roomType.setBranch(branch);
                 availableRoomTypes.add(roomType);
             }
         } catch (SQLException e) {
@@ -247,81 +253,80 @@ BranchDAO branchDAO = new BranchDAO();
     }
 
     // hoang: lay theo id
-   public RoomType getRoomTypeById(int id) {
-    RoomType roomType = null;
-    String sql = "SELECT * FROM RoomType WHERE id = ? AND is_deleted = 0";
+    public RoomType getRoomTypeById(int id) {
+        RoomType roomType = null;
+        String sql = "SELECT * FROM RoomType WHERE id = ? AND is_deleted = 0";
 
-    try {
-        PreparedStatement st = connection.prepareStatement(sql);
-        st.setInt(1, id);
-        ResultSet rs = st.executeQuery();
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, id);
+            ResultSet rs = st.executeQuery();
 
-        if (rs.next()) {
-            roomType = new RoomType(
-                rs.getInt("id"),
-                rs.getString("name"),
-                rs.getString("description"),
-                rs.getDouble("base_price"),
-                rs.getInt("capacity_adult"),
-                rs.getInt("capacity_child"),
-                rs.getString("image_url"),
-                rs.getInt("branch_id"),
-                rs.getBoolean("is_deleted")
-            );
+            if (rs.next()) {
+                roomType = new RoomType(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getDouble("base_price"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
+                        rs.getString("image_url"),
+                        rs.getInt("branch_id"),
+                        rs.getBoolean("is_deleted")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // Hoặc dùng logger nếu có
         }
-    } catch (SQLException e) {
-        e.printStackTrace(); // Hoặc dùng logger nếu có
+
+        return roomType;
     }
 
-    return roomType;
-}
-
-   // hoang lay 3 phong gan gia nhat
+    // hoang lay 3 phong gan gia nhat
     public List<RoomType> getSimilarRoomTypes(int targetId) {
-    List<RoomType> similarRoomTypes = new ArrayList<>();
-    RoomType targetRoom = getRoomTypeById(targetId); // đảm bảo hàm này đã được sửa đúng
+        List<RoomType> similarRoomTypes = new ArrayList<>();
+        RoomType targetRoom = getRoomTypeById(targetId); // đảm bảo hàm này đã được sửa đúng
 
-    if (targetRoom == null) {
+        if (targetRoom == null) {
+            return similarRoomTypes;
+        }
+
+        String sql = "SELECT * FROM RoomType WHERE id != ? AND is_deleted = 0"; // bỏ qua phòng đã bị xóa mềm
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, targetId);
+            ResultSet rs = st.executeQuery();
+
+            List<RoomType> allOtherRooms = new ArrayList<>();
+            while (rs.next()) {
+                RoomType room = new RoomType(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getDouble("base_price"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
+                        rs.getString("image_url"),
+                        rs.getInt("branch_id"),
+                        rs.getBoolean("is_deleted")
+                );
+                allOtherRooms.add(room);
+            }
+
+            // Sắp xếp theo khoảng cách giá
+            allOtherRooms.sort(Comparator.comparingDouble(r -> Math.abs(r.getBase_price() - targetRoom.getBase_price())));
+
+            // Lấy 3 phòng gần giá nhất
+            for (int i = 0; i < Math.min(3, allOtherRooms.size()); i++) {
+                similarRoomTypes.add(allOtherRooms.get(i));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         return similarRoomTypes;
     }
-
-    String sql = "SELECT * FROM RoomType WHERE id != ? AND is_deleted = 0"; // bỏ qua phòng đã bị xóa mềm
-    try {
-        PreparedStatement st = connection.prepareStatement(sql);
-        st.setInt(1, targetId);
-        ResultSet rs = st.executeQuery();
-
-        List<RoomType> allOtherRooms = new ArrayList<>();
-        while (rs.next()) {
-            RoomType room = new RoomType(
-                rs.getInt("id"),
-                rs.getString("name"),
-                rs.getString("description"),
-                rs.getDouble("base_price"),
-                rs.getInt("capacity_adult"),
-                rs.getInt("capacity_child"),
-                rs.getString("image_url"),
-                rs.getInt("branch_id"),
-                rs.getBoolean("is_deleted")
-            );
-            allOtherRooms.add(room);
-        }
-
-        // Sắp xếp theo khoảng cách giá
-        allOtherRooms.sort(Comparator.comparingDouble(r -> Math.abs(r.getBase_price() - targetRoom.getBase_price())));
-
-        // Lấy 3 phòng gần giá nhất
-        for (int i = 0; i < Math.min(3, allOtherRooms.size()); i++) {
-            similarRoomTypes.add(allOtherRooms.get(i));
-        }
-
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
-
-    return similarRoomTypes;
-}
-
 
     public List<RoomType> searchAvailableRoomTypes(LocalDate checkIn, LocalDate checkOut, int guests, int branchId) {
         List<RoomType> availableRoomTypes = new ArrayList<>();
