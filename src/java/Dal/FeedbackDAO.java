@@ -830,6 +830,7 @@ public class FeedbackDAO extends DBcontext.DBContext {
         }
     }
 
+    //Hung: set status hidden 
     public boolean warnAndHideFeedbackById(int feedbackId) {
         String sql = "UPDATE Feedback SET admin_action = 'Warned', status = 'Hidden' WHERE id = ?";
 
@@ -843,6 +844,7 @@ public class FeedbackDAO extends DBcontext.DBContext {
         }
     }
 
+    // Hung: set status ban => block user account
     public boolean banFeedbackAndUser(String userId, int feedbackId) {
         String updateFeedbackSql = "UPDATE Feedback SET admin_action = 'Banned', status = 'Blocked' WHERE id = ?";
         String updateUserSql = "UPDATE UserAccount SET status = 'Banned' WHERE id = ?";
@@ -882,6 +884,28 @@ public class FeedbackDAO extends DBcontext.DBContext {
             e.printStackTrace();
             return false;
         }
+    }
+
+    // Hung: tính trung bình rating cho 1 branch
+    public double getAverageRatingByBranch(int branchId) {
+        String sql = "SELECT AVG(CAST(f.rating AS FLOAT)) AS avg_rating "
+                + "FROM Feedback f "
+                + "JOIN Booking b ON f.booking_id = b.id "
+                + "WHERE f.status = 'Visible' AND f.is_deleted = 0 AND b.branch_id = ?";
+
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, branchId);
+            ResultSet rs = st.executeQuery();
+
+            if (rs.next()) {
+                return rs.getDouble("avg_rating"); // Trả về 0.0 nếu null cũng ok vì getDouble sẽ trả 0
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0; // Trường hợp không có dữ liệu
     }
 
     public static void main(String[] args) {

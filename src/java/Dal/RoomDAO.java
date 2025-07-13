@@ -7,6 +7,9 @@ import java.util.List;
 import DBcontext.DBContext;
 import Model.Booking;
 import Model.RoomType;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -1896,4 +1899,103 @@ public boolean updateRoomStatusAfterCheckout(int bookingId, String newStatus) {
         return false;
     }
 }
+
+public double getOccupancyRate(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+    double occupancyRate = 0;
+
+    String sqlRoomCount = "SELECT COUNT(*) AS room_count FROM Room "
+            + "WHERE branch_id = ? AND status != 'Maintenance' AND is_deleted = 0";
+
+    String sqlBookingRoomType = "SELECT brt.quantity, b.check_in, b.check_out "
+            + "FROM BookingRoomType brt "
+            + "JOIN Booking b ON brt.booking_id = b.id "
+            + "WHERE b.branch_id = ? "
+            + "AND b.is_deleted = 0 "
+            + "AND b.status IN ('Paid', 'CheckedIn', 'CheckedOut', 'Completed') "
+            + "AND (b.check_out >= ? AND b.check_in <= ?)";
+
+    String sqlRoomAssignment = "SELECT ra.room_id, b.check_in, b.check_out "
+            + "FROM RoomAssignment ra "
+            + "JOIN Booking b ON ra.booking_id = b.id "
+            + "WHERE b.branch_id = ? "
+            + "AND b.is_deleted = 0 "
+            + "AND b.status IN ('Paid', 'CheckedIn', 'CheckedOut', 'Completed') "
+            + "AND (b.check_out >= ? AND b.check_in <= ?)";
+
+    try {
+        LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+        LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+        // 1. Lấy số phòng khả dụng
+        int roomCount = 0;
+        try (PreparedStatement st = connection.prepareStatement(sqlRoomCount)) {
+            st.setInt(1, branchId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                roomCount = rs.getInt("room_count");
+            }
+        }
+
+        if (roomCount == 0) {
+            return 0; // Không có phòng, Occupancy là 0%
+        }
+
+        long daysInPeriod = ChronoUnit.DAYS.between(fromDate, toDate) + 1;
+        long totalNightsAvailable = roomCount * daysInPeriod;
+
+        long totalNightsSold = 0;
+
+        // 2. Tính số đêm từ BookingRoomType (khách đặt trước)
+        try (PreparedStatement st = connection.prepareStatement(sqlBookingRoomType)) {
+            st.setInt(1, branchId);
+            st.setDate(2, java.sql.Date.valueOf(fromDate));
+            st.setDate(3, java.sql.Date.valueOf(toDate));
+
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                int quantity = rs.getInt("quantity");
+                LocalDate checkIn = rs.getTimestamp("check_in").toLocalDateTime().toLocalDate();
+                LocalDate checkOut = rs.getTimestamp("check_out").toLocalDateTime().toLocalDate();
+
+                LocalDate actualStart = checkIn.isBefore(fromDate) ? fromDate : checkIn;
+                LocalDate actualEnd = checkOut.isAfter(toDate) ? toDate : checkOut;
+
+                if (!actualStart.isAfter(actualEnd)) {
+                    long nights = ChronoUnit.DAYS.between(actualStart, actualEnd);
+                    totalNightsSold += nights * quantity;
+                }
+            }
+        }
+
+        // 3. Tính số đêm từ RoomAssignment (khách walk-in)
+        try (PreparedStatement st = connection.prepareStatement(sqlRoomAssignment)) {
+            st.setInt(1, branchId);
+            st.setDate(2, java.sql.Date.valueOf(fromDate));
+            st.setDate(3, java.sql.Date.valueOf(toDate));
+
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                LocalDate checkIn = rs.getTimestamp("check_in").toLocalDateTime().toLocalDate();
+                LocalDate checkOut = rs.getTimestamp("check_out").toLocalDateTime().toLocalDate();
+
+                LocalDate actualStart = checkIn.isBefore(fromDate) ? fromDate : checkIn;
+                LocalDate actualEnd = checkOut.isAfter(toDate) ? toDate : checkOut;
+
+                if (!actualStart.isAfter(actualEnd)) {
+                    long nights = ChronoUnit.DAYS.between(actualStart, actualEnd);
+                    totalNightsSold += nights; // walk-in thì tính từng phòng, không cần nhân quantity
+                }
+            }
+        }
+
+        // 4. Tính occupancy rate
+        occupancyRate = (double) totalNightsSold / totalNightsAvailable * 100;
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+
+    return occupancyRate;
+}
+
 }

@@ -10,6 +10,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 /**
@@ -319,7 +321,7 @@ public class RevenueDAO extends DBcontext.DBContext {
             return false;
         }
     }
-    
+
     public boolean isFieldExists(String fieldName, String value, Integer excludeId) {
         String sql = "SELECT 1 FROM Revenue WHERE " + fieldName + " = ?" + (excludeId != null ? " AND id != ?" : "");
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -335,8 +337,44 @@ public class RevenueDAO extends DBcontext.DBContext {
         return false;
     }
 
-    public static void main(String[] args) {
-        RevenueDAO dAO = new RevenueDAO();
+    public double getTotalRevenueByBranchAndMonthRange(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        double totalRevenue = 0;
+        String sql = "SELECT SUM(amount) AS total FROM Revenue "
+                + "WHERE branch_id = ? "
+                + "AND revenue_date >= ? AND revenue_date <= ?";
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, branchId);
+
+            // Tính ngày đầu và ngày cuối
+            LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+            LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+            st.setDate(2, java.sql.Date.valueOf(fromDate));
+            st.setDate(3, java.sql.Date.valueOf(toDate));
+
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                totalRevenue = rs.getDouble("total");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return totalRevenue;
     }
 
+    public static void main(String[] args) {
+        RevenueDAO aO = new RevenueDAO();
+        LocalDate today = LocalDate.now();
+        int currentMonth = today.getMonthValue(); // từ 1 đến 12
+        int currentYear = today.getYear();
+        int monthTo = currentMonth;
+        int yearTo = currentYear;
+
+        // Lấy total revenue theo tháng hiện tại
+        double totalRevenue = aO.getTotalRevenueByBranchAndMonthRange(1, currentMonth, currentYear, monthTo, yearTo);
+        System.out.println(totalRevenue);
+    }
 }

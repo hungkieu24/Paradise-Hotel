@@ -217,7 +217,7 @@ public class financialDashboardServlet extends HttpServlet {
                     Date toDate = Date.valueOf(toDateStr);
                     total = dao.getTotalCapitalByBranchAndDateRange(branchId, fromDate, toDate);
                 } else {
-                    total = dao.getTotalCapitalByBranch(branchId);
+                    total = dao.getTotalCapitalByBranchId(branchId);
                 }
             }
         }

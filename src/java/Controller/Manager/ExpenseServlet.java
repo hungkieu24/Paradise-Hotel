@@ -42,14 +42,14 @@ public class ExpenseServlet extends HttpServlet {
             HotelBranch branch = branchDAO.getBranchByManagerId(managerId);
             int branchId = branch.getId();
 
-            ExpenseDAO revenueDAO = new ExpenseDAO();
+            ExpenseDAO expenseDAO = new ExpenseDAO();
 
             LocalDate today = LocalDate.now();
             int currentMonth = today.getMonthValue(); // từ 1 đến 12
             int currentYear = today.getYear();
 
-            List<Expense> expenseList = revenueDAO.getExpenseByBranchAndMonthYear(branchId, currentMonth, currentYear);
-            double totalExpense = revenueDAO.getTotalExpenseByBranchAndMonthYear(branchId, currentMonth, currentYear);
+            List<Expense> expenseList = expenseDAO.getExpenseByBranchAndMonthYear(branchId, currentMonth, currentYear);
+            double totalExpense = expenseDAO.getTotalExpenseByBranchAndMonthYear(branchId, currentMonth, currentYear);
 
             List<String> monthNames = new ArrayList<>();
             DateFormatSymbols dfs = new DateFormatSymbols(Locale.ENGLISH);
@@ -64,8 +64,8 @@ public class ExpenseServlet extends HttpServlet {
                     currentMonth = Integer.parseInt(request.getParameter("month"));
                     currentYear = Integer.parseInt(request.getParameter("year"));
 
-                    expenseList = revenueDAO.getExpenseByBranchAndMonthYear(branchId, currentMonth, currentYear);
-                    totalExpense = revenueDAO.getTotalExpenseByBranchAndMonthYear(branchId, currentMonth, currentYear);
+                    expenseList = expenseDAO.getExpenseByBranchAndMonthYear(branchId, currentMonth, currentYear);
+                    totalExpense = expenseDAO.getTotalExpenseByBranchAndMonthYear(branchId, currentMonth, currentYear);
                 }
             }
 

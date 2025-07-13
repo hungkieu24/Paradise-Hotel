@@ -111,7 +111,7 @@
 
                 <div class="content-body">
                     <div class="rooms-container">
-                        <div class="page-actions">
+                        <div class="page-actions" style="justify-content: unset">
                             <form action="">
                                 <input type="hidden" name="action" value="search">
                                 <div class="search-box">
@@ -122,12 +122,12 @@
                             <form id="ratingFilterForm">
                                 <input type="hidden" name="action" value="filter">
                                 <select id="typeFilter" name="rating" onchange="document.getElementById('ratingFilterForm').submit()">
-                                    <option value="all">All Rating</option>
-                                    <option value="1">1 ★</option>
-                                    <option value="2">2 ★</option>
-                                    <option value="3">3 ★</option>
-                                    <option value="4">4 ★</option>
-                                    <option value="5">5 ★</option>
+                                    <option value="0" ${param.rating == 0 ? 'selected' : ''}>All Rating</option>
+                                    <c:forEach var="i" begin="1" end="5">
+                                        <option value="${i}" ${i == param.rating ? 'selected' : ''}>
+                                            ${i} ★
+                                        </option>
+                                    </c:forEach>
                                 </select>
                             </form>
                         </div>
