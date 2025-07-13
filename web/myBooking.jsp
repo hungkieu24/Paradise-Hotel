@@ -58,7 +58,6 @@
                 ${sessionScope.message}
             </div>
 
-            <!-- Xóa message sau khi hiển thị -->
             <c:remove var="message" scope="session" />
             <c:remove var="messageType" scope="session" />
         </c:if>
@@ -171,6 +170,8 @@
                                             <div class="d-flex justify-content-between mt-3">
 
                                                 <a href="#" class="btn_1 small open-detail" data-id="${b.id}">Chi tiết</a>
+                                                <button type="button" class="btn_1 small" onclick="openEditModal('${b.id}', '${fn:escapeXml(b.note)}')">Edit Special Request</button>
+
                                                 <c:if test="${b.status == 'Pending'}">
                                                     <button type="button" class="btn_1 small danger" onclick="showCancelForm('${b.id}')">Cancel Booking</button>
                                                 </c:if>
@@ -181,6 +182,24 @@
                                     </div>
                                 </div>
                             </c:forEach>
+
+                            <div id="editModal" class="modal" style="display: none;">
+                                <div class="modal-content">
+                                    <span class="close" onclick="closeEditModal()">×</span>
+                                    <h3>Edit Special Request</h3>
+                                    <form action="myBooking" method="post">
+                                        <input type="hidden" name="action" value="editSpecialRequest" />
+                                        <input type="hidden" name="bookingId" id="modalBookingId" />
+                                        <textarea name="specialRequest" id="modalSpecialRequest" rows="4" class="form-control" required></textarea>
+                                        <div style="margin-top: 15px;">
+                                            <button type="submit" class="btn_1">Save</button>
+                                            <button type="button" class="btn_1 gray" onclick="closeEditModal()">Cancel</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+
                             <!-- Cancel Form Modal -->
                             <div id="cancelModal" class="modal">
                                 <div class="modal-content">
@@ -335,5 +354,17 @@
                 document.getElementById('cancelModal').style.display = 'none';
             }
         </script>
+        <script>
+            function openEditModal(bookingId, currentRequest) {
+                document.getElementById("modalBookingId").value = bookingId;
+                document.getElementById("modalSpecialRequest").value = currentRequest;
+                document.getElementById("editModal").style.display = "block";
+            }
+
+            function closeEditModal() {
+                document.getElementById("editModal").style.display = "none";
+            }
+        </script>
+
     </body>
 </html>
