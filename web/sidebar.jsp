@@ -15,13 +15,10 @@
         </button>
     </div>
     <div class="sidebar-menu">
-        <a href="staff-dashboard.jsp" class="menu-item active">
-            <i class="fas fa-user-cog"></i>
-            <span class="menu-text">Panel</span>
-        </a>
+
         <a href="staff-bookings-list" class="menu-item">
             <i class="fas fa-calendar-check"></i>
-            <span class="menu-text">Today's Bookings</span>
+            <span class="menu-text">List Booking</span>
         </a>
         <a href="staff-rooms" class="menu-item">
             <i class="fas fa-door-closed"></i>
@@ -30,6 +27,10 @@
         <a href="searchGuest" class="menu-item">
             <i class="fas fa-plus-circle"></i>
             <span class="menu-text">Add New Booking</span>
+        </a>
+        <a href="staff-room-assignments-view" class="menu-item">
+            <i class="fas fa-plus-circle"></i>
+            <span class="menu-text">Room Assign List</span>
         </a>
         <a href="logout.jsp" class="menu-item logout">
             <i class="fas fa-sign-out-alt"></i>

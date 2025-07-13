@@ -3,6 +3,7 @@ package Dal;
 import DBcontext.DBContext;
 import Model.RoomAssignmentView;
 import java.sql.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -209,4 +210,40 @@ public class RoomAssignmentDAO extends DBContext {
         
         return "Unknown Branch";
     }
+    
+    
+    public boolean createRoomAssignment(int bookingId, int roomId) {
+        String sql = "INSERT INTO RoomAssignment (booking_id, room_id, assigned_at) VALUES (?, ?, ?)";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            ps.setInt(2, roomId);
+            ps.setTimestamp(3, Timestamp.from(Instant.now()));  // lấy thời gian hiện tại
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+}
+    
+    
+    public boolean insertBookingRoomType(int bookingId, int roomTypeId, int quantity, double pricePerRoom) {
+        String sql = "INSERT INTO BookingRoomType (booking_id, room_type_id, quantity, price_per_room) "
+                   + "VALUES (?, ?, ?, ?)";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            ps.setInt(2, roomTypeId);
+            ps.setInt(3, quantity);
+            ps.setDouble(4, pricePerRoom);
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 }

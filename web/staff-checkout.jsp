@@ -621,7 +621,7 @@
                                     <i class="bi bi-person"></i>
                                     <span class="detail-label">Name:</span>
                                     <span class="detail-value">
-                                        <%= customer.getFullName() != null ? customer.getFullName() : customer.getUsername() %>
+                                        <%= customer.getFullname() != null ? customer.getFullname() : customer.getUsername() %>
                                     </span>
                                 </div>
                                 <div class="detail-item">
@@ -781,9 +781,9 @@
                                
                                 
                                 <div class="checkout-actions">
-                                    <a href="view-booking-detail?bookingId=<%= booking.getId() %>" class="btn-back">
+                                    <a href="staff-bookings-list" class="btn-back">
                                         <i class="bi bi-arrow-left"></i>
-                                        Back to Details
+                                        Back to Booking List
                                     </a>
                                         <button type="submit" class="btn-checkout">
                                         <i class="bi bi-check-circle"></i>

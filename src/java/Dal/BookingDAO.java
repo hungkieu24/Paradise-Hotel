@@ -13,8 +13,12 @@ import java.sql.Timestamp;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BookingDAO extends DBcontext.DBContext {
 
@@ -1926,6 +1930,152 @@ public class BookingDAO extends DBcontext.DBContext {
             ps.setString(4, paidStatus); // e.g., "Unpaid"
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Hung: Lấy số lượng khách theo khoảng thời gian
+    public int getTotalGuestsCompletedBookingByBranchAndMonthRange(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        int totalGuests = 0;
+        String sql = "SELECT COUNT(DISTINCT user_id) AS total FROM Booking "
+                + "WHERE branch_id = ? "
+                + "AND is_deleted = 0 "
+                + "AND status = 'Completed' "
+                + "AND check_in >= ? AND check_in <= ?";
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, branchId);
+
+            // Tính ngày đầu và cuối của khoảng tháng
+            LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+            LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+            st.setDate(2, java.sql.Date.valueOf(fromDate));
+            st.setDate(3, java.sql.Date.valueOf(toDate));
+
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                totalGuests = rs.getInt("total");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return totalGuests;
+    }
+
+    // Hung: hàm hỗ trợ làm biểu đồ theo status 
+    public Map<String, Integer> getBookingStatusCountsByBranchAndMonthYearRange(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        Map<String, Integer> statusCounts = new LinkedHashMap<>();
+
+        // Khởi tạo các status với 0 để tránh null
+        String[] allStatuses = {"Pending", "Paid", "CheckedIn", "CheckedOut", "Completed", "Cancelled", "NoShow"};
+        for (String status : allStatuses) {
+            statusCounts.put(status, 0);
+        }
+
+        LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+        LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+        String sql = "SELECT status, COUNT(*) AS count FROM Booking "
+                + "WHERE branch_id = ? "
+                + "AND is_deleted = 0 "
+                + "AND booking_time BETWEEN ? AND ? "
+                + "GROUP BY status";
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, branchId);
+            st.setDate(2, java.sql.Date.valueOf(fromDate));
+            st.setDate(3, java.sql.Date.valueOf(toDate));
+
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                String status = rs.getString("status");
+                int count = rs.getInt("count");
+                statusCounts.put(status, count);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return statusCounts;
+    }
+
+    public int getTotalBookingByBranchAndMonthRange(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        int totalBooking = 0;
+
+        LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+        LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+        String sql = "SELECT COUNT(*) AS total FROM Booking "
+                + "WHERE branch_id = ? "
+                + "AND is_deleted = 0 "
+                + "AND booking_time BETWEEN ? AND ?";
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, branchId);
+            st.setDate(2, java.sql.Date.valueOf(fromDate));
+            st.setDate(3, java.sql.Date.valueOf(toDate));
+
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                totalBooking = rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return totalBooking;
+    }
+    
+    public Integer addBooking2(String userId, Timestamp checkIn, Timestamp checkOut,
+            String status, double totalPrice, String paymentStatus, int branchId,
+            String note, boolean isDeleted) {
+
+        String sql = "INSERT INTO Booking (user_id, check_in, check_out, status, total_price, "
+                   + "payment_status, branch_id, note, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, userId);
+            ps.setTimestamp(2, checkIn);
+            ps.setTimestamp(3, checkOut);
+            ps.setString(4, status);
+            ps.setDouble(5, totalPrice);
+            ps.setString(6, paymentStatus);
+            ps.setInt(7, branchId);
+            ps.setString(8, note);
+            ps.setBoolean(9, isDeleted);
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Creating booking failed, no rows affected.");
+            }
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);  // return booking_id
+                } else {
+                    throw new SQLException("Creating booking failed, no ID obtained.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;  // or throw custom exception if you prefer
+        }
+    }
+    
+    public boolean updateBookingPrice(int bookingId, double newTotalPrice) {
+        try {
+            String sql = "UPDATE Booking SET total_price = ? WHERE id = ?";
+
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setDouble(1, newTotalPrice);
+                ps.setInt(2, bookingId);
+
+                int rowsAffected = ps.executeUpdate();
+                return rowsAffected > 0;
+            }
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
