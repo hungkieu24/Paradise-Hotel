@@ -2,7 +2,8 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package Controller.admin;
+
+package Controller.HotelOwner;
 
 import Dal.HotelBranchDAO;
 import Dal.UserAccountDAO;
@@ -34,15 +35,15 @@ import java.util.Map;
         maxFileSize = 1024 * 1024 * 10, // 10 MB
         maxRequestSize = 1024 * 1024 * 50 // 50 MB
 )
-@WebServlet(name = "branchEventHandlerServlet", urlPatterns = {"/admin/branchEventHandler"})
+@WebServlet(name="branchEventHandler", urlPatterns={"/hotelOwner/branchEventHandler"})
 public class branchEventHandlerServlet extends HttpServlet {
-
+   
     private final UploadMultyImage uploader = new UploadMultyImage();
     private final UserAccountDAO accountDAO = new UserAccountDAO();
     private final HotelBranchDAO branchDAO = new HotelBranchDAO();
 
-    private final String BRANCH_PAGE = "./branch";
-    private final String HOTEL_BRANCH_IMAGE_FOLDER_PREFIX = "HotelBranch_";
+    private final String BRANCH_PAGE = "./manageBranch";
+    private final String HOTEL_BRANCH_IMAGE_FOLDER_PREFIX = "/img/HotelBranch_";
     private static final String COL_EMAIL = "email";
     private static final String COL_PHONE = "phone";
     private static final String COL_ADDRESS = "address";

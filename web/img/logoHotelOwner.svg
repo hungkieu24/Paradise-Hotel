@@ -1,0 +1,35 @@
+<svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Building outline -->
+  <rect x="8" y="12" width="34" height="32" fill="#667eea" stroke="#4c63d2" stroke-width="2"/>
+  
+  <!-- Roof -->
+  <polygon points="6,12 25,4 44,12" fill="#4c63d2"/>
+  
+  <!-- Windows -->
+  <rect x="12" y="16" width="4" height="4" fill="white" opacity="0.9"/>
+  <rect x="18" y="16" width="4" height="4" fill="white" opacity="0.9"/>
+  <rect x="28" y="16" width="4" height="4" fill="white" opacity="0.9"/>
+  <rect x="34" y="16" width="4" height="4" fill="white" opacity="0.9"/>
+  
+  <rect x="12" y="22" width="4" height="4" fill="white" opacity="0.9"/>
+  <rect x="18" y="22" width="4" height="4" fill="white" opacity="0.9"/>
+  <rect x="28" y="22" width="4" height="4" fill="white" opacity="0.9"/>
+  <rect x="34" y="22" width="4" height="4" fill="white" opacity="0.9"/>
+  
+  <rect x="12" y="28" width="4" height="4" fill="white" opacity="0.9"/>
+  <rect x="18" y="28" width="4" height="4" fill="white" opacity="0.9"/>
+  <rect x="28" y="28" width="4" height="4" fill="white" opacity="0.9"/>
+  <rect x="34" y="28" width="4" height="4" fill="white" opacity="0.9"/>
+  
+  <!-- Main entrance -->
+  <rect x="22" y="34" width="6" height="10" fill="#2d3748"/>
+  <circle cx="26" cy="39" r="0.5" fill="white"/>
+  
+  <!-- Hotel sign -->
+  <rect x="20" y="6" width="10" height="3" fill="white" opacity="0.9"/>
+  <text x="25" y="8" text-anchor="middle" font-family="Arial" font-size="2" fill="#667eea">HOTEL</text>
+  
+  <!-- Dollar sign overlay for financial theme -->
+  <circle cx="40" cy="35" r="6" fill="#48bb78" opacity="0.9"/>
+  <text x="40" y="38" text-anchor="middle" font-family="Arial" font-size="6" font-weight="bold" fill="white">$</text>
+</svg>

@@ -102,6 +102,22 @@ public class UserAccount {
         this.fullname = fullname;
     }
 
+    public UserAccount(String id, String username, String fullname, String email, String avatar_url, String role, String status, String create_at, String phonenumber, Integer branchId, String login_type, boolean is_deleted, String last_login_at) {
+        this.id = id;
+        this.username = username;
+        this.fullname = fullname;
+        this.email = email;
+        this.avatar_url = avatar_url;
+        this.role = role;
+        this.status = status;
+        this.create_at = create_at;
+        this.phonenumber = phonenumber;
+        this.branchId = branchId;
+        this.login_type = login_type;
+        this.is_deleted = is_deleted;
+        this.last_login_at = last_login_at;
+    }
+  
     public String getBranchName() {
         return branchName;
     }

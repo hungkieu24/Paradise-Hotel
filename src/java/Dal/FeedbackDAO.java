@@ -454,7 +454,6 @@ public class FeedbackDAO extends DBcontext.DBContext {
 
         return false;
     }
-//   
 
     public boolean deleteFeedbackById(int id) {
         String sql = "DELETE FROM Feedback WHERE id = ?";
@@ -481,4 +480,413 @@ public class FeedbackDAO extends DBcontext.DBContext {
         return false;
     }
 
+    //Hung: lay feedback = branch id
+    public List<Feedback> getAllFeedbackByBranchId(int branchId) {
+        List<Feedback> feedbackList = new ArrayList<>();
+        String sql = "SELECT f.id, f.booking_id, f.rating, f.comment, f.image_url, "
+                + "f.created_at, f.status, f.admin_action, f.is_deleted, "
+                + "u.id AS user_id, u.username, u.fullname, u.email, u.avatar_url, "
+                + "u.role, u.status AS user_status, u.created_at AS user_created_at, "
+                + "u.phonenumber, u.branch_id AS user_branch_id, u.login_type, "
+                + "u.is_deleted AS user_is_deleted, u.last_login_at "
+                + "FROM Feedback f "
+                + "JOIN Booking b ON f.booking_id = b.id "
+                + "JOIN UserAccount u ON f.user_id = u.id "
+                + "WHERE f.status = 'Visible' AND b.branch_id = ?";
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, branchId);
+            ResultSet rs = st.executeQuery();
+
+            while (rs.next()) {
+                // Chuyển timestamp thành chuỗi (định dạng tùy bạn, đây là ví dụ đơn giản)
+                String createdAtStr = rs.getTimestamp("user_created_at") != null
+                        ? rs.getTimestamp("user_created_at").toString() : null;
+                String lastLoginStr = rs.getTimestamp("last_login_at") != null
+                        ? rs.getTimestamp("last_login_at").toString() : null;
+
+                UserAccount user = new UserAccount(
+                        rs.getString("user_id"),
+                        rs.getString("username"),
+                        rs.getString("fullname"),
+                        rs.getString("email"),
+                        rs.getString("avatar_url"),
+                        rs.getString("role"),
+                        rs.getString("user_status"),
+                        createdAtStr,
+                        rs.getString("phonenumber"),
+                        rs.getObject("user_branch_id") != null ? rs.getInt("user_branch_id") : null,
+                        rs.getString("login_type"),
+                        rs.getBoolean("user_is_deleted"),
+                        lastLoginStr
+                );
+
+                Feedback feedback = new Feedback(
+                        rs.getInt("id"),
+                        rs.getInt("booking_id"),
+                        rs.getInt("rating"),
+                        rs.getString("comment"),
+                        rs.getString("image_url"),
+                        rs.getTimestamp("created_at"),
+                        rs.getString("status"),
+                        rs.getString("admin_action"),
+                        rs.getBoolean("is_deleted"),
+                        user
+                );
+
+                feedbackList.add(feedback);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return feedbackList;
+    }
+
+    //Hung: lay feedbak = branch id va phan trang
+    public List<Feedback> getFeedbackByBranchIdAndPage(int branchId, int page, int pageSize) {
+        List<Feedback> feedbackList = new ArrayList<>();
+        String sql = "SELECT f.id, f.booking_id, f.rating, f.comment, f.image_url, "
+                + "f.created_at, f.status, f.admin_action, f.is_deleted, "
+                + "u.id AS user_id, u.username, u.fullname, u.email, u.avatar_url, "
+                + "u.role, u.status AS user_status, u.created_at AS user_created_at, "
+                + "u.phonenumber, u.branch_id AS user_branch_id, u.login_type, "
+                + "u.is_deleted AS user_is_deleted, u.last_login_at "
+                + "FROM Feedback f "
+                + "JOIN Booking b ON f.booking_id = b.id "
+                + "JOIN UserAccount u ON f.user_id = u.id "
+                + "WHERE b.branch_id = ? "
+                + "ORDER BY f.created_at DESC "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, branchId);
+            stmt.setInt(2, (page - 1) * pageSize);
+            stmt.setInt(3, pageSize);
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                // Convert timestamps to string
+                String createdAtStr = rs.getTimestamp("user_created_at") != null
+                        ? rs.getTimestamp("user_created_at").toString()
+                        : null;
+                String lastLoginStr = rs.getTimestamp("last_login_at") != null
+                        ? rs.getTimestamp("last_login_at").toString()
+                        : null;
+
+                UserAccount user = new UserAccount(
+                        rs.getString("user_id"),
+                        rs.getString("username"),
+                        rs.getString("fullname"),
+                        rs.getString("email"),
+                        rs.getString("avatar_url"),
+                        rs.getString("role"),
+                        rs.getString("user_status"),
+                        createdAtStr,
+                        rs.getString("phonenumber"),
+                        rs.getObject("user_branch_id") != null ? rs.getInt("user_branch_id") : null,
+                        rs.getString("login_type"),
+                        rs.getBoolean("user_is_deleted"),
+                        lastLoginStr
+                );
+
+                Feedback feedback = new Feedback(
+                        rs.getInt("id"),
+                        rs.getInt("booking_id"),
+                        rs.getInt("rating"),
+                        rs.getString("comment"),
+                        rs.getString("image_url"),
+                        rs.getTimestamp("created_at"),
+                        rs.getString("status"),
+                        rs.getString("admin_action"),
+                        rs.getBoolean("is_deleted"),
+                        user
+                );
+
+                feedbackList.add(feedback);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return feedbackList;
+    }
+
+    //Hung: tong so feedback
+    public int getTotalFeedbackByBranchId(int branchId) {
+        String sql = "SELECT COUNT(*) FROM Feedback f JOIN Booking b ON f.booking_id = b.id WHERE b.branch_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, branchId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return 0;
+    }
+
+    //Hung: search feedback va phan trang
+    public List<Feedback> searchFeedbackByBranchAndKeyword(int branchId, String keyword, int page, int pageSize) {
+        List<Feedback> feedbackList = new ArrayList<>();
+        String sql = "SELECT f.id, f.booking_id, f.rating, f.comment, f.image_url, "
+                + "f.created_at, f.status, f.admin_action, f.is_deleted, "
+                + "u.id AS user_id, u.username, u.fullname, u.email, u.avatar_url, "
+                + "u.role, u.status AS user_status, u.created_at AS user_created_at, "
+                + "u.phonenumber, u.branch_id AS user_branch_id, u.login_type, "
+                + "u.is_deleted AS user_is_deleted, u.last_login_at "
+                + "FROM Feedback f "
+                + "JOIN Booking b ON f.booking_id = b.id "
+                + "JOIN UserAccount u ON f.user_id = u.id "
+                + "WHERE b.branch_id = ? "
+                + "AND (f.comment LIKE ? OR u.username LIKE ? OR f.status LIKE ? ) "
+                + "ORDER BY f.created_at DESC "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            String likeKeyword = "%" + keyword + "%";
+            stmt.setInt(1, branchId);
+            stmt.setString(2, likeKeyword);
+            stmt.setString(3, likeKeyword);
+            stmt.setString(4, likeKeyword);
+            stmt.setInt(5, (page - 1) * pageSize);
+            stmt.setInt(6, pageSize);
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String createdAtStr = rs.getTimestamp("user_created_at") != null
+                        ? rs.getTimestamp("user_created_at").toString()
+                        : null;
+                String lastLoginStr = rs.getTimestamp("last_login_at") != null
+                        ? rs.getTimestamp("last_login_at").toString()
+                        : null;
+
+                UserAccount user = new UserAccount(
+                        rs.getString("user_id"),
+                        rs.getString("username"),
+                        rs.getString("fullname"),
+                        rs.getString("email"),
+                        rs.getString("avatar_url"),
+                        rs.getString("role"),
+                        rs.getString("user_status"),
+                        createdAtStr,
+                        rs.getString("phonenumber"),
+                        rs.getObject("user_branch_id") != null ? rs.getInt("user_branch_id") : null,
+                        rs.getString("login_type"),
+                        rs.getBoolean("user_is_deleted"),
+                        lastLoginStr
+                );
+
+                Feedback feedback = new Feedback(
+                        rs.getInt("id"),
+                        rs.getInt("booking_id"),
+                        rs.getInt("rating"),
+                        rs.getString("comment"),
+                        rs.getString("image_url"),
+                        rs.getTimestamp("created_at"),
+                        rs.getString("status"),
+                        rs.getString("admin_action"),
+                        rs.getBoolean("is_deleted"),
+                        user
+                );
+
+                feedbackList.add(feedback);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return feedbackList;
+    }
+
+    //Hung: tong so feedback sau khi search
+    public int countSearchFeedbackByBranchAndKeyword(int branchId, String keyword) {
+        String sql = "SELECT COUNT(*) "
+                + "FROM Feedback f "
+                + "JOIN Booking b ON f.booking_id = b.id "
+                + "JOIN UserAccount u ON f.user_id = u.id "
+                + "WHERE b.branch_id = ? "
+                + "AND (f.comment LIKE ? OR u.username LIKE ? OR f.status LIKE ? )";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            String likeKeyword = "%" + keyword + "%";
+            stmt.setInt(1, branchId);
+            stmt.setString(2, likeKeyword);
+            stmt.setString(3, likeKeyword);
+            stmt.setString(4, likeKeyword);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    //Hung: loc = rating
+    public List<Feedback> filterFeedbackByBranchAndRating(int branchId, int rating, int page, int pageSize) {
+        List<Feedback> feedbackList = new ArrayList<>();
+        String sql = "SELECT f.id, f.booking_id, f.rating, f.comment, f.image_url, "
+                + "f.created_at, f.status, f.admin_action, f.is_deleted, "
+                + "u.id AS user_id, u.username, u.fullname, u.email, u.avatar_url, "
+                + "u.role, u.status AS user_status, u.created_at AS user_created_at, "
+                + "u.phonenumber, u.branch_id AS user_branch_id, u.login_type, "
+                + "u.is_deleted AS user_is_deleted, u.last_login_at "
+                + "FROM Feedback f "
+                + "JOIN Booking b ON f.booking_id = b.id "
+                + "JOIN UserAccount u ON f.user_id = u.id "
+                + "WHERE b.branch_id = ? AND f.rating = ? "
+                + "ORDER BY f.created_at DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, branchId);
+            stmt.setInt(2, rating);
+            stmt.setInt(3, (page - 1) * pageSize);
+            stmt.setInt(4, pageSize);
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                String createdAtStr = rs.getTimestamp("user_created_at") != null
+                        ? rs.getTimestamp("user_created_at").toString()
+                        : null;
+                String lastLoginStr = rs.getTimestamp("last_login_at") != null
+                        ? rs.getTimestamp("last_login_at").toString()
+                        : null;
+
+                UserAccount user = new UserAccount(
+                        rs.getString("user_id"),
+                        rs.getString("username"),
+                        rs.getString("fullname"),
+                        rs.getString("email"),
+                        rs.getString("avatar_url"),
+                        rs.getString("role"),
+                        rs.getString("user_status"),
+                        createdAtStr,
+                        rs.getString("phonenumber"),
+                        rs.getObject("user_branch_id") != null ? rs.getInt("user_branch_id") : null,
+                        rs.getString("login_type"),
+                        rs.getBoolean("user_is_deleted"),
+                        lastLoginStr
+                );
+
+                Feedback feedback = new Feedback(
+                        rs.getInt("id"),
+                        rs.getInt("booking_id"),
+                        rs.getInt("rating"),
+                        rs.getString("comment"),
+                        rs.getString("image_url"),
+                        rs.getTimestamp("created_at"),
+                        rs.getString("status"),
+                        rs.getString("admin_action"),
+                        rs.getBoolean("is_deleted"),
+                        user
+                );
+
+                feedbackList.add(feedback);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return feedbackList;
+    }
+
+    //Hung: tong so sau khi loc = rating
+    public int countFeedbackByBranchAndRating(int branchId, int rating) {
+        String sql = "SELECT COUNT(*) FROM Feedback f "
+                + "JOIN Booking b ON f.booking_id = b.id "
+                + "WHERE b.branch_id = ? AND f.rating = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, branchId);
+            stmt.setInt(2, rating);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    // soft delete feedback
+    public boolean deleteFeedback(int feedbackId) {
+        String sql = "UPDATE Feedback SET is_deleted = 1 WHERE id = ?";
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, feedbackId);
+            int rowsAffected = st.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean warnAndHideFeedbackById(int feedbackId) {
+        String sql = "UPDATE Feedback SET admin_action = 'Warned', status = 'Hidden' WHERE id = ?";
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, feedbackId);
+            int rowsAffected = st.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean banFeedbackAndUser(String userId, int feedbackId) {
+        String updateFeedbackSql = "UPDATE Feedback SET admin_action = 'Banned', status = 'Blocked' WHERE id = ?";
+        String updateUserSql = "UPDATE UserAccount SET status = 'Banned' WHERE id = ?";
+
+        try {
+            connection.setAutoCommit(false); // Bắt đầu giao dịch
+
+            try {
+                PreparedStatement updateFeedbackStmt = connection.prepareStatement(updateFeedbackSql);
+                PreparedStatement updateUserStmt = connection.prepareStatement(updateUserSql);
+                // Cập nhật feedback
+                updateFeedbackStmt.setInt(1, feedbackId);
+                int rowsFeedback = updateFeedbackStmt.executeUpdate();
+
+                // Cập nhật user
+                updateUserStmt.setString(1, userId);
+                int rowsUser = updateUserStmt.executeUpdate();
+
+                // Kiểm tra cả 2 cập nhật thành công
+                if (rowsFeedback > 0 && rowsUser > 0) {
+                    connection.commit(); // Thành công => commit
+                    return true;
+                } else {
+                    connection.rollback(); // Một trong hai thất bại => rollback
+                    return false;
+                }
+
+            } catch (SQLException e) {
+                connection.rollback(); // Bắt lỗi => rollback
+                e.printStackTrace();
+                return false;
+            } finally {
+                connection.setAutoCommit(true); // Khôi phục lại trạng thái tự động commit
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static void main(String[] args) {
+        FeedbackDAO aO = new FeedbackDAO();
+        int d = aO.countSearchFeedbackByBranchAndKeyword(1, "gre");
+        System.out.println(d);
+    }
 }
