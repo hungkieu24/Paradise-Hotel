@@ -13,7 +13,7 @@ public class BookingRoomType {
     private String roomTypeDescription;
     private String roomTypeImageUrl;
     private String branchName;
-    
+    private double base_price;
     // Constructors
     public BookingRoomType() {
     }
@@ -101,7 +101,14 @@ public class BookingRoomType {
     public void setBranchName(String branchName) {
         this.branchName = branchName;
     }
-    
+
+    public double getBase_price() {
+        return base_price;
+    }
+
+    public void setBase_price(double base_price) {
+        this.base_price = base_price;
+    }    
     // Utility methods
     public BigDecimal getTotalPrice() {
         return pricePerRoom.multiply(BigDecimal.valueOf(quantity));

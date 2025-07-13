@@ -6,8 +6,10 @@ package Controller.Customer;
 
 import Dal.FeedbackDAO;
 import Dal.RoomTypeDAO;
+import Dal.ServiceDAO;
 import Model.Feedback;
 import Model.RoomType;
+import Model.Service;
 import Model.UserAccount;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -16,6 +18,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -59,6 +63,16 @@ public class ViewRoomTypeDetailsServlet extends HttpServlet {
         request.setAttribute("user", user);
 
         ////////////////////////////////////////////////////////////////////////
+        
+        ServiceDAO serviceDAO = new ServiceDAO();
+        List<Service> listServices = new ArrayList<>();
+
+        RoomType room = roomTypeDAO.getRoomTypeById(roomTypeId);
+        listServices = serviceDAO.getServicesByBranchId(room.getBranchId());
+
+        request.setAttribute("listServices", listServices);
+
+        /////////////////////////////////////////////////////////////////Service
         request.setAttribute("listFeedback", listFeedback);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);

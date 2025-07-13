@@ -59,30 +59,7 @@
 
         <div class="layer"></div><!-- Opacity Mask -->
 
-        <header class="reveal_header">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-6">
-                        <a href="homepage" class="logo_normal"><img src="img/logo.png" width="135" height="45" alt=""></a>
-                        <a href="index.html" class="logo_sticky"><img src="img/logo_sticky.png" width="135" height="45" alt=""></a>
-                    </div>
-                    <div class="col-6">
-                        <nav>
-                            <ul>
-
-                                <li>
-                                    <div class="hamburger_2 open_close_nav_panel">
-                                        <div class="hamburger__box">
-                                            <div class="hamburger__inner"></div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-            </div><!-- /container -->
-        </header><!-- /Header -->
+        <%@ include file="./header.jsp"%>
 
         <div class="nav_panel">
             <a href="#" class="closebt open_close_nav_panel"><i class="bi bi-x"></i></a>
@@ -180,19 +157,7 @@
                             <input id="phonenumber" type="tel" value="${sessionScope.user.getPhonenumber()}" name="phonenumber" readonly>
                         </div>
 
-                        <!-- Date & Guest -->
 
-                        <!--                        <div class="guest-inputs">
-                                                                            <label>Adult:
-                                                                                <input id="adult-input" name="adult" type="number" value="1" min="1" max="">
-                                                                            </label>
-                                                                            <div id="adult-error" style="color: red; font-size: 0.9em; display: none;"></div>
-                                                
-                                                                            <label>Child:
-                                                                                <input id="child-input" name="child" type="number" value="0" min="0" max="">
-                                                                            </label>
-                                                                            <div id="child-error" style="color: red; font-size: 0.9em; display: none;"></div>
-                                                                        </div>-->
                         <div class="booking-details">
                             <label for="checkIn">Check-in:</label>
                             <input type="datetime-local" id="checkIn" name="checkIn" required>
@@ -207,21 +172,28 @@
                             <div class="services-grid">
                                 <c:forEach var="s" items="${listServices}">
                                     <label>
-                                        <input
-                                            type="checkbox"
-                                            name="serviceIds"
-                                            value="${s.id}"
+                                        ${s.name} - ${s.description} - 
+                                        <fmt:formatNumber value="${s.price}" type="number" groupingUsed="true" maxFractionDigits="0" /> VND
+                                        <input 
+                                            type="number" 
+                                            class="service-qty-input"
+                                            name="serviceQuantity_${s.id}" 
+                                            data-id="${s.id}"
+                                            data-name="${s.name}"
                                             data-price="${s.price}"
-                                            data-name="${s.name}" />
-
-                                        ${s.name} - ${s.description} - <fmt:formatNumber value="${s.price}" type="number" groupingUsed="true" maxFractionDigits="0" /> VND
+                                            min="0" 
+                                            max="${totalRoomQuantity}" 
+                                            value="<c:out value='${selectedServiceMap[s.id] != null ? selectedServiceMap[s.id] : 0}' />"
+                                            style="width: 60px; margin-left: 10px"
+                                            />
                                     </label>
                                 </c:forEach>
                             </div>
                         </div>
                         <!-- Special Request -->
                         <label for="note">Note:</label>
-                        <textarea id="note" name="note" placeholder="Special request..."></textarea>
+                        <textarea id="note" name="note" placeholder="Special request...">${preNote}</textarea>
+
                     </div>
 
                     <input type="hidden" name="selectedServiceIds" id="selectedServiceIds" />
@@ -247,13 +219,14 @@
                             </c:if>
 
 
+
                             <c:if test="${not empty listCartItem}">
                                 <ul class="room-summary">
-                                    <c:forEach var="r" items="${listCartItem}">
+                                    <c:forEach var="r" items="${sessionScope.listCartItem}">
                                         <li class="room-item">
                                             <span class="room-name">${r.roomType.name} x ${r.quantity}</span>
                                             <span class="room-price">
-                                                <fmt:formatNumber value="${r.roomType.base_price * r.quantity}" type="number" groupingUsed="true" maxFractionDigits="0" /> VND
+                                                <fmt:formatNumber value="${r.roomType.base_price}" type="number" groupingUsed="true" maxFractionDigits="0" /> VND
                                             </span>
                                         </li>
                                     </c:forEach>
@@ -391,80 +364,100 @@
 
         <script>
             document.addEventListener("DOMContentLoaded", function () {
-
-                const checkboxes = document.querySelectorAll('input[name="serviceIds"]');
+                const form = document.getElementById("booking-form");
+                const inputs = document.querySelectorAll(".service-qty-input");
                 const selectedServicesList = document.getElementById("service-list");
                 const totalCostDisplay = document.getElementById("service-total");
-
                 const selectedServiceIdsInput = document.getElementById("selectedServiceIds");
                 const totalServiceCostInput = document.getElementById("totalServiceCost");
-
-                // Lấy tổng số lượng phòng từ hidden input đã render sẵn từ server
-                const totalRoomQuantityInput = document.getElementById("totalRoomQuantity");
-                let totalQuantity = parseInt(totalRoomQuantityInput?.value || "1");
+                let hasServiceQtyError = false;
 
                 function updateSelectedServices() {
-
-                    let totalServiceCost = 0;
-                    let selectedIds = [];
+                    let total = 0;
+                    let selectedServices = [];
                     selectedServicesList.innerHTML = "";
 
-                    let totalQuantity = parseInt(document.getElementById("totalRoomQuantity").value);
-                    if (isNaN(totalQuantity) || totalQuantity < 1) {
-                        console.warn("⚠ totalRoomQuantity không hợp lệ, mặc định = 1");
-                        totalQuantity = 1;
-                    }
+                    const maxQuantity = parseInt(document.getElementById("totalRoomQuantity")?.value || "1");
+                    hasServiceQtyError = false;
 
-                    checkboxes.forEach(cb => {
-                        if (cb.checked) {
-                            const name = cb.dataset.name || "Unknown";
-                            const price = parseInt(cb.dataset.price || "0");
-                            const total = price * totalQuantity;
+                    inputs.forEach(input => {
+                        const qty = parseInt(input.value || "0");
+                        const id = input.dataset.id;
+                        const name = input.dataset.name;
+                        const price = parseFloat(input.dataset.price || "0");
 
-                            totalServiceCost += total;
+                        // Validate
+                        if (qty < 0 || qty > maxQuantity) {
+                            input.style.border = "2px solid red";
+                            hasServiceQtyError = true;
+                        } else {
+                            input.style.border = "";
+                        }
+
+                        if (qty > 0 && qty <= maxQuantity) {
+                            const cost = qty * price;
+                            total += cost;
+                            selectedServices.push(id + ":" + qty);
 
                             const li = document.createElement("li");
-                            li.textContent = name + " x " + totalQuantity + " = " + total.toLocaleString("vi-VN") + " VND ";
+                            li.textContent = name + " x " + qty + " = " + cost.toLocaleString("vi-VN") + " VND ";
                             selectedServicesList.appendChild(li);
-
-                            selectedIds.push(cb.value);
                         }
                     });
 
-                    totalCostDisplay.textContent = totalServiceCost.toLocaleString("vi-VN") + " VND";
-                    selectedServiceIdsInput.value = selectedIds.join(",");
-                    totalServiceCostInput.value = totalServiceCost;
+                    if (hasServiceQtyError) {
+                        showToast("⚠ Please input number of service from 0 to " + maxQuantity, "#e53935");
+                    }
 
-                    // xử lý tiền
-                    // Sau khi tính xong totalServiceCost:
-                    const totalRoomCost = parseInt(document.getElementById("totalRoom").value || "0");
-                    const discountPercent = parseFloat(document.getElementById("discountPercent")?.value || "0");
+                    totalCostDisplay.textContent = total.toLocaleString("vi-VN") + " VND";
+                    selectedServiceIdsInput.value = selectedServices.join(",");
+                    totalServiceCostInput.value = total;
 
-                    // 1. Total All
-                    const totalAll = totalRoomCost + totalServiceCost;
+                    // Discount and Final total
+                    const totalRoomCost = parseFloat(document.getElementById("totalRoom").value || "0");
+                    const discountPercent = parseFloat(document.getElementById("discountPercent").value || "0");
 
-                    // 2. Discount Applied
+                    const totalAll = totalRoomCost + total;
                     const discountAmount = Math.round(totalAll * discountPercent / 100);
-
-                    // 3. Total After Discount
                     const totalAfterDiscount = totalAll - discountAmount;
 
-                    // Cập nhật giao diện
                     document.getElementById("discount-applied").textContent = discountAmount.toLocaleString("vi-VN") + " VND";
                     document.getElementById("final-total").textContent = totalAfterDiscount.toLocaleString("vi-VN") + " VND";
                     document.getElementById("finalTotalPrice").value = totalAfterDiscount;
-
-//                    console.log(document.getElementById("note").value);
-
                 }
 
+                // Attach input event
+                inputs.forEach(input => input.addEventListener("input", updateSelectedServices));
+                updateSelectedServices();
 
-                checkboxes.forEach(cb => cb.addEventListener("change", updateSelectedServices));
-                updateSelectedServices(); // gọi ban đầu
+                // Validate on form submit
+                form.addEventListener("submit", function (e) {
+                    updateSelectedServices();
+                    if (hasServiceQtyError) {
+                        e.preventDefault();
+                        showToast("❌ Please fix service quantity errors before booking", "#e53935");
+                        return;
+                    }
+                });
             });
+
+            function showToast(message, color = "#4caf50") {
+                const toast = document.getElementById("toast-message");
+                toast.innerText = message;
+                toast.style.backgroundColor = color;
+                toast.classList.remove("hidden");
+                toast.classList.add("show");
+
+                setTimeout(() => {
+                    toast.classList.remove("show");
+                    toast.classList.add("hidden");
+                }, 3000);
+            }
         </script>
+
         <div id="toast-message" class="toast hidden">Thông báo mẫu</div>
 
+        <!-- Submit logic script -->
         <script>
             document.addEventListener("DOMContentLoaded", function () {
                 const form = document.getElementById("booking-form");
@@ -490,6 +483,9 @@
                                 console.log(data);
                                 if (data.status === "success") {
                                     showToast("✅ Booking success!");
+                                    setTimeout(() => {
+                                        window.location.href = "booking"; // gọi lại servlet với session đã clear
+                                    }, 1500);
                                 } else if (data.status === "error" && data.message) {
                                     showToast("❌ " + data.message, "#e53935");
                                 } else {
@@ -502,22 +498,8 @@
                             });
                 });
             });
-
         </script>
-        <script>
-            function showToast(message, color = "#4caf50") {
-                const toast = document.getElementById("toast-message");
-                toast.innerText = message;
-                toast.style.backgroundColor = color;
-                toast.classList.remove("hidden");
-                toast.classList.add("show");
 
-                setTimeout(() => {
-                    toast.classList.remove("show");
-                    toast.classList.add("hidden");
-                }, 3000);
-            }
-        </script>
 
 
     </body>

@@ -306,7 +306,7 @@ public class BookingDAO extends DBcontext.DBContext {
 
     // Hủy booking với lý do
     public boolean cancelBooking(int bookingId, String cancelReason) {
-        String sql = "UPDATE Booking SET status = 'CANCELLED', cancel_reason = ?, cancel_time = ? WHERE id = ? AND status IN ('Pending', 'Confirmed')";
+        String sql = "UPDATE Booking SET status = 'Cancelled', cancel_reason = ?, cancel_time = ? WHERE id = ? AND status IN ('Pending', 'Confirmed')";
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setString(1, cancelReason);
@@ -489,6 +489,71 @@ public class BookingDAO extends DBcontext.DBContext {
         return booking;
     }
 
+    //hoang
+    public Booking getBookingById1(int bookingId) {
+        Booking booking = null;
+        String sql = "SELECT b.*, u.username, u.fullname, hb.name AS branch_name "
+                + "FROM Booking b "
+                + "JOIN HotelBranch hb ON b.branch_id = hb.id "
+                + "LEFT JOIN UserAccount u ON b.user_id = u.id "
+                + "WHERE b.id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    booking = new Booking();
+                    booking.setId(rs.getInt("id"));
+                    booking.setUserId(rs.getString("user_id"));
+                    booking.setBookingTime(rs.getTimestamp("booking_time"));
+                    booking.setCheckIn(rs.getTimestamp("check_in"));
+                    booking.setCheckOut(rs.getTimestamp("check_out"));
+                    booking.setStatus(rs.getString("status"));
+                    booking.setTotalPrice(rs.getDouble("total_price"));
+                    booking.setPaymentStatus(rs.getString("payment_status"));
+                    booking.setCancelReason(rs.getString("cancel_reason"));
+                    booking.setCancelTime(rs.getTimestamp("cancel_time"));
+                    booking.setPromotionId(rs.getObject("promotion_id") != null ? rs.getInt("promotion_id") : null);
+                    booking.setBranchId(rs.getInt("branch_id"));
+                    booking.setUserName(rs.getString("username"));
+                    booking.setFullName(rs.getString("fullname"));
+                    booking.setNote(rs.getString("note"));
+                    booking.setBranchName(rs.getString("branch_name"));
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in getBookingById: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // Lấy thông tin về loại phòng đã đặt
+        if (booking != null) {
+            String sqlRoomTypes = "SELECT rt.name, brt.room_type_id FROM BookingRoomType brt "
+                    + "JOIN RoomType rt ON brt.room_type_id = rt.id "
+                    + "WHERE brt.booking_id = ?";
+            List<String> roomTypeNames = new ArrayList<>();
+            try (PreparedStatement ps = connection.prepareStatement(sqlRoomTypes)) {
+                ps.setInt(1, bookingId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        roomTypeNames.add(rs.getString("name"));
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            booking.setRoomTypeName(String.join(", ", roomTypeNames));
+
+            // Lấy danh sách phòng đã gán cho booking
+            booking.setRooms(getAssignedRoomsByBookingId(bookingId));
+
+            // Lấy chuỗi số phòng
+            String roomNumbers = getRoomNumbersStringByBookingId(bookingId);
+            booking.setRoomNumbers(roomNumbers != null ? roomNumbers : "");
+        }
+
+        return booking;
+    }
+
     /**
      * Lấy danh sách phòng đã được gán cho booking
      */
@@ -537,11 +602,109 @@ public class BookingDAO extends DBcontext.DBContext {
                     booking.setCheckOut(rs.getTimestamp("check_out"));
                     booking.setStatus(rs.getString("status"));
                     booking.setTotalPrice(rs.getDouble("total_price"));
-
                     booking.setPaymentStatus(rs.getString("payment_status"));
                     booking.setCancelReason(rs.getString("cancel_reason"));
                     booking.setCancelTime(rs.getTimestamp("cancel_time"));
                     booking.setPromotionId(rs.getObject("promotion_id") != null ? rs.getInt("promotion_id") : null);
+                    list.add(booking);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<Booking> getBookingsByUserId1(String userId) {
+        List<Booking> list = new ArrayList<>();
+        String sql = """
+   SELECT b.*, 
+          rt.image_url AS room_type_image, 
+          rt.name AS room_type_name,  
+          hb.name AS branch_name
+   FROM Booking b
+   JOIN HotelBranch hb ON b.branch_id = hb.id 
+   OUTER APPLY (
+       SELECT TOP 1 rt.image_url, rt.name
+       FROM Room r
+       JOIN RoomType rt ON r.room_type_id = rt.id
+       WHERE r.branch_id = b.branch_id
+   ) rt
+   WHERE b.user_id = ?
+     AND b.status NOT IN ('Pending', 'Paid')
+   ORDER BY b.booking_time DESC
+""";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Booking booking = new Booking();
+                    booking.setId(rs.getInt("id"));
+                    booking.setUserId(rs.getString("user_id"));
+                    booking.setBookingTime(rs.getTimestamp("booking_time"));
+                    booking.setCheckIn(rs.getTimestamp("check_in"));
+                    booking.setCheckOut(rs.getTimestamp("check_out"));
+                    booking.setStatus(rs.getString("status"));
+                    booking.setTotalPrice(rs.getDouble("total_price"));
+                    booking.setPaymentStatus(rs.getString("payment_status"));
+                    booking.setCancelReason(rs.getString("cancel_reason"));
+                    booking.setCancelTime(rs.getTimestamp("cancel_time"));
+                    booking.setPromotionId(rs.getObject("promotion_id") != null ? rs.getInt("promotion_id") : null);
+                    booking.setBranchId(rs.getInt("branch_id"));
+                    booking.setBranchName(rs.getString("branch_name"));
+                    booking.setRoomTypeImage(rs.getString("room_type_image"));
+                    booking.setRoomTypeName(rs.getString("room_type_name"));
+                    list.add(booking);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    // hoang
+    public List<Booking> getBookingsByUserId11(String userId) {
+        List<Booking> list = new ArrayList<>();
+        String sql = """
+   SELECT b.*, 
+          rt.image_url AS room_type_image, 
+          rt.name AS room_type_name,  
+          hb.name AS branch_name
+   FROM Booking b
+   JOIN HotelBranch hb ON b.branch_id = hb.id 
+   OUTER APPLY (
+       SELECT TOP 1 rt.image_url, rt.name
+       FROM Room r
+       JOIN RoomType rt ON r.room_type_id = rt.id
+       WHERE r.branch_id = b.branch_id
+   ) rt
+   WHERE b.user_id = ?
+     AND b.status IN ('Pending', 'Paid')
+   ORDER BY b.booking_time DESC
+""";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Booking booking = new Booking();
+                    booking.setId(rs.getInt("id"));
+                    booking.setUserId(rs.getString("user_id"));
+                    booking.setBookingTime(rs.getTimestamp("booking_time"));
+                    booking.setCheckIn(rs.getTimestamp("check_in"));
+                    booking.setCheckOut(rs.getTimestamp("check_out"));
+                    booking.setStatus(rs.getString("status"));
+                    booking.setTotalPrice(rs.getDouble("total_price"));
+                    booking.setPaymentStatus(rs.getString("payment_status"));
+                    booking.setCancelReason(rs.getString("cancel_reason"));
+                    booking.setCancelTime(rs.getTimestamp("cancel_time"));
+                    booking.setPromotionId(rs.getObject("promotion_id") != null ? rs.getInt("promotion_id") : null);
+                    booking.setBranchId(rs.getInt("branch_id"));
+                    booking.setBranchName(rs.getString("branch_name"));
+                    booking.setRoomTypeImage(rs.getString("room_type_image"));
+                    booking.setRoomTypeName(rs.getString("room_type_name"));
                     list.add(booking);
                 }
             }
@@ -1709,27 +1872,63 @@ public class BookingDAO extends DBcontext.DBContext {
         return bookingRoomTypes;
     }
 
-    public boolean addBooking(String userId, Timestamp checkIn, Timestamp checkOut,
+    public Integer addBookingReturnId(String userId, Timestamp checkIn, Timestamp checkOut,
             String status, double totalPrice, String paymentStatus, int branchId,
             String note, boolean isDeleted) {
 
         String sql = "INSERT INTO Booking (user_id, check_in, check_out, status, total_price, "
                 + "payment_status, branch_id, note, is_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
+        try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, userId);
+            ps.setTimestamp(2, checkIn);
+            ps.setTimestamp(3, checkOut);
+            ps.setString(4, status);
+            ps.setDouble(5, totalPrice);
+            ps.setString(6, paymentStatus);
+            ps.setInt(7, branchId);
+            ps.setString(8, note);
+            ps.setBoolean(9, isDeleted);
+
+            int affectedRows = ps.executeUpdate();
+
+            if (affectedRows > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1); // booking_id vừa insert
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean insertBookingRoomType(int bookingId, int roomTypeId, int quantity, double pricePerRoom) {
+        String sql = "INSERT INTO BookingRoomType (booking_id, room_type_id, quantity, price_per_room) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-
-            ps.setString(1, userId);                // user_id
-            ps.setTimestamp(2, checkIn);            // check_in
-            ps.setTimestamp(3, checkOut);           // check_out
-            ps.setString(4, status);                // status
-            ps.setDouble(5, totalPrice);            // total_price
-            ps.setString(6, paymentStatus);         // payment_status
-            ps.setInt(7, branchId);                 // branch_id
-            ps.setString(8, note);                  // note
-            ps.setBoolean(9, isDeleted);           // is_deleted
-
+            ps.setInt(1, bookingId);
+            ps.setInt(2, roomTypeId);
+            ps.setInt(3, quantity);
+            ps.setDouble(4, pricePerRoom);
             return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
+    public boolean insertBookingService(int bookingId, int serviceId, int quantity, String paidStatus) {
+        String sql = "INSERT INTO BookingService (booking_id, service_id, quantity, paid_status) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            ps.setInt(2, serviceId);
+            ps.setInt(3, quantity);
+            ps.setString(4, paidStatus); // e.g., "Unpaid"
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;

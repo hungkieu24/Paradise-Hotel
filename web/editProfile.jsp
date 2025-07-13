@@ -56,61 +56,10 @@
         </div><!-- /Page Preload -->
 
         <div class="layer"></div><!-- Opacity Mask -->
-
-        <header class="reveal_header">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-6">
-                        <a href="homepage" class="logo_normal"><img src="img/logo.png" width="135" height="45" alt=""></a>
-                        <a href="index.html" class="logo_sticky"><img src="img/logo_sticky.png" width="135" height="45" alt=""></a>
-                    </div>
-                    <div class="col-6">
-                        <nav>
-                            <ul>
-
-                                <li>
-                                    <div class="hamburger_2 open_close_nav_panel">
-                                        <div class="hamburger__box">
-                                            <div class="hamburger__inner"></div>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-            </div><!-- /container -->
-        </header><!-- /Header -->
-
+        
         <div class="nav_panel">
             <a href="#" class="closebt open_close_nav_panel"><i class="bi bi-x"></i></a>
             <div class="logo_panel"><img src="img/logo_sticky.png" width="135" height="45" alt=""></div>
-            <div class="sidebar-navigation">
-                <nav>
-                    <ul class="level-1">
-                        <li><a href="#">Personal Info</a></li>
-                        <li><a href="editProfile">Change Personal Info</a></li>
-                        <li><a href="#">Booking History</a></li>
-                        <li><a href="myBooking">Your Booking</a></li>
-                        <li><a href="#">Loyalty Status</a> </li>
-                        <li><a href="#">Change Password</a></li>
-                        <li class="parent"><a href="#0">Feedback</a>
-                            <ul class="level-2">
-                                <li class="back"><a href="#0">Back</a></li>
-                                <li><a href="viewFeedback">View Feedback</a></li>
-                                <li><a href="sendFeedback.jsp">Send Feedback</a></li>
-                            </ul> 
-                        </li>
-                        <li><a href="./homepage?action=logout">Log out</a></li>
-                        <li><a href="homepage" class="home-link">Home</a></li>
-                    </ul>
-                    <div class="panel_footer">
-                        <div class="phone_element"><a href="tel://423424234"><i class="bi bi-telephone"></i><span><em>Info and bookings</em>+41 934 121 1334</span></a></div>
-                    </div>
-                    <!-- /panel_footer -->
-                </nav>
-            </div>
-            <!-- /sidebar-navigation -->
         </div>
         <!-- /nav_panel -->
 
@@ -130,13 +79,13 @@
             <div class="container margin_120_95">
                 <div class="sidebar">
                     <img class="avatar" src="${sessionScope.user.getAvatar_url()}" alt="Avatar"/>
-                    <p>Rank: <span>${sessionScope.loyaltypointlp.getLevel()}</span> </p>
+                    <p>Rank: <a href="redeemVoucher">${sessionScope.loyaltypointlp.getLevel()}</a> </p>
                     <p>Accumulated Points: <a href="redeemVoucher">${sessionScope.loyaltypointlp.getPoints()}</a></p>
                     <ul>
                         <li><a href="editProfile">Personal Info</a></li>
-                        <li><a href="#">Booking History</a></li>
-                        <li><a href="#">Your Booking</a></li>
-                        <li><a href="">Loyalty Status</a> </li>
+                        <li><a href="bookingHistory">Booking History</a></li>
+                        <li><a href="#">My Booking</a></li>
+                        <li><a href="redeemVoucher">Loyalty Status</a> </li>
                         <li><a href="changePassword.jsp">Change Password</a></li>
                         <li><a href="./homepage?action=logout">Log out</a></li>
                         <li><a href="homepage">Home</a></li>
@@ -149,13 +98,6 @@
                         <form id="editProfile" action="editProfile" method="post" enctype="multipart/form-data">
                             <div class="avatar-section">
                                 <img class="avatar" src="${sessionScope.user.getAvatar_url()}" alt="Avatar"/>
-                                <!--                                    <p >Choose file to change avatar</p>
-                                
-                                                                    <input type="file" id="avatar-upload" name="avatar">
-                                                                    <button type="button" class="custom-upload-button" onclick="document.getElementById('avatar-upload').click();">
-                                                                        Upload Avatar
-                                                                    </button>
-                                                                    <span class="file-name" id="file-name">No file chosen</span>-->
                             </div>
 
                             <div class="form-group">

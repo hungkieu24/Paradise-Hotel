@@ -53,6 +53,10 @@ public class ViewRoomTypeListServlet extends HttpServlet {
                     checkIn = LocalDate.parse(parts[0].trim(), formatter);
                     checkOut = LocalDate.parse(parts[1].trim(), formatter);
                 } catch (DateTimeParseException e) {
+                    System.err.println("LỖI PARSE NGÀY:");
+                    System.err.println("start: '" + parts[0] + "'");
+                    System.err.println("end:   '" + parts[1] + "'");
+                    e.printStackTrace();
                     checkIn = null;
                     checkOut = null;
                 }

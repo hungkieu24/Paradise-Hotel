@@ -6,6 +6,7 @@ package Dal;
 
 import Model.Branch;
 import Model.RoomType;
+import java.sql.Timestamp;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -141,31 +142,34 @@ public class RoomTypeDAO extends DBContext {
     public List<RoomType> getAvailableRoomTypesByDate(LocalDate checkIn, LocalDate checkOut) {
         List<RoomType> availableRoomTypes = new ArrayList<>();
         BranchDAO branchDAO = new BranchDAO();
+
+        // Chuyển LocalDate -> Timestamp (bắt đầu ngày)
+        Timestamp checkInTimestamp = Timestamp.valueOf(checkIn.atStartOfDay());
+        Timestamp checkOutTimestamp = Timestamp.valueOf(checkOut.atStartOfDay());
+
         String sql = """
-        SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price,
-                        rt.capacity_adult, rt.capacity_child,
-                        rt.image_url, rt.branch_id, rt.is_deleted
-        FROM RoomType rt
-        WHERE rt.is_deleted = 0
-          AND EXISTS (
-              SELECT 1
-              FROM Room r
-              WHERE r.room_type_id = rt.id
-                AND r.status NOT IN ('Maintenance', 'Locked')
-                AND r.id NOT IN (
-                    SELECT br.room_id
-                    FROM BookingRoom br
-                    JOIN Booking b ON br.booking_id = b.id
-                    WHERE b.status NOT IN ('Cancelled', 'Locked')
-                      AND b.check_in < ?
-                      AND b.check_out > ?
-                )
-          )
+        SELECT DISTINCT rt.*
+          FROM RoomType rt
+          WHERE rt.is_deleted = 0
+            AND EXISTS (
+                SELECT 1
+                FROM Room r
+                WHERE r.room_type_id = rt.id
+                  AND r.status NOT IN ('Maintenance', 'Booked')
+                  AND r.id NOT IN (
+                      SELECT br.room_type_id
+                      FROM BookingRoomType br
+                      JOIN Booking b ON br.booking_id = b.id
+                      WHERE b.status NOT IN ('Cancelled', 'Locked')
+                        AND b.check_in < ?
+                        AND b.check_out > ?
+                  )
+            )
     """;
 
         try (PreparedStatement st = connection.prepareStatement(sql)) {
-            st.setDate(1, Date.valueOf(checkOut));
-            st.setDate(2, Date.valueOf(checkIn));
+            st.setTimestamp(1, checkOutTimestamp); // b.check_in < checkOut
+            st.setTimestamp(2, checkInTimestamp);  // b.check_out > checkIn
 
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
@@ -180,6 +184,7 @@ public class RoomTypeDAO extends DBContext {
                         rs.getInt("branch_id"),
                         rs.getBoolean("is_deleted")
                 );
+                // Lấy thông tin chi nhánh
                 Branch branch = branchDAO.getBranchByRoomTypeId(roomType.getRoomTypeID());
                 roomType.setBranch(branch);
                 availableRoomTypes.add(roomType);
@@ -207,14 +212,14 @@ public class RoomTypeDAO extends DBContext {
               SELECT 1
               FROM Room r
               WHERE r.room_type_id = rt.id
-                AND r.status NOT IN ('Maintenance', 'Locked')
-                AND r.id NOT IN (
-                    SELECT br.room_id
-                    FROM BookingRoom br
-                    JOIN Booking b ON br.booking_id = b.id
-                    WHERE b.status NOT IN ('Cancelled', 'Locked')
-                      AND b.check_in < ?
-                      AND b.check_out > ?
+                AND r.status NOT IN ('Maintenance', 'Booked')
+                                        AND r.id NOT IN (
+                                            SELECT br.room_type_id
+                                            FROM BookingRoomType br
+                                            JOIN Booking b ON br.booking_id = b.id
+                                            WHERE b.status NOT IN ('Cancelled', 'Locked')
+                                              AND b.check_in < ?
+                                              AND b.check_out > ?
                 )
           )
     """;

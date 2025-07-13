@@ -1,12 +1,16 @@
 <%-- 
-    Document   : changePassword
-    Created on : Jun 14, 2025, 1:00:17 AM
+    Document   : bookingHistory
+    Created on : Jul 10, 2025, 5:12:40 PM
     Author     : KTC
 --%>
+
 
 <!DOCTYPE html>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
 <html lang="en">
 
     <head>
@@ -35,6 +39,7 @@
         <link rel="stylesheet" href="css/editProfile1.css">
         <!-- YOUR CUSTOM CSS -->
         <link href="css/custom.css" rel="stylesheet">
+        <link href="css/bookingHistory.css" rel="stylesheet">
     </head>
 
     <body> 
@@ -63,10 +68,36 @@
         <div class="layer"></div><!-- Opacity Mask -->
 
 
+
         <div class="nav_panel">
             <a href="#" class="closebt open_close_nav_panel"><i class="bi bi-x"></i></a>
             <div class="logo_panel"><img src="img/logo_sticky.png" width="135" height="45" alt=""></div>
-            
+            <div class="sidebar-navigation">
+                <nav>
+                    <ul class="level-1">
+                        <li><a href="#">Personal Info</a></li>
+                        <li><a href="editProfile">Change Personal Info</a></li>
+                        <li><a href="#">Booking History</a></li>
+                        <li><a href="myBooking">Your Booking</a></li>
+                        <li><a href="#">Loyalty Status</a> </li>
+                        <li><a href="#">Change Password</a></li>
+                        <li class="parent"><a href="#0">Feedback</a>
+                            <ul class="level-2">
+                                <li class="back"><a href="#0">Back</a></li>
+                                <li><a href="viewFeedback">View Feedback</a></li>
+                                <li><a href="sendFeedback.jsp">Send Feedback</a></li>
+                            </ul> 
+                        </li>
+                        <li><a href="./homepage?action=logout">Log out</a></li>
+                        <li><a href="homepage" class="home-link">Home</a></li>
+                    </ul>
+                    <div class="panel_footer">
+                        <div class="phone_element"><a href="tel://423424234"><i class="bi bi-telephone"></i><span><em>Info and bookings</em>+41 934 121 1334</span></a></div>
+                    </div>
+                    <!-- /panel_footer -->
+                </nav>
+            </div>
+            <!-- /sidebar-navigation -->
         </div>
         <!-- /nav_panel -->
 
@@ -77,78 +108,110 @@
                 <div class="wrapper opacity-mask d-flex align-items-center justify-content-center text-center animate_hero" data-opacity-mask="rgba(0, 0, 0, 0.5)">
                     <div class="container">
                         <small class="slide-animated one">Luxury Hotel Experience</small>
-                        <h1 class="slide-animated two">Update Password</h1>
+                        <h1 class="slide-animated two">Booking History</h1>
                     </div>
                 </div>
             </div>
             <!-- /Background Img Parallax -->
 
             <div class="container margin_120_95">
-                <div class="sidebar">
+                <div class="sidebar" style="margin-right: 0px">
                     <img class="avatar" src="${sessionScope.user.getAvatar_url()}" alt="Avatar"/>
-                    <p>Rank: <span>${sessionScope.loyaltypointlp.getLevel()}</span> </p>
+                    <p>Rank: <span>${sessionScope.loyaltypointlp.getLevel()}</span></p>
                     <p>Accumulated Points: <a href="#">${sessionScope.loyaltypointlp.getPoints()}</a></p>
                     <ul>
                         <li><a href="editProfile">Personal Info</a></li>
                         <li><a href="bookingHistory">Booking History</a></li>
-                        <li><a href="#">My Booking</a></li>
+                        <li><a href="myBooking">My Booking</a></li>
                         <li><a href="redeemVoucher">Loyalty Status</a> </li>
                         <li><a href="changePassword.jsp">Change Password</a></li>
                         <li><a href="./homepage?action=logout">Log out</a></li>
                         <li><a href="homepage">Home</a></li>
                     </ul>
                 </div>
+
                 <div class="form-wrapper">
-                    <h3 class="mb-3">Change Password</h3>
-                    <div id="message-contact"></div>
-                    <div class="main-content">
-                        <form id="changePassword" action="changePassword" method="post">
+                    <h3 class="mb-4">My Booking History</h3>
+                    <div class="row">
+                        <c:forEach var="b" items="${bookings}">
+                            <div class="col-lg-4 col-md-6 mb-4">
+                                <div class="card shadow-sm p-3 h-100" >
+                                    <c:choose>
+                                        <c:when test="${not empty b.roomTypeImage}">
+                                            <img src="${b.roomTypeImage}" class="card-img-top" alt=""/>
+                                        </c:when>
+                                    </c:choose>
 
-                            <div class="form-group">
-                                <label for="currentPassword">Current Password:</label>
-                                <div class="input-with-icon">
-                                    <input type="password" id="currentPassword" name="currentPassword" required>
-                                    <i class="bi bi-eye-slash toggle-password" toggle="#currentPassword"></i>
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <c:choose>
+                                                <c:when test="${b.branchName != null}">${b.branchName}</c:when>
+                                                <c:otherwise>Chi nhánh không xác định</c:otherwise>
+                                            </c:choose>
+                                        </h5>
+
+                                        <p class="card-text mb-1">Check In - Check Out: 
+                                            <fmt:formatDate value="${b.checkIn}" pattern="dd/MM/yyyy" /> - 
+                                            <fmt:formatDate value="${b.checkOut}" pattern="dd/MM/yyyy" />
+                                        </p>
+                                        <p class="card-text mb-1">RoomType: ${b.roomTypeName}</p>
+                                        <p class="card-text mb-1">Total Price: <fmt:formatNumber value="${b.totalPrice}" type="currency" currencySymbol="₫"/></p>
+                                        <p class="card-text mt-2" style="font-weight: bold; color:
+                                           <c:choose>
+                                               <c:when test="${b.status eq 'Completed'}">green</c:when>
+                                               <c:when test="${b.status eq 'Pending'}">orange</c:when>
+                                               <c:when test="${b.status eq 'Cancelled'}">red</c:when>
+                                               <c:otherwise>#555</c:otherwise>
+                                           </c:choose>">
+                                            <c:choose>
+                                                <c:when test="${b.status eq 'Completed'}">Completed</c:when>
+                                                <c:when test="${b.status eq 'Pending'}">Pending</c:when>
+                                                <c:when test="${b.status eq 'Cancelled'}">Cancelled</c:when>
+                                                <c:otherwise>${b.status}</c:otherwise>
+                                            </c:choose>
+                                        </p>
+
+                                        <div class="d-flex justify-content-between mt-3">
+                                            <a style="margin-left: 325px" href="#" class="btn_1 small open-detail" data-id="${b.id}">Chi tiết</a>
+
+                                            <a href="rebook?id=${b.id}" class="btn_1 small outline">Đặt lại</a>
+
+
+
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-3">
+                                            <c:if test="${b.status eq 'Completed'}">
+                                                <a style="margin-left: 350px" href="sendFeedback?bookingId=${b.id}" class="btn_1 small">Gửi Feedback</a>
+                                            </c:if>
+                                        </div>
+                                    </div>
                                 </div>
-                                <!--<p class="form_error"></p>-->
-<!--                                <c:if test="${not empty currentPasswordError}">
-                                    <p class="form_error">${currentPasswordError}</p>
-                                </c:if> -->
-                            </div> 
-
-                            <div class="form-group">
-                                <label for="newPassword">New Password:</label>
-                                <div class="input-with-icon">
-                                    <input type="password" id="newPassword" name="newPassword" required>
-                                    <i class="bi bi-eye-slash toggle-password" toggle="#newPassword"></i>
-                                </div>
-                                <p style="color: red" class="form__error username__error"></p>
                             </div>
+                        </c:forEach>
+                    </div>
+                    <!-- Pagination -->
+                    <div class="pagination d-flex justify-content-center mt-4"> 
+                        <c:if test="${currentPage > 1}">
+                            <a href="bookingHistory?page=${currentPage - 1}" class="prev">Previous</a>
+                        </c:if>
 
-                            <div class="form-group">
-                                <label for="confirmPassword">Confirm New Password:</label>
-                                <div class="input-with-icon">
-                                    <input type="password" id="confirmPassword" name="confirmPassword" required>
-                                    <i class="bi bi-eye-slash toggle-password" toggle="#confirmPassword"></i>
-                                </div>
-                                <p style="color: red" class="form__error username__error"></p>
-                                <c:if test="${not empty confirmPasswordError}">
-                                    <p class="form_error">${confirmPasswordError}</p>
-                                </c:if>
-                            </div>
+                        <c:forEach var="i" begin="1" end="${totalPages}">
+                            <a href="bookingHistory?page=${i}" class="${i == currentPage ? 'active' : ''}">${i}</a>
+                        </c:forEach>
 
-                            <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px;">
-                                <button class="openEditProfileModal1" type="submit">Update</button>
-                                <!--                                <button class="openEditProfileModal1" type="reset">Cancel</button>-->
-                                <a href="forgotPassword.jsp" class="btn_1" style="display: inline-block;">Forgot password?</a>
-                            </div>
-
-                        </form>
+                        <c:if test="${currentPage < totalPages}">
+                            <a href="bookingHistory?page=${currentPage + 1}" class="next">Next</a>
+                        </c:if>
                     </div>
 
                 </div>
-
-                <!-- /row -->
+            </div>
+            <!-- Modal -->
+            <div id="bookingDetailModal" class="modal-overlay" style="display:none;">
+                <div class="modal-content">
+                    <span class="close-button" onclick="closeModal()">×</span>
+                    <div id="modal-body-content"></div>
+                </div>
             </div>
 
         </main>
@@ -228,41 +291,29 @@
         <script src="phpmailer/validate.js"></script>
         <script src="./js/toastMessage.js"></script>                
         <script src="./js/validationForm.js"></script>
-        <script>
-            document.querySelectorAll('.toggle-password').forEach(function (eyeIcon) {
-                eyeIcon.addEventListener('click', function () {
-                    const input = document.querySelector(this.getAttribute('toggle'));
-                    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                    input.setAttribute('type', type);
-                    this.classList.toggle('bi-eye');
-                    this.classList.toggle('bi-eye-slash');
-                });
-            });
-        </script>
 
         <script>
-            Validator({
-                form: '#changePassword',
-                formGroupSelector: '.form-group',
-                errorSelector: '.form__error',
-                rules: [
-                    Validator.minLength(' #newPassword', 8),
-                    Validator.isRequired('#confirmPassword'),
-                    Validator.isConfirmed(' #confirmPassword', function () {
-                        return document.querySelector('#changePassword #newPassword').value;
-                    }, 'Password re-entered is incorrect')
-                ],
-                onsubmit: function (formValue) {
-                    document.querySelector('#changePassword').submit();
-                }
-            });
-        </script>
-        <script>
-            window.addEventListener("load", function () {
-                const preloader = document.getElementById("preloader");
-                if (preloader)
-                    preloader.style.display = "none";
-            });
+                        document.querySelectorAll('.open-detail').forEach(btn => {
+                            btn.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                const bookingId = this.getAttribute('data-id');
+
+                                fetch('bookingDetail?id=' + bookingId)
+                                        .then(response => response.text())
+                                        .then(html => {
+                                            document.getElementById('modal-body-content').innerHTML = html;
+                                            document.getElementById('bookingDetailModal').style.display = 'flex';
+                                        })
+                                        .catch(error => {
+                                            console.error("Error loading booking detail:", error);
+                                        });
+                            });
+                        });
+
+                        function closeModal() {
+                            document.getElementById('bookingDetailModal').style.display = 'none';
+                        }
+
         </script>
 
     </body>

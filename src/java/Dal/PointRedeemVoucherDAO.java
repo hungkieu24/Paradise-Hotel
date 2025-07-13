@@ -6,6 +6,8 @@ package Dal;
 
 import DBcontext.DBContext;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -40,6 +42,21 @@ public class PointRedeemVoucherDAO extends DBContext {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<Integer> getRedeemedVoucherIdsByUser(String userId) {
+        List<Integer> result = new ArrayList<>();
+        String sql = "SELECT voucher_id FROM PointRedeemVoucher WHERE user_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, userId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                result.add(rs.getInt("voucher_id"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
 }
