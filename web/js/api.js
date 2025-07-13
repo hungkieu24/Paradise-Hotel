@@ -1,4 +1,4 @@
-const host = "https://provinces.open-api.vn/api/";
+const host = "http://provinces.open-api.vn/api/";
 
 const createLocationSelector = (config) => {
     const { provinceId, districtId, wardId, addressId } = config;

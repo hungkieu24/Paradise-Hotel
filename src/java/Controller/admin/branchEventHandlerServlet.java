@@ -42,7 +42,7 @@ public class branchEventHandlerServlet extends HttpServlet {
     private final HotelBranchDAO branchDAO = new HotelBranchDAO();
 
     private final String BRANCH_PAGE = "./branch";
-    private final String HOTEL_BRANCH_IMAGE_FOLDER_PREFIX = "/img/HotelBranch_";
+    private final String HOTEL_BRANCH_IMAGE_FOLDER_PREFIX = "HotelBranch_";
     private static final String COL_EMAIL = "email";
     private static final String COL_PHONE = "phone";
     private static final String COL_ADDRESS = "address";

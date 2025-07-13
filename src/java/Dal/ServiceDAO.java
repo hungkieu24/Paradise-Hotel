@@ -1,5 +1,3 @@
-
-
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
@@ -16,6 +14,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import Model.Branch;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 public class ServiceDAO extends DBContext {
 
@@ -67,12 +69,12 @@ public class ServiceDAO extends DBContext {
                 }
             }
         } catch (Exception e) {
-          e.printStackTrace();
+            e.printStackTrace();
         }
 
         return services;
     }
-  
+
     public List<Service> getAllServices() {
         List<Service> services = new ArrayList<>();
         String sql = "SELECT * FROM Service WHERE status = 'Active' AND is_deleted = 0";
@@ -199,13 +201,13 @@ public class ServiceDAO extends DBContext {
                         }
                     }
                 }
-              }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-      return false;
+        return false;
     }
-  
+
     // hoang: lay ca where unactive
     public List<Service> getAllServices1() {
         List<Service> services = new ArrayList<>();
@@ -261,7 +263,6 @@ public class ServiceDAO extends DBContext {
 //
 //        return null; // Trả về null nếu không tìm thấy hoặc có lỗi
 //    }
-
     public Service getServiceById1(int id) {
         String sql = "SELECT * FROM Service WHERE id = ? AND is_deleted = 0";
 
@@ -336,7 +337,7 @@ public class ServiceDAO extends DBContext {
         } catch (Exception e) {
             e.printStackTrace();
         }
-      return branches;
+        return branches;
     }
 
     //hoang
@@ -349,7 +350,7 @@ public class ServiceDAO extends DBContext {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Service s = new Service(
-                  rs.getInt("id"),
+                        rs.getInt("id"),
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getDouble("price"),
@@ -363,9 +364,9 @@ public class ServiceDAO extends DBContext {
         } catch (Exception e) {
             e.printStackTrace();
         }
-      return list;
+        return list;
     }
-  
+
     /**
      * Xóa mềm dịch vụ
      */
@@ -438,121 +439,121 @@ public class ServiceDAO extends DBContext {
 
         return service;
     }
+
     /**
- * Lấy danh sách services chưa thanh toán của booking
- */
-public List<Service> getUnpaidServicesByBookingId(int bookingId) {
-    List<Service> services = new ArrayList<>();
-    
-    try {
-        String sql = "SELECT s.id, s.name, s.description, s.price, s.image_url, " +
-                     "bs.quantity, bs.paid_status " +
-                     "FROM BookingService bs " +
-                     "JOIN Service s ON bs.service_id = s.id " +
-                     "WHERE bs.booking_id = ? AND bs.paid_status = 'Unpaid' " +
-                     "AND s.is_deleted = 0 " +
-                     "ORDER BY s.name";
-        
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, bookingId);
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Service service = new Service();
-                    service.setId(rs.getInt("id"));
-                    service.setName(rs.getString("name"));
-                    service.setDescription(rs.getString("description"));
-                    service.setPrice(rs.getDouble("price"));
-                    service.setImageUrl(rs.getString("image_url"));
-                    service.setQuantity(rs.getInt("quantity"));
-                    service.setBookingServiceStatus(rs.getString("paid_status"));
-                    services.add(service);
+     * Lấy danh sách services chưa thanh toán của booking
+     */
+    public List<Service> getUnpaidServicesByBookingId(int bookingId) {
+        List<Service> services = new ArrayList<>();
+
+        try {
+            String sql = "SELECT s.id, s.name, s.description, s.price, s.image_url, "
+                    + "bs.quantity, bs.paid_status "
+                    + "FROM BookingService bs "
+                    + "JOIN Service s ON bs.service_id = s.id "
+                    + "WHERE bs.booking_id = ? AND bs.paid_status = 'Unpaid' "
+                    + "AND s.is_deleted = 0 "
+                    + "ORDER BY s.name";
+
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, bookingId);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Service service = new Service();
+                        service.setId(rs.getInt("id"));
+                        service.setName(rs.getString("name"));
+                        service.setDescription(rs.getString("description"));
+                        service.setPrice(rs.getDouble("price"));
+                        service.setImageUrl(rs.getString("image_url"));
+                        service.setQuantity(rs.getInt("quantity"));
+                        service.setBookingServiceStatus(rs.getString("paid_status"));
+                        services.add(service);
+                    }
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    
-    return services;
-}
 
-/**
- * Lấy tổng tiền services chưa thanh toán
- */
-public double getUnpaidServiceTotalByBookingId(int bookingId) {
-    double total = 0;
-    
-    try {
-        String sql = "SELECT SUM(s.price * bs.quantity) as total " +
-                     "FROM BookingService bs " +
-                     "JOIN Service s ON bs.service_id = s.id " +
-                     "WHERE bs.booking_id = ? AND bs.paid_status = 'Unpaid' " +
-                     "AND s.is_deleted = 0";
-        
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, bookingId);
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    total = rs.getDouble("total");
+        return services;
+    }
+
+    /**
+     * Lấy tổng tiền services chưa thanh toán
+     */
+    public double getUnpaidServiceTotalByBookingId(int bookingId) {
+        double total = 0;
+
+        try {
+            String sql = "SELECT SUM(s.price * bs.quantity) as total "
+                    + "FROM BookingService bs "
+                    + "JOIN Service s ON bs.service_id = s.id "
+                    + "WHERE bs.booking_id = ? AND bs.paid_status = 'Unpaid' "
+                    + "AND s.is_deleted = 0";
+
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, bookingId);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        total = rs.getDouble("total");
+                    }
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    
-    return total;
-}
 
-/**
- * Lấy tổng tiền services đã thanh toán
- */
-public double getPaidServiceTotalByBookingId(int bookingId) {
-    double total = 0;
-    
-    try {
-        String sql = "SELECT SUM(s.price * bs.quantity) as total " +
-                     "FROM BookingService bs " +
-                     "JOIN Service s ON bs.service_id = s.id " +
-                     "WHERE bs.booking_id = ? AND bs.paid_status = 'Paid' " +
-                     "AND s.is_deleted = 0";
-        
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, bookingId);
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    total = rs.getDouble("total");
+        return total;
+    }
+
+    /**
+     * Lấy tổng tiền services đã thanh toán
+     */
+    public double getPaidServiceTotalByBookingId(int bookingId) {
+        double total = 0;
+
+        try {
+            String sql = "SELECT SUM(s.price * bs.quantity) as total "
+                    + "FROM BookingService bs "
+                    + "JOIN Service s ON bs.service_id = s.id "
+                    + "WHERE bs.booking_id = ? AND bs.paid_status = 'Paid' "
+                    + "AND s.is_deleted = 0";
+
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, bookingId);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        total = rs.getDouble("total");
+                    }
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    
-    return total;
-}
 
-/**
- * Đánh dấu tất cả services của booking là đã thanh toán
- */
-public boolean markAllServicesAsPaid(int bookingId) {
-    try {
-        String sql = "UPDATE BookingService SET paid_status = 'Paid' WHERE booking_id = ?";
-        
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, bookingId);
-            return ps.executeUpdate() > 0;
+        return total;
+    }
+
+    /**
+     * Đánh dấu tất cả services của booking là đã thanh toán
+     */
+    public boolean markAllServicesAsPaid(int bookingId) {
+        try {
+            String sql = "UPDATE BookingService SET paid_status = 'Paid' WHERE booking_id = ?";
+
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, bookingId);
+                return ps.executeUpdate() > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-        return false;
     }
-}
 
-  
     //author: ThienTC
     //Lấy list service cho manager để hiển thị 
     public List<Service> getServicesByBranchId(int branchId, int page, int pageSize) {
@@ -828,4 +829,44 @@ public boolean markAllServicesAsPaid(int bookingId) {
         }
         return false;
     }
+
+    public Map<String, Integer> getServiceUsageByBranchAndMonthRange(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        Map<String, Integer> serviceUsageMap = new LinkedHashMap<>();
+
+        LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+        LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+        String sql = "SELECT s.name AS serviceName, SUM(bs.quantity) AS totalUsed "
+                + "FROM BookingService bs "
+                + "JOIN Booking b ON bs.booking_id = b.id "
+                + "JOIN Service s ON bs.service_id = s.id "
+                + "WHERE b.branch_id = ? "
+                + "AND b.status = 'Completed' "
+                + "AND bs.paid_status = 'Paid' "
+                + "AND s.is_deleted = 0 "
+                + "AND s.branch_id = ? "
+                + "AND b.check_in BETWEEN ? AND ? "
+                + "GROUP BY s.name "
+                + "ORDER BY totalUsed DESC";
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, branchId);
+            st.setInt(2, branchId);
+            st.setDate(3, java.sql.Date.valueOf(fromDate));
+            st.setDate(4, java.sql.Date.valueOf(toDate));
+
+            ResultSet rs = st.executeQuery();
+
+            while (rs.next()) {
+                String serviceName = rs.getString("serviceName");
+                int totalUsed = rs.getInt("totalUsed");
+                serviceUsageMap.put(serviceName, totalUsed);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return serviceUsageMap;
+    }
+
 }

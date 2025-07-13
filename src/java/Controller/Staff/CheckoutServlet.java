@@ -233,6 +233,12 @@ public class CheckoutServlet extends HttpServlet {
             System.out.println("- Unpaid Service Price: " + unpaidServicePrice);
             System.out.println("- Rank Discount: " + rankDiscount + " (" + rankDiscountPercent + "%)");
             System.out.println("- Amount to Pay: " + amountToPay);
+            
+//            ramework logging
+//            logger.debug("Checkout calculation completed: roomPrice={}, servicePrice={}, paidService={}, "
+//                       + "unpaidService={}, discount={}, amountToPay={}",
+//                       totalRoomPrice, totalServicePrice, paidServicePrice,
+//                       unpaidServicePrice, rankDiscount, amountToPay);
 
         } catch (Exception e) {
             e.printStackTrace();

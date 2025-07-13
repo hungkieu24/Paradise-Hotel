@@ -4,7 +4,7 @@
  */
 package Model;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 /**
  *

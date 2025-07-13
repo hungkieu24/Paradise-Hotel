@@ -16,6 +16,8 @@ public class Feedback {
     private Timestamp created_at;
     private String status;
     private String admin_action;
+    private boolean is_deleted;
+    
     private UserAccount userAccount;
     private int roomTypeId;
     // Additional fields for display
@@ -24,8 +26,6 @@ public class Feedback {
 
     public Feedback() {
     }
-    
-    
     
     // Constructor with all fields
     public Feedback(int id, String user_id, int booking_id, int rating, 
@@ -114,6 +114,19 @@ public class Feedback {
         this.created_at = created_at;
         this.status = status;
         this.admin_action = admin_action;
+    }
+
+    public Feedback(int id, int booking_id, int rating, String comment, String image_url, Timestamp created_at, String status, String admin_action, boolean is_deleted, UserAccount userAccount) {
+        this.id = id;
+        this.booking_id = booking_id;
+        this.rating = rating;
+        this.comment = comment;
+        this.image_url = image_url;
+        this.created_at = created_at;
+        this.status = status;
+        this.admin_action = admin_action;
+        this.is_deleted = is_deleted;
+        this.userAccount = userAccount;
     }
 
     public int getRoomTypeId() {

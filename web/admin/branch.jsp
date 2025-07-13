@@ -73,7 +73,7 @@
                                     <input type="text" name="searchKeyword" id="roomSearch" value="${param.searchKeyword}" placeholder="Search branch..." >
                                 </div>
                             </form>
-                            <button class="btn btn-primary js-toggle" toggle-target="#add-modal">
+                            <button id="add-branch-btn" class="btn btn-primary js-toggle" toggle-target="#add-modal">
                                 <i class="fas fa-plus"></i>
                                 Add new branch
                             </button>
@@ -443,6 +443,7 @@
                                     <option value="">Choose province</option>
                                 </select>
                             </div>
+                            <p class="form__error"></p>
                         </div>
 
                         <div class="form__group">
@@ -452,6 +453,7 @@
                                     <option value="">Choose district</option>
                                 </select>
                             </div>
+                            <p class="form__error"></p>
                         </div>
 
                         <div class="form__group">
@@ -461,9 +463,10 @@
                                     <option value="">Choose ward</option>
                                 </select>
                             </div>
+                            <p class="form__error"></p>
                         </div>
                     </div>
-                    <div class="form__row">
+                    <div class="form__row" style="display: none">
                         <div class="form__group">
                             <label class="form__label form-card__label">Address</label>
                             <div class="form__text-input">
@@ -505,7 +508,7 @@
                         <a href="../admin/branch" class="btn btn--text">
                             <div class=" btn--rounded btn-normal">Cancel</div>
                         </a>
-                        <button type="submit" class="btn btn-primary btn--rounded">Add</button>
+                        <button type="submit" id="btn-Addform-submit" class="btn btn-primary btn--rounded">Add</button>
                     </div>
                 </form>
             </div>
@@ -658,9 +661,13 @@
                 errorSelector: '.form__error',
                 rules: [
                     Validator.isRequired('#branchName-add', 'Please enter the full name of the branch'),
-                    Validator.isPhoneNumber('#branchPhone-add', 'Please enter branch phone number'),
+                    Validator.isRequired('#branchPhone-add', 'Please enter branch phone number'),
+                    Validator.isPhoneNumber('#branchPhone-add', 'Phone number must be exactly 10 digits'),
                     Validator.isRequired('#branchEmail-add', 'Please enter branch email'),
                     Validator.isEmail('#branchEmail-add', 'This field must be an email'),
+                    Validator.isSelectRequired('#province-add', 'Please choose province'),
+                    Validator.isSelectRequired('#district-add', 'Please choose district'),
+                    Validator.isSelectRequired('#ward-add', 'Please choose ward'),
                     Validator.isRequired('#specificAddress-add', 'Please enter specific branch address'),
                     Validator.isRequiredFile('#imageInput-add', 'Please select at least one file.'),
                     Validator.isImageFile('#imageInput-add', 'File must be an image (.jpg, .png, .gif, .webp)'),
