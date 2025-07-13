@@ -9,8 +9,11 @@ import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet(name = "StaffBookingsListServlet", urlPatterns = {"/staff-bookings-list"})
+@WebServlet(name = "StaffBookingsListServlet", urlPatterns = {"/staff-bookings-list"})  
 public class StaffBookingsListServlet extends HttpServlet {
+    
+    public static final String BRANCH_NAME = "branchName";
+    
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

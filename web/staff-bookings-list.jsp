@@ -215,22 +215,7 @@
                             <%= request.getAttribute("checkoutMessage") %>
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
-                        <% } %>
-
-                        <!-- Navigation -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <a href="staff-dashboard.jsp" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left"></i> Back to Dashboard
-                            </a>
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-outline-primary" onclick="window.location.reload()">
-                                    <i class="bi bi-arrow-clockwise"></i> Refresh
-                                </button>
-                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#helpModal">
-                                    <i class="bi bi-question-circle"></i> Help
-                                </button>
-                            </div>
-                        </div>
+                        <% } %>         
 
                         <!-- Statistics Cards -->
                         <div class="row mb-4">
@@ -360,7 +345,7 @@
                                                         ) && b.getCheckIn() != null && now.before(b.getCheckIn());
 
                                                         boolean canCheckout = "checkedin".equalsIgnoreCase(b.getStatus());
-                                                        
+                                                        boolean completed =  "Completed".equalsIgnoreCase(b.getStatus());
                                                         // Assign room logic
                                                         boolean canAssignRoom = (
                                                             "paid".equalsIgnoreCase(b.getStatus()) ||
@@ -434,23 +419,15 @@
                                                 </td>
                                                 <td>
                                                     <div class="action-buttons">
-                                                        <!-- Modified: Changed both Check-in and Assign Room buttons to link to staff/room-assignment -->
                                                         <% if (canCheckin) { %>
-                                                        <%-- Nếu đến giờ check-in, hiển thị nút Check-in (màu xanh lá) và link đến trang gán phòng --%>
                                                         <a href="staff-room-assignment?action=assign&bookingId=<%= b.getId() %>" 
                                                            class="btn btn-success btn-sm" 
                                                            title="Assign rooms and check-in customer">
                                                             <i class="bi bi-person-check"></i> Check-in
                                                         </a>
-                                                        <% } else if (canAssignRoom) { %>
-                                                        <%-- Nếu chưa đến giờ check-in nhưng có thể gán phòng, hiển thị nút Assign Room (màu xanh dương) --%>
-                                                        <a href="staff-room-assignment?action=assign&bookingId=<%= b.getId() %>" 
-                                                           class="btn btn-outline-primary btn-sm" 
-                                                           title="Assign rooms to this booking">
-                                                            <i class="bi bi-house-door"></i> Assign Room
-                                                        </a>
+                                                        <% } else if (!canCheckin && !canCheckout && !completed) { %>
+                                                        <span class="text-muted">Waiting check-in</span>
                                                         <% } %>
-
 
                                                         <!-- Check-out Button -->
                                                         <% if (canCheckout) { %>
@@ -461,6 +438,7 @@
                                                             </button>
                                                         </form>
                                                         <% } %>
+
 
                                                         <!-- View Customer Button -->
                                                         <a href="view-user-info?bookingId=<%= b.getId() %>" 

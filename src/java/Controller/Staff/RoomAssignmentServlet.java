@@ -1,3 +1,4 @@
+
 import Dal.BookingDAO;
 import Dal.BookingRoomTypeDAO;
 import Dal.BookingServiceDAO;
@@ -33,20 +34,20 @@ public class RoomAssignmentServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         HttpSession session = request.getSession();
         UserAccount user = (UserAccount) session.getAttribute("user");
-        
+
         if (user == null || !("Staff".equals(user.getRole()) || "Manager".equals(user.getRole()))) {
             response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
-        
+
         String action = request.getParameter("action");
         if (action == null) {
             action = "list";
         }
-        
+
         switch (action) {
             case "list":
                 listPendingBookings(request, response, user.getBranchId());
@@ -66,17 +67,17 @@ public class RoomAssignmentServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         HttpSession session = request.getSession();
         UserAccount user = (UserAccount) session.getAttribute("user");
-        
+
         if (user == null || !("Staff".equals(user.getRole()) || "Manager".equals(user.getRole()))) {
             response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
-        
+
         String action = request.getParameter("action");
-        
+
         switch (action) {
             case "assign-room":
                 assignRoom(request, response);
@@ -98,27 +99,27 @@ public class RoomAssignmentServlet extends HttpServlet {
                 break;
         }
     }
-    
+
     private void listPendingBookings(HttpServletRequest request, HttpServletResponse response, int branchId)
             throws ServletException, IOException {
-        
+
         BookingDAO bookingDAO = new BookingDAO();
         List<Booking> pendingBookings = bookingDAO.getPendingBookingsForBranch(branchId);
-        
+
         Map<Integer, Boolean> fullyAssignedMap = new HashMap<>();
         if (pendingBookings != null) {
             for (Booking booking : pendingBookings) {
                 fullyAssignedMap.put(booking.getId(), bookingDAO.areAllRoomsAssigned(booking.getId()));
             }
         }
-        
+
         request.setAttribute("pendingBookings", pendingBookings);
         request.setAttribute("fullyAssignedMap", fullyAssignedMap);
-        
+
         RequestDispatcher dispatcher = request.getRequestDispatcher("/staff-room-assignment-list.jsp");
         dispatcher.forward(request, response);
     }
-    
+
     private void showAssignRoomPage(HttpServletRequest request, HttpServletResponse response, Integer branchID)
             throws ServletException, IOException {
         try {
@@ -137,9 +138,9 @@ public class RoomAssignmentServlet extends HttpServlet {
             // Lấy các phòng đã được gán cho booking này
             RoomDAO roomDAO = new RoomDAO();
             List<Room> assignedRooms = roomDAO.getAssignedRoomsByBookingId(bookingId);
-              Set<Integer> assignedRoomIds = assignedRooms.stream()
-                                        .map(Room::getId)
-                                        .collect(Collectors.toSet());
+            Set<Integer> assignedRoomIds = assignedRooms.stream()
+                    .map(Room::getId)
+                    .collect(Collectors.toSet());
 
             // Lấy thông tin yêu cầu của booking
             BookingRoomTypeDAO brtDAO = new BookingRoomTypeDAO();
@@ -157,7 +158,7 @@ public class RoomAssignmentServlet extends HttpServlet {
             }
 
             // Lấy TẤT CẢ các loại phòng trong toàn bộ hệ thống
-            RoomTypeDAO roomTypeDAO = new RoomTypeDAO(); 
+            RoomTypeDAO roomTypeDAO = new RoomTypeDAO();
             List<RoomType> allSystemRoomTypes = roomTypeDAO.getAllRoomType(); // Sử dụng findAll
 
             // Lấy các phòng có sẵn cho TỪNG loại phòng, NHƯNG chỉ ở chi nhánh hiện tại
@@ -165,7 +166,7 @@ public class RoomAssignmentServlet extends HttpServlet {
             for (RoomType rt : allSystemRoomTypes) {
                 // Quan trọng: Vẫn truyền branchId để đảm bảo chỉ lấy phòng ở đúng chi nhánh
                 List<Room> available = roomDAO.getAvailableRoomsForAssignment(rt.getRoomTypeID(), branchId, bookingId);
-                 // Gán flag assigned cho từng phòng
+                // Gán flag assigned cho từng phòng
                 for (Room room : available) {
                     room.setAssigned(assignedRoomIds.contains(room.getId()));
                 }
@@ -183,9 +184,7 @@ public class RoomAssignmentServlet extends HttpServlet {
             ServiceDAO serviceDAO = new ServiceDAO();
             List<Service> availableServices = serviceDAO.getActiveServicesByBranch(branchId);
 
-            
-          
-            request.setAttribute("assignedRoomIds", assignedRoomIds);    
+            request.setAttribute("assignedRoomIds", assignedRoomIds);
             request.setAttribute("booking", booking);
             request.setAttribute("assignedRooms", assignedRooms);
             request.setAttribute("allSystemRoomTypes", allSystemRoomTypes); // <-- Dữ liệu mới
@@ -202,91 +201,90 @@ public class RoomAssignmentServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/staff-room-assignment?error=invalid_booking_id");
         }
     }
-    
+
     private void assignRoom(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        
+
         response.setContentType("text/plain;charset=UTF-8");
         PrintWriter out = response.getWriter();
 
         int bookingId = Integer.parseInt(request.getParameter("bookingId"));
         int roomId = Integer.parseInt(request.getParameter("roomId"));
-        
+        RoomDAO roomDAO = new RoomDAO();
+        roomDAO.updateRoomStatus(roomId, "Occupied");
         BookingDAO bookingDAO = new BookingDAO();
         // Phương thức này bây giờ sẽ gán một phòng duy nhất
-       boolean success = bookingDAO.assignRoomsToBooking(bookingId, new String[]{String.valueOf(roomId)});
-        
-        response.sendRedirect(request.getContextPath() + 
-            "/staff-room-assignment?action=assign&bookingId=" + bookingId + 
-            (success ? "" : "&error=failed"));
+        boolean success = bookingDAO.assignRoomsToBooking(bookingId, new String[]{String.valueOf(roomId)});
+
+        response.sendRedirect(request.getContextPath()
+                + "/staff-room-assignment?action=assign&bookingId=" + bookingId
+                + (success ? "" : "&error=failed"));
     }
-    
+
     private void removeRoomAssignment(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        
+
         int bookingId = Integer.parseInt(request.getParameter("bookingId"));
         int roomId = Integer.parseInt(request.getParameter("roomId"));
-        
+
         RoomDAO roomDAO = new RoomDAO();
         boolean success = roomDAO.removeRoomAssignment(bookingId, roomId);
-        
-        response.sendRedirect(request.getContextPath() + 
-            "/staff-room-assignment?action=assign&bookingId=" + bookingId + 
-            (success ? "" : "&error=remove-failed"));
+
+        response.sendRedirect(request.getContextPath()
+                + "/staff-room-assignment?action=assign&bookingId=" + bookingId
+                + (success ? "" : "&error=remove-failed"));
     }
-    
+
     private void completeAssignment(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        
+
         int bookingId = Integer.parseInt(request.getParameter("bookingId"));
         BookingDAO bookingDAO = new BookingDAO();
-        
-            Booking booking = bookingDAO.getBookingById(bookingId);
-            
-            if ("Pending".equalsIgnoreCase(booking.getStatus())) {
-                bookingDAO.updateBookingStatus(bookingId, "CheckedIn");
-            } else {
-                 bookingDAO.updateBookingStatus(bookingId, "Assigned");
-            }
-            response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
-       
+
+        Booking booking = bookingDAO.getBookingById(bookingId);
+
+        if ("Paid".equalsIgnoreCase(booking.getStatus())) {
+            bookingDAO.updateBookingStatus(bookingId, "CheckedIn");
+        } else {
+            bookingDAO.updateBookingStatus(bookingId, "Assigned");
+        }
+        response.sendRedirect(request.getContextPath() + "/staff-bookings-list");
+
     }
-    
+
     private void addServiceToBooking(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        
+
         int bookingId = Integer.parseInt(request.getParameter("bookingId"));
         int serviceId = Integer.parseInt(request.getParameter("serviceId"));
         int quantity = Integer.parseInt(request.getParameter("quantity"));
         String paidStatus = request.getParameter("paidStatus") != null ? request.getParameter("paidStatus") : "Unpaid";
-        
+
         BookingService bookingService = new BookingService();
         bookingService.setBookingId(bookingId);
         bookingService.setServiceId(serviceId);
         bookingService.setQuantity(quantity);
         bookingService.setPaidStatus(paidStatus);
-        
+
         BookingServiceDAO bookingServiceDAO = new BookingServiceDAO();
         boolean success = bookingServiceDAO.addOrUpdateServiceToBooking(bookingService);
-        
-        response.sendRedirect(request.getContextPath() + 
-            "/staff-room-assignment?action=assign&bookingId=" + bookingId + 
-            (success ? "&success=service-added" : "&error=service-add-failed"));
+
+        response.sendRedirect(request.getContextPath()
+                + "/staff-room-assignment?action=assign&bookingId=" + bookingId
+                + (success ? "&success=service-added" : "&error=service-add-failed"));
     }
-    
+
     private void removeServiceFromBooking(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        
+
         int bookingId = Integer.parseInt(request.getParameter("bookingId"));
         int serviceId = Integer.parseInt(request.getParameter("serviceId"));
-        
+
         BookingServiceDAO bookingServiceDAO = new BookingServiceDAO();
         boolean success = bookingServiceDAO.removeServiceFromBooking(bookingId, serviceId);
-        
-        response.sendRedirect(request.getContextPath() + 
-            "/staff-room-assignment?action=assign&bookingId=" + bookingId + 
-            (success ? "&success=service-removed" : "&error=service-remove-failed"));
+
+        response.sendRedirect(request.getContextPath()
+                + "/staff-room-assignment?action=assign&bookingId=" + bookingId
+                + (success ? "&success=service-removed" : "&error=service-remove-failed"));
     }
 }
-
-

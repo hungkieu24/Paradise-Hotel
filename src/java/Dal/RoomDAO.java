@@ -23,8 +23,8 @@ public class RoomDAO extends DBContext {
 public Room getRoomById(int roomId) {
     String sql = "SELECT r.id, r.room_number, r.status, r.branch_id, " +
                 "rt.name as room_type_name, rt.id as room_type_id " +
-                "FROM Rooms r " +
-                "INNER JOIN RoomTypes rt ON r.room_type_id = rt.id " +
+                "FROM Room r " +
+                "INNER JOIN RoomType rt ON r.room_type_id = rt.id " +
                 "WHERE r.id = ?";
     
     PreparedStatement ps = null;
@@ -752,7 +752,7 @@ public Room getRoomById(int roomId) {
      * @return true nếu thành công, false nếu thất bại
      */
     public boolean updateRoomStatus(int roomId, String status) {
-        String sql = "UPDATE Rooms SET status = ? WHERE id = ?";
+        String sql = "UPDATE Room SET status = ? WHERE id = ?";
         PreparedStatement ps = null;
 
         try {
@@ -913,15 +913,13 @@ public Room getRoomById(int roomId) {
 
     /**
      * Lấy danh sách phòng đã được gán cho một booking
-     *
-     * @param bookingId ID của booking
      * @return List<Room> danh sách phòng đã gán
      */
     public List<Room> getAssignedRoomsByBookingId(int bookingId) {
         String sql = "SELECT r.id, r.room_number, r.status, r.branch_id, "
                 + "rt.name as room_type_name, rt.id as room_type_id "
-                + "FROM Rooms r "
-                + "INNER JOIN RoomTypes rt ON r.room_type_id = rt.id "
+                + "FROM Room r "
+                + "INNER JOIN RoomType rt ON r.room_type_id = rt.id "
                 + "INNER JOIN RoomAssignment ra ON r.id = ra.room_id "
                 + "WHERE ra.booking_id = ? "
                 + "ORDER BY r.room_number";
@@ -1624,36 +1622,6 @@ public Room getRoomById(int roomId) {
         return roomTypeIds;
     }
 
-    /**
-     * Lấy phòng có sẵn từ một booking dựa vào RoomTypeName
-     */
-//    public static void main(String[] args) {
-//        RoomDAO r = new RoomDAO();
-//        BookingDAO b = new BookingDAO();
-//        Booking bt = b.getBookingById(11);
-//        List<Room> list = r.getAvailableRoomsForBooking(bt);
-//       
-//        // Tạo map để nhóm phòng theo loại
-//        java.util.Map<String, java.util.List<Room>> roomsByType = new java.util.HashMap<>();
-//        for (Room room : list) {
-//            String typeName = room.getRoomTypeName() != null ? room.getRoomTypeName() : "Other";
-//
-//            if (!roomsByType.containsKey(typeName)) {
-//                roomsByType.put(typeName, new java.util.ArrayList<>());
-//            }
-//
-//            roomsByType.get(typeName).add(room);
-//        }
-//        // Hiển thị phòng theo từng loại
-//        for (java.util.Map.Entry<String, java.util.List<Room>> entry : roomsByType.entrySet()) {
-//            String typeName = entry.getKey();
-//            java.util.List<Room> rooms = entry.getValue();
-//            boolean isMatchingType = "Deluxe" != null
-//                    && (bt.getRoomTypeName() != null && bt.getRoomTypeName().contains(typeName));
-//
-//        }
-//
-//    }
     public List<Room> getAvailableRoomsForBooking(Booking booking) {
         List<Room> availableRooms = new ArrayList<>();
 
@@ -1772,8 +1740,8 @@ public Room getRoomById(int roomId) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT r.id, r.room_number, r.status, r.branch_id, ")
                 .append("rt.name as room_type_name, rt.id as room_type_id ")
-                .append("FROM Rooms r ")
-                .append("INNER JOIN RoomTypes rt ON r.room_type_id = rt.id ")
+                .append("FROM Room r ")
+                .append("INNER JOIN RoomType rt ON r.room_type_id = rt.id ")
                 .append("WHERE r.id IN (");
 
         // Thêm placeholders

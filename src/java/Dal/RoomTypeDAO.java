@@ -16,17 +16,18 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import DBcontext.DBContext;
 
 /**
  *
  * @author hungk
  */
-public class RoomTypeDAO extends DBcontext.DBContext {
+public class RoomTypeDAO extends DBContext {
 
     //hoang create: lay all room type
     public List<RoomType> getAllRoomType() {
         List<RoomType> roomTypeList = new ArrayList<>();
-        String sql = "SELECT * FROM RoomType WHERE is_deleted = 0"; // Bỏ các bản ghi đã xóa mềm
+        String sql = "SELECT * FROM RoomType WHERE is_deleted = 0"; 
         BranchDAO branchDAO = new BranchDAO();
         try {
             PreparedStatement st = connection.prepareStatement(sql);
@@ -50,7 +51,7 @@ public class RoomTypeDAO extends DBcontext.DBContext {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace(); // Có thể thay bằng logger nếu bạn dùng log framework
+            e.printStackTrace();
         }
 
         return roomTypeList;
