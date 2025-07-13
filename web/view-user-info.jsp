@@ -7,8 +7,8 @@
     UserAccount user = (UserAccount) request.getAttribute("user");
     String rank = (String) request.getAttribute("rank");
     if (rank == null && user != null && user.getRank() != null) rank = user.getRank();
-    String fullName = (user != null && user.getFullName() != null) ? user.getFullName() : "";
-    // Bây giờ chúng ta nhận một đối tượng booking duy nhất
+    String fullName = (user != null && user.getFullname() != null) ? user.getFullname() : "";
+
     Booking booking = (Booking) request.getAttribute("booking");
 %>
 <!DOCTYPE html>

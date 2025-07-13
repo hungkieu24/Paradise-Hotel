@@ -129,7 +129,7 @@ public class LoginServlet extends HttpServlet {
                     String branchName = branchDAO.getBranchNameById(user.getBranchId());
                     session.setAttribute("branchName", branchName);
                 }
-                response.sendRedirect("staff-dashboard.jsp");
+                response.sendRedirect("staff-bookings-list");
             } else {
                 session.setAttribute("userRole", role);
                 response.sendRedirect("homepage");

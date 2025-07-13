@@ -57,11 +57,12 @@ public class PaymentResultServlet extends HttpServlet {
                 payment.setAmount(amount);
                 payment.setStatus("Completed");
                 payment.setPaidAt(new Timestamp(System.currentTimeMillis()));
-
+                
+                
         VNPayPaymentDAO dao = new VNPayPaymentDAO();
         int paymentId = dao.createPayment(payment);
-        BookingDAO bookingDAO = new BookingDAO();
-        bookingDAO.updateBookingStatus(bookingId, "Paid");    
+        BookingDAO bookingDAO = new BookingDAO();   
+        bookingDAO.updateBookingStatus(bookingId, "Completed");    
         request.setAttribute("vnp_TxnRef", vnp_TxnRef);
         request.setAttribute("vnp_TransactionNo", vnp_TransactionNo);
         request.setAttribute("vnp_BankCode", vnp_BankCode);

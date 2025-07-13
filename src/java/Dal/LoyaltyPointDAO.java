@@ -16,22 +16,33 @@ public class LoyaltyPointDAO extends DBContext {
 
     //hoang
     public LoyaltyPoint getLoyaltyPointByUserId(String userId) {
-        LoyaltyPoint loyaltyPoint = new LoyaltyPoint();
+        LoyaltyPoint loyaltyPoint = null;
 
-        String sql = "SELECT lp.user_id, lp.points, lp.level, lp.last_updated, lp.expired_at, br.discount_percent "
+        String sql = "SELECT lp.*, br.discount_percent "
                 + "FROM LoyaltyPoint lp "
-                + "JOIN BenefitRank br ON lp.level = br.level "
-                + "WHERE lp.user_id = ? AND br.is_deleted = 0";
+                + "LEFT JOIN BenefitRank br ON lp.level = br.level AND br.is_deleted = 0 "
+                + "WHERE lp.user_id = ?";
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    loyaltyPoint.setUser_id(rs.getString("user_id"));
+                    // Chỉ tạo đối tượng khi có dữ liệu
+                    loyaltyPoint = new LoyaltyPoint();
+
+                    loyaltyPoint.setUserId(rs.getString("user_id"));
                     loyaltyPoint.setPoints(rs.getInt("points"));
                     loyaltyPoint.setLevel(rs.getString("level"));
-                    loyaltyPoint.setLast_updated(rs.getDate("last_updated"));
-                    loyaltyPoint.setExpired_at(rs.getDate("expired_at"));
+
+                    loyaltyPoint.setLastUpdated(rs.getTimestamp("last_updated"));
+                    loyaltyPoint.setExpiredAt(rs.getTimestamp("expired_at"));
+
+                    loyaltyPoint.setTotalSpending(rs.getBigDecimal("total_spending"));
+                    loyaltyPoint.setLifetimePoints(rs.getInt("lifetime_points"));
+                    loyaltyPoint.setPointsUsed(rs.getInt("points_used"));
+                    loyaltyPoint.setLastTierCheck(rs.getTimestamp("last_tier_check"));
+                    loyaltyPoint.setNextTierSpendingNeeded(rs.getBigDecimal("next_tier_spending_needed"));
+
                     loyaltyPoint.setDiscountPercent(rs.getInt("discount_percent"));
                 }
             }
@@ -58,69 +69,68 @@ public class LoyaltyPointDAO extends DBContext {
         }
         return points;
     }
-    
- 
-   /**
- * Thêm điểm thưởng cho khách hàng
- */
-public boolean addPoints(String userId, int points, String reason) {
-    try {
-        // Update loyalty points
-        String updateSql = "UPDATE LoyaltyPoint SET points = points + ?, last_updated = GETDATE() WHERE user_id = ?";
-        
-        try (PreparedStatement ps = connection.prepareStatement(updateSql)) {
-            ps.setInt(1, points);
-            ps.setString(2, userId);
-            
-            int rowsAffected = ps.executeUpdate();
-            
-            if (rowsAffected == 0) {
-                // Insert new record if user doesn't exist
-                String insertSql = "INSERT INTO LoyaltyPoint (user_id, points, level, last_updated) VALUES (?, ?, 'Member', GETDATE())";
-                try (PreparedStatement insertPs = connection.prepareStatement(insertSql)) {
-                    insertPs.setString(1, userId);
-                    insertPs.setInt(2, points);
-                    insertPs.executeUpdate();
+
+    /**
+     * Thêm điểm thưởng cho khách hàng
+     */
+    public boolean addPoints(String userId, int points, String reason) {
+        try {
+            // Update loyalty points
+            String updateSql = "UPDATE LoyaltyPoint SET points = points + ?, last_updated = GETDATE() WHERE user_id = ?";
+
+            try (PreparedStatement ps = connection.prepareStatement(updateSql)) {
+                ps.setInt(1, points);
+                ps.setString(2, userId);
+
+                int rowsAffected = ps.executeUpdate();
+
+                if (rowsAffected == 0) {
+                    // Insert new record if user doesn't exist
+                    String insertSql = "INSERT INTO LoyaltyPoint (user_id, points, level, last_updated) VALUES (?, ?, 'Member', GETDATE())";
+                    try (PreparedStatement insertPs = connection.prepareStatement(insertSql)) {
+                        insertPs.setString(1, userId);
+                        insertPs.setInt(2, points);
+                        insertPs.executeUpdate();
+                    }
+                }
+
+                // Record transaction
+                String transactionSql = "INSERT INTO PointTransaction (user_id, change_type, points_changed, reason, created_at) VALUES (?, 'Earn', ?, ?, GETDATE())";
+                try (PreparedStatement transactionPs = connection.prepareStatement(transactionSql)) {
+                    transactionPs.setString(1, userId);
+                    transactionPs.setInt(2, points);
+                    transactionPs.setString(3, reason);
+                    transactionPs.executeUpdate();
+                }
+
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    /**
+     * Lấy rank của user
+     */
+    public String getRankByUserId(String userId) {
+        try {
+            String sql = "SELECT level FROM LoyaltyPoint WHERE user_id = ?";
+
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, userId);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getString("level");
+                    }
                 }
             }
-            
-            // Record transaction
-            String transactionSql = "INSERT INTO PointTransaction (user_id, change_type, points_changed, reason, created_at) VALUES (?, 'Earn', ?, ?, GETDATE())";
-            try (PreparedStatement transactionPs = connection.prepareStatement(transactionSql)) {
-                transactionPs.setString(1, userId);
-                transactionPs.setInt(2, points);
-                transactionPs.setString(3, reason);
-                transactionPs.executeUpdate();
-            }
-            
-            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
-        return false;
+        return "Member";
     }
-}
-/**
- * Lấy rank của user
- */
-public String getRankByUserId(String userId) {
-    try {
-        String sql = "SELECT level FROM LoyaltyPoint WHERE user_id = ?";
-        
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, userId);
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("level");
-                }
-            }
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    return "Member";
-}
     //hoang
     public boolean subtractPoints(String userId, int amount) {
         String sql = "UPDATE LoyaltyPoint SET points = points - ?, last_updated = CURRENT_TIMESTAMP "

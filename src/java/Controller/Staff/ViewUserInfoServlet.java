@@ -55,7 +55,7 @@ public class ViewUserInfoServlet extends HttpServlet {
                 
                 request.setAttribute("user", user);
                 request.setAttribute("rank", rank);
-                request.setAttribute("booking", booking); // Gửi đối tượng booking duy nhất
+                request.setAttribute("booking", booking); 
             } else {
                 // Xử lý trường hợp không tìm thấy booking
                 request.setAttribute("user", null);

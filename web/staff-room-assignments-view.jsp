@@ -462,13 +462,10 @@
         </button>
     </div>
     <div class="sidebar-menu">
-        <a href="staff-dashboard.jsp" class="menu-item active">
-            <i class="fas fa-user-cog"></i>
-            <span class="menu-text">Panel</span>
-        </a>
+ 
         <a href="staff-bookings-list" class="menu-item">
             <i class="fas fa-calendar-check"></i>
-            <span class="menu-text">Today's Bookings</span>
+            <span class="menu-text">List Bookings</span>
         </a>
         <a href="staff-rooms" class="menu-item">
             <i class="fas fa-door-closed"></i>
@@ -477,6 +474,10 @@
         <a href="searchGuest" class="menu-item">
             <i class="fas fa-plus-circle"></i>
             <span class="menu-text">Add New Booking</span>
+        </a>
+        <a href="staff-room-assignments-view" class="menu-item">
+            <i class="fas fa-plus-circle"></i>
+            <span class="menu-text">Room Assign List</span>
         </a>
         <a href="logout.jsp" class="menu-item logout">
             <i class="fas fa-sign-out-alt"></i>
@@ -535,9 +536,9 @@
 
                 <!-- Navigation -->
                 <div class="nav-buttons">
-                    <a href="<%= contextPath %>/staff-room-assignment" class="btn-back">
+                    <a href="staff-bookings-list" class="btn-back">
                         <i class="bi bi-arrow-left"></i>
-                        Back to Assignment Management
+                        Back to Booking List
                     </a>
                     <button type="button" class="btn-refresh" onclick="window.location.reload()">
                         <i class="bi bi-arrow-clockwise"></i>
@@ -750,10 +751,6 @@
                                             <a href="<%= contextPath %>/staff-room-assignment?action=assign&bookingId=<%= assignment.getBookingId() %>" 
                                                class="btn btn-outline-primary btn-sm" title="Manage Assignment">
                                                 <i class="bi bi-gear"></i>
-                                            </a>
-                                            <a href="<%= contextPath %>/view-booking-detail?bookingId=<%= assignment.getBookingId() %>" 
-                                               class="btn btn-outline-info btn-sm" title="View Details">
-                                                <i class="bi bi-eye"></i>
                                             </a>
                                         </div>
                                     </td>

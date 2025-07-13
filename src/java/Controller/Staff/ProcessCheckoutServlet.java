@@ -105,11 +105,7 @@ public class ProcessCheckoutServlet extends HttpServlet {
 
                     // Generate invoice
                     generateInvoice(booking, amountToPay);
-
-                    // Log the completion
-                    System.out.println("Booking #" + bookingId + " completed by staff: " + staffUser.getUsername() + 
-                        " at " + new Timestamp(new Date().getTime()));
-
+          
                     // Redirect to success page
                     response.sendRedirect("checkout-success?bookingId=" + bookingId + 
                         "&amount=" + amountToPay + "&method=" + paymentMethod + "&status=completed");
