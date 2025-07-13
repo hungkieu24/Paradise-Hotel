@@ -104,7 +104,7 @@
                     </button>
                 </div>
                 <div class="sidebar-menu">
-                    <a href="./manager/dashboard.jsp" class="menu-item ">
+                    <a href="./manager/dashboard" class="menu-item ">
                         <i class="fas fa-chart-line"></i>
                         <span class="menu-text">Dashboard</span>
                     </a>

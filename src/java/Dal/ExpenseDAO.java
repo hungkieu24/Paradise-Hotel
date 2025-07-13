@@ -11,6 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 /**
@@ -160,7 +162,7 @@ public class ExpenseDAO extends DBcontext.DBContext {
             return false;
         }
     }
-    
+
     public boolean isFieldExists(String fieldName, String value, Integer excludeId) {
         String sql = "SELECT 1 FROM Expense WHERE " + fieldName + " = ?" + (excludeId != null ? " AND id != ?" : "");
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -175,4 +177,33 @@ public class ExpenseDAO extends DBcontext.DBContext {
         }
         return false;
     }
+
+    public double getTotalExpenseByBranchAndMonthRange(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        double total = 0;
+        String sql = "SELECT SUM(amount) AS total FROM Expense "
+                + "WHERE branch_id = ? "
+                + "AND expense_date >= ? AND expense_date <= ?";
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, branchId);
+
+            // Tính ngày bắt đầu và kết thúc
+            LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+            LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+            st.setDate(2, java.sql.Date.valueOf(fromDate));
+            st.setDate(3, java.sql.Date.valueOf(toDate));
+
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                total = rs.getDouble("total");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return total;
+    }
+
 }

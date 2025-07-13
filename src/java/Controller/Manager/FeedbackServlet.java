@@ -61,11 +61,11 @@ public class FeedbackServlet extends HttpServlet {
                 }
 
                 if (action.equals("filter")) {
-                    if (ratingStr.equals("all")) {
+                    int rating = Integer.parseInt(ratingStr);
+                    if (rating == 0) {
                         feedbackList = feedbackDAO.getFeedbackByBranchIdAndPage(branchId, page, pageSize);
                         listSize = feedbackDAO.getTotalFeedbackByBranchId(branchId);
                     } else {
-                        int rating = Integer.parseInt(ratingStr);
                         feedbackList = feedbackDAO.filterFeedbackByBranchAndRating(branchId, rating, page, pageSize);
                         listSize = feedbackDAO.countFeedbackByBranchAndRating(branchId, rating);
                     }

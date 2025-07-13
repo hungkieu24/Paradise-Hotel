@@ -228,7 +228,7 @@ public class uploadReportServlet extends HttpServlet {
             }
 
             InitialInvestmentDAO investmentDAO = new InitialInvestmentDAO();
-            double previousCapital = investmentDAO.getTotalCapitalByBranch(branchId);
+            double previousCapital = investmentDAO.getTotalCapitalByBranchId(branchId);
             double totalCapital = previousCapital + newCapital;
 
             int dataStartRow = findDataStartRow(sheet);

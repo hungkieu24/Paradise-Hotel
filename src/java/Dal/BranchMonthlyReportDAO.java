@@ -12,6 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -623,6 +625,15 @@ public class BranchMonthlyReportDAO extends DBcontext.DBContext {
         return monthlyProfits;
     }
 
+    public Map<String, Double> getMonthlyProfitTrendByBranchAndMonthYear(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        Map<String, Double> result = new LinkedHashMap<>();
+
+        LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+        LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+        return getMonthlyProfitTrendByBranchAndDateRange(branchId, java.sql.Date.valueOf(fromDate), java.sql.Date.valueOf(toDate));
+    }
+
     public Map<String, Map<String, Double>> getBranchComparisonData() {
         Map<String, Map<String, Double>> data = new LinkedHashMap<>();
 
@@ -833,6 +844,59 @@ public class BranchMonthlyReportDAO extends DBcontext.DBContext {
         }
 
         return false;
+    }
+
+    public void upsertMonthlyReport(int branchId, LocalDate reportMonth, double revenue, double expenses, double profit, double profitRate) {
+        String checkSql = "SELECT Revenue, Expenses, Profit, ProfitRate FROM BranchMonthlyReport WHERE BranchId = ? AND ReportMonth = ?";
+        String insertSql = "INSERT INTO BranchMonthlyReport (BranchId, ReportMonth, Revenue, Expenses, Profit, ProfitRate, CreatedAt) VALUES (?, ?, ?, ?, ?, ?, GETDATE())";
+        String updateSql = "UPDATE BranchMonthlyReport SET Revenue = ?, Expenses = ?, Profit = ?, ProfitRate = ? WHERE BranchId = ? AND ReportMonth = ?";
+
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
+            checkStmt.setInt(1, branchId);
+            checkStmt.setDate(2, java.sql.Date.valueOf(reportMonth));
+
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (rs.next()) {
+                double oldRevenue = rs.getDouble("Revenue");
+                double oldExpenses = rs.getDouble("Expenses");
+                double oldProfit = rs.getDouble("Profit");
+                double oldProfitRate = rs.getDouble("ProfitRate");
+
+                // So sánh giá trị cũ và mới (có thể làm tròn nếu cần để tránh sai số)
+                if (Double.compare(oldRevenue, revenue) != 0
+                        || Double.compare(oldExpenses, expenses) != 0
+                        || Double.compare(oldProfit, profit) != 0
+                        || Double.compare(oldProfitRate, profitRate) != 0) {
+
+                    // Dữ liệu thay đổi → Cập nhật
+                    try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+                        updateStmt.setDouble(1, revenue);
+                        updateStmt.setDouble(2, expenses);
+                        updateStmt.setDouble(3, profit);
+                        updateStmt.setDouble(4, profitRate);
+                        updateStmt.setInt(5, branchId);
+                        updateStmt.setDate(6, java.sql.Date.valueOf(reportMonth));
+                        updateStmt.executeUpdate();
+                    }
+                }
+                // Nếu dữ liệu giống hệt → Không làm gì
+            } else {
+                // Chưa có bản ghi → Thêm mới
+                try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+                    insertStmt.setInt(1, branchId);
+                    insertStmt.setDate(2, java.sql.Date.valueOf(reportMonth));
+                    insertStmt.setDouble(3, revenue);
+                    insertStmt.setDouble(4, expenses);
+                    insertStmt.setDouble(5, profit);
+                    insertStmt.setDouble(6, profitRate);
+                    insertStmt.executeUpdate();
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
 }

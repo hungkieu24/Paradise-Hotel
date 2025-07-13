@@ -11,6 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 /**
@@ -218,7 +220,7 @@ public class InitialInvestmentDAO extends DBcontext.DBContext {
         return total;
     }
 
-    public double getTotalCapitalByBranch(int branchId) {
+    public double getTotalCapitalByBranchId(int branchId) {
         String sql = "SELECT SUM(Capital) AS TotalCapital FROM InitialInvestment WHERE BranchId = ?";
         double total = 0;
 
@@ -280,24 +282,6 @@ public class InitialInvestmentDAO extends DBcontext.DBContext {
         return total;
     }
 
-    public double getTotalCapitalByBranchId(int branchId) {
-        String sql = "SELECT SUM(Capital) AS TotalCapital FROM InitialInvestment WHERE BranchId = ?";
-
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, branchId);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getDouble("TotalCapital");
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return 0.0; // Nếu không có khoản đầu tư nào
-    }
-
     public InitialInvestment getLatestInitialInvestmentByBranchId(int branchId) {
         String sql = "SELECT TOP 1 * FROM InitialInvestment "
                 + "WHERE BranchId = ? "
@@ -336,6 +320,34 @@ public class InitialInvestmentDAO extends DBcontext.DBContext {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public double getTotalCapitalByBranchAndDateRange(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        double total = 0;
+        String sql = "SELECT SUM(Capital) AS total FROM InitialInvestment "
+                + "WHERE BranchId = ? "
+                + "AND InvestedDate >= ? AND InvestedDate <= ?";
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            st.setInt(1, branchId);
+
+            // Tính ngày bắt đầu và kết thúc theo đầu tháng & cuối tháng
+            LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+            LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+            st.setDate(2, java.sql.Date.valueOf(fromDate));
+            st.setDate(3, java.sql.Date.valueOf(toDate));
+
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                total = rs.getDouble("total");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return total;
     }
 
 }
