@@ -16,11 +16,11 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.sql.Date;
+import java.text.DateFormatSymbols;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 /**
  *
@@ -35,40 +35,85 @@ public class financialDashboardServlet extends HttpServlet {
         String action = request.getParameter("action");
         int page = parseIntSafe(request.getParameter("page"), 1);
         int pageSize = 10;
+        int listSize = 0;
 
         BranchMonthlyReportDAO monthlyReportDAO = new BranchMonthlyReportDAO();
         InitialInvestmentDAO investmentDAO = new InitialInvestmentDAO();
-        List<BranchMonthlyReport> branchMonthlyReportList;
-        List<InitialInvestment> initialInvestmentList;
-        Map<String, Double> systemTotals;
-        int monthRange = 0;
-        double totalInitialInvestment = 0;
-        int listSize;
 
+        LocalDate today = LocalDate.now();
+        int[] earliest = monthlyReportDAO.getEarliestMonthYearInBranchMonthlyReport();
+        int currentMonth = earliest[0]; 
+        int currentYear = earliest[1];
+        int monthTo = today.getMonthValue(); // từ 1 đến 12
+        int yearTo = today.getYear();
+
+        List<BranchMonthlyReport> branchMonthlyReportList = monthlyReportDAO.getBranchMonthlyReportsByMonthRangeAllBranches(currentMonth, currentYear, monthTo, yearTo, page, pageSize);
+        listSize = monthlyReportDAO.getBranchMonthlyReportCountAllBranches(currentMonth, currentYear, monthTo, yearTo);
+
+        List<InitialInvestment> initialInvestmentList = investmentDAO.getInitialInvestmentsByMonthRange(currentMonth, currentYear, monthTo, yearTo);
+        double totalInitialInvestment = investmentDAO.getTotalInitialInvestmentByMonthRange(currentMonth, currentYear, monthTo, yearTo);
+
+        // Lấy total revenue theo tháng hiện tại
+        double totalRevenue = monthlyReportDAO.getTotalRevenueAllBranches(currentMonth, currentYear, monthTo, yearTo);
+
+        // Lấy total expense theo tháng hiện tại
+        double totalExpense = monthlyReportDAO.getTotalExpensesAllBranches(currentMonth, currentYear, monthTo, yearTo);
+        
+        int branchId = 0;
         if (action != null && action.equals("filter")) {
-            branchMonthlyReportList = getFilteredReports(request, page, pageSize, monthlyReportDAO);
-            listSize = (int) request.getAttribute("reportListSize");
-            initialInvestmentList = getFilteredInitialInvestment(request, investmentDAO);
-            totalInitialInvestment = getTotalInitialInvestment(request, investmentDAO);
-            systemTotals = getSystemTotalMap(request, monthlyReportDAO);
-            monthRange = getMonthRange(request, monthlyReportDAO);
-        } else {
-            branchMonthlyReportList = monthlyReportDAO.getListBranchMonthlyReportByPage(page, pageSize);
-            List<BranchMonthlyReport> listAll = monthlyReportDAO.getBranchMonthlyReportSimple();
-            listSize = listAll.size();
-            initialInvestmentList = investmentDAO.getInitialInvestmentsWithHotelBranch();
-            totalInitialInvestment = investmentDAO.getTotalInitialCapital();
-            systemTotals = monthlyReportDAO.getSystemTotals();
-            monthRange = monthlyReportDAO.getReportMonthRange();
+            currentMonth = Integer.parseInt(request.getParameter("monthFrom"));
+            currentYear = Integer.parseInt(request.getParameter("yearFrom"));
+            monthTo = Integer.parseInt(request.getParameter("monthTo"));
+            yearTo = Integer.parseInt(request.getParameter("yearTo"));
+            branchId = Integer.parseInt(request.getParameter("branchId"));
+
+            if (branchId != 0) {
+                branchMonthlyReportList = monthlyReportDAO.getBranchMonthlyReportsByMonthRange(branchId, currentMonth, currentYear, monthTo, yearTo, page, pageSize);
+                listSize = monthlyReportDAO.getBranchMonthlyReportCount(branchId, currentMonth, currentYear, monthTo, yearTo);
+                initialInvestmentList = investmentDAO.getInitialInvestmentsByBranchAndMonthRange(branchId, currentMonth, currentYear, monthTo, yearTo);
+                totalInitialInvestment = investmentDAO.getTotalInitialInvestmentByBranchAndMonthRange(branchId, currentMonth, currentYear, monthTo, yearTo);
+
+                totalRevenue = monthlyReportDAO.getTotalRevenueByBranchAndMonthRange(branchId, currentMonth, currentYear, monthTo, yearTo);
+                totalExpense = monthlyReportDAO.getTotalExpensesByBranchAndMonthRange(branchId, currentMonth, currentYear, monthTo, yearTo);
+            } else {
+                branchMonthlyReportList = monthlyReportDAO.getBranchMonthlyReportsByMonthRangeAllBranches(currentMonth, currentYear, monthTo, yearTo, page, pageSize);
+                listSize = monthlyReportDAO.getBranchMonthlyReportCountAllBranches(currentMonth, currentYear, monthTo, yearTo);
+                initialInvestmentList = investmentDAO.getInitialInvestmentsByMonthRange(currentMonth, currentYear, monthTo, yearTo);
+                totalInitialInvestment = investmentDAO.getTotalInitialInvestmentByMonthRange(currentMonth, currentYear, monthTo, yearTo);
+
+                totalRevenue = monthlyReportDAO.getTotalRevenueAllBranches(currentMonth, currentYear, monthTo, yearTo);
+                totalExpense = monthlyReportDAO.getTotalExpensesAllBranches(currentMonth, currentYear, monthTo, yearTo);
+            }
         }
 
         int totalPages = (int) Math.ceil((double) listSize / pageSize);
 
+        double Profit = totalRevenue - totalExpense;
+        double ProfitRate = 0;
+
+        if (totalInitialInvestment != 0) {
+            ProfitRate = (Profit / totalInitialInvestment) * 100;
+        }
+
         HotelBranchDAO branchDAO = new HotelBranchDAO();
         List<HotelBranch> branchList = branchDAO.getAllHotelBranchesSimple();
         
+        List<String> monthNames = prepareMonthNames();
+        int totalMonths = (yearTo - currentYear) * 12 + (monthTo - currentMonth) + 1;
+
         // Set attribute để đổ dữ liệu về JSP
-        request.setAttribute("monthRange", monthRange);
+        request.setAttribute("totalMonths", totalMonths);
+        request.setAttribute("branchId", branchId);
+        request.setAttribute("monthNames", monthNames);
+        request.setAttribute("monthFrom", currentMonth);
+        request.setAttribute("yearFrom", currentYear);
+        request.setAttribute("monthTo", monthTo);
+        request.setAttribute("yearTo", yearTo);
+        request.setAttribute("totalExpense", totalExpense);
+        request.setAttribute("totalRevenue", totalRevenue);
+        request.setAttribute("Profit", Profit);
+        request.setAttribute("ProfitRate", ProfitRate);
+
         request.setAttribute("action", action);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
@@ -77,187 +122,19 @@ public class financialDashboardServlet extends HttpServlet {
         request.setAttribute("branchList", branchList);
         request.setAttribute("branchMonthlyReportList", branchMonthlyReportList);
         request.setAttribute("initialInvestmentList", initialInvestmentList);
-        request.setAttribute("systemTotals", systemTotals);
         request.getRequestDispatcher("./financialDashboard.jsp").forward(request, response);
     }
-
-    private List<BranchMonthlyReport> getFilteredReports(HttpServletRequest request, int page, int pageSize, BranchMonthlyReportDAO dao) {
-        String branchIdStr = request.getParameter("branchId");
-        String fromDateStr = request.getParameter("fromDate");
-        String toDateStr = request.getParameter("toDate");
-
-        boolean hasFromDate = fromDateStr != null && !fromDateStr.isEmpty();
-        boolean hasToDate = toDateStr != null && !toDateStr.isEmpty();
-
-        int listSize = 0;
-        List<BranchMonthlyReport> list = new ArrayList<>();
-
-        if (branchIdStr != null) {
-            int branchId = parseIntSafe(branchIdStr, 0);
-
-            if (branchId == 0) {
-                if (hasFromDate && hasToDate) {
-                    Date fromDate = Date.valueOf(fromDateStr);
-                    Date toDate = Date.valueOf(toDateStr);
-                    list = dao.getBranchMonthlyReportsByMonthRange(branchId, fromDate, toDate, page, pageSize);
-                    listSize = dao.getTotalBranchMonthlyReportByMonthRange(branchId, fromDate, toDate);
-                } else {
-                    list = dao.getListBranchMonthlyReportByPage(page, pageSize);
-                    listSize = dao.getBranchMonthlyReportSimple().size();
-                }
-            } else {
-                if (hasFromDate && hasToDate) {
-                    Date fromDate = Date.valueOf(fromDateStr);
-                    Date toDate = Date.valueOf(toDateStr);
-                    list = dao.getBranchMonthlyReportsByBranchIdAndMonthRange(branchId, fromDate, toDate, page, pageSize);
-                    listSize = dao.getTotalBranchMonthlyReportByBranchIdAndMonthRange(branchId, fromDate, toDate);
-                } else {
-                    list = dao.getBranchMonthlyReportsByBranchId(branchId, page, pageSize);
-                    listSize = dao.getTotalBranchMonthlyReportByBranchId(branchId);
-                }
-            }
-        }
-
-        request.setAttribute("reportListSize", listSize);
-        return list;
-    }
-
-    private int getMonthRange(HttpServletRequest request, BranchMonthlyReportDAO dao) {
-        String branchIdStr = request.getParameter("branchId");
-        String fromDateStr = request.getParameter("fromDate");
-        String toDateStr = request.getParameter("toDate");
-
-        boolean hasFromDate = fromDateStr != null && !fromDateStr.isEmpty();
-        boolean hasToDate = toDateStr != null && !toDateStr.isEmpty();
-
-        int monthRange = 0;
-
-        if (branchIdStr != null) {
-            int branchId = parseIntSafe(branchIdStr, 0);
-
-            if (branchId == 0) {
-                if (hasFromDate && hasToDate) {
-                    Date fromDate = Date.valueOf(fromDateStr);
-                    Date toDate = Date.valueOf(toDateStr);
-                    monthRange = dao.getMonthDifference(fromDate, toDate);
-                } else {
-                    monthRange = dao.getReportMonthRange();
-                }
-            } else {
-                if (hasFromDate && hasToDate) {
-                    Date fromDate = Date.valueOf(fromDateStr);
-                    Date toDate = Date.valueOf(toDateStr);
-                    monthRange = dao.getReportMonthRangeByBranchAndDate(branchId, fromDate, toDate);
-                } else {
-                    monthRange = dao.getReportMonthRangeByBranch(branchId);
-                }
-            }
-        }
-        return monthRange;
-    }
     
-    private List<InitialInvestment> getFilteredInitialInvestment(HttpServletRequest request, InitialInvestmentDAO dao) {
-        String branchIdStr = request.getParameter("branchId");
-        String fromDateStr = request.getParameter("fromDate");
-        String toDateStr = request.getParameter("toDate");
-
-        boolean hasFromDate = fromDateStr != null && !fromDateStr.isEmpty();
-        boolean hasToDate = toDateStr != null && !toDateStr.isEmpty();
-
-        List<InitialInvestment> list = new ArrayList<>();
-
-        if (branchIdStr != null) {
-            int branchId = parseIntSafe(branchIdStr, 0);
-
-            if (branchId == 0) {
-                if (hasFromDate && hasToDate) {
-                    Date fromDate = Date.valueOf(fromDateStr);
-                    Date toDate = Date.valueOf(toDateStr);
-                    list = dao.getInitialInvestmentsByDateRange(fromDate, toDate);
-                } else {
-                    list = dao.getInitialInvestmentsWithHotelBranch();
-                }
-            } else {
-                if (hasFromDate && hasToDate) {
-                    Date fromDate = Date.valueOf(fromDateStr);
-                    Date toDate = Date.valueOf(toDateStr);
-                    list = dao.getInitialInvestmentsByBranchAndDateRange(branchId, fromDate, toDate);
-                } else {
-                    list = dao.getInitialInvestmentsByBranchId(branchId);
-                }
-            }
+    private List<String> prepareMonthNames() {
+        List<String> monthNames = new ArrayList<>();
+        DateFormatSymbols dfs = new DateFormatSymbols(Locale.ENGLISH);
+        String[] months = dfs.getMonths();
+        for (int i = 0; i < 12; i++) {
+            monthNames.add(months[i]);
         }
-        return list;
+        return monthNames;
     }
 
-    private double getTotalInitialInvestment(HttpServletRequest request, InitialInvestmentDAO dao) {
-        String branchIdStr = request.getParameter("branchId");
-        String fromDateStr = request.getParameter("fromDate");
-        String toDateStr = request.getParameter("toDate");
-
-        boolean hasFromDate = fromDateStr != null && !fromDateStr.isEmpty();
-        boolean hasToDate = toDateStr != null && !toDateStr.isEmpty();
-
-        double total = 0;
-
-        if (branchIdStr != null) {
-            int branchId = parseIntSafe(branchIdStr, 0);
-
-            if (branchId == 0) {
-                if (hasFromDate && hasToDate) {
-                    Date fromDate = Date.valueOf(fromDateStr);
-                    Date toDate = Date.valueOf(toDateStr);
-                    total = dao.getTotalCapitalByDateRange(fromDate, toDate);
-                } else {
-                    total = dao.getTotalInitialCapital();
-                }
-            } else {
-                if (hasFromDate && hasToDate) {
-                    Date fromDate = Date.valueOf(fromDateStr);
-                    Date toDate = Date.valueOf(toDateStr);
-                    total = dao.getTotalCapitalByBranchAndDateRange(branchId, fromDate, toDate);
-                } else {
-                    total = dao.getTotalCapitalByBranchId(branchId);
-                }
-            }
-        }
-        return total;
-    }
-    
-    private Map<String, Double> getSystemTotalMap (HttpServletRequest request, BranchMonthlyReportDAO dao) {
-        String branchIdStr = request.getParameter("branchId");
-        String fromDateStr = request.getParameter("fromDate");
-        String toDateStr = request.getParameter("toDate");
-
-        boolean hasFromDate = fromDateStr != null && !fromDateStr.isEmpty();
-        boolean hasToDate = toDateStr != null && !toDateStr.isEmpty();
-
-        Map<String, Double> result = new HashMap<>();
-
-        if (branchIdStr != null) {
-            int branchId = parseIntSafe(branchIdStr, 0);
-
-            if (branchId == 0) {
-                if (hasFromDate && hasToDate) {
-                    Date fromDate = Date.valueOf(fromDateStr);
-                    Date toDate = Date.valueOf(toDateStr);
-                    result = dao.getSystemTotals(fromDate, toDate);
-                } else {
-                    result = dao.getSystemTotals();
-                }
-            } else {
-                if (hasFromDate && hasToDate) {
-                    Date fromDate = Date.valueOf(fromDateStr);
-                    Date toDate = Date.valueOf(toDateStr);
-                    result = dao.getTotalsByBranchAndDateRange(branchId, fromDate, toDate);
-                } else {
-                    result = dao.getTotalsByBranch(branchId);
-                }
-            }
-        }
-        return result;
-    }
-    
     private int parseIntSafe(String value, int defaultValue) {
         try {
             return Integer.parseInt(value);

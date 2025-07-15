@@ -558,4 +558,167 @@ public class InitialInvestmentDAO extends DBcontext.DBContext {
         return null; // Không có dữ liệu
     }
 
+    // Hàm mới
+    public List<InitialInvestment> getInitialInvestmentsByMonthRange(int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        List<InitialInvestment> investmentList = new ArrayList<>();
+
+        String sql = "SELECT i.*, b.id AS branch_id, b.name, b.address, b.phone, b.email, b.image_url, b.owner_id, b.manager_id "
+                + "FROM InitialInvestment i "
+                + "JOIN HotelBranch b ON i.BranchId = b.id "
+                + "WHERE i.InvestedDate >= ? "
+                + "AND i.InvestedDate <= ? "
+                + "AND b.is_deleted = 0 "
+                + "ORDER BY i.InvestedDate DESC";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            // Tính ngày đầu tháng và cuối tháng
+            LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+            LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+            ps.setDate(1, java.sql.Date.valueOf(fromDate));
+            ps.setDate(2, java.sql.Date.valueOf(toDate));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    HotelBranch branch = new HotelBranch(
+                            rs.getInt("branch_id"),
+                            rs.getString("name"),
+                            rs.getString("address"),
+                            rs.getString("phone"),
+                            rs.getString("email"),
+                            rs.getString("image_url"),
+                            rs.getString("owner_id"),
+                            rs.getString("manager_id")
+                    );
+
+                    InitialInvestment investment = new InitialInvestment(
+                            rs.getInt("id"),
+                            rs.getDouble("Capital"),
+                            rs.getDate("InvestedDate"),
+                            branch
+                    );
+
+                    investmentList.add(investment);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return investmentList;
+    }
+
+    public List<InitialInvestment> getInitialInvestmentsByBranchAndMonthRange(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        List<InitialInvestment> investmentList = new ArrayList<>();
+
+        String sql = "SELECT i.*, b.id AS branch_id, b.name, b.address, b.phone, b.email, b.image_url, b.owner_id, b.manager_id "
+                + "FROM InitialInvestment i "
+                + "JOIN HotelBranch b ON i.BranchId = b.id "
+                + "WHERE i.InvestedDate >= ? "
+                + "AND i.InvestedDate <= ? "
+                + "AND i.BranchId = ? "
+                + "AND b.is_deleted = 0 "
+                + "ORDER BY i.InvestedDate DESC";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            // Tính ngày đầu tháng và cuối tháng
+            LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+            LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+            ps.setDate(1, java.sql.Date.valueOf(fromDate));
+            ps.setDate(2, java.sql.Date.valueOf(toDate));
+            ps.setInt(3, branchId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    HotelBranch branch = new HotelBranch(
+                            rs.getInt("branch_id"),
+                            rs.getString("name"),
+                            rs.getString("address"),
+                            rs.getString("phone"),
+                            rs.getString("email"),
+                            rs.getString("image_url"),
+                            rs.getString("owner_id"),
+                            rs.getString("manager_id")
+                    );
+
+                    InitialInvestment investment = new InitialInvestment(
+                            rs.getInt("id"),
+                            rs.getDouble("Capital"),
+                            rs.getDate("InvestedDate"),
+                            branch
+                    );
+
+                    investmentList.add(investment);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return investmentList;
+    }
+
+    public double getTotalInitialInvestmentByMonthRange(int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        double total = 0;
+
+        String sql = "SELECT SUM(Capital) AS total FROM InitialInvestment i "
+                + "JOIN HotelBranch b ON i.BranchId = b.id "
+                + "WHERE i.InvestedDate >= ? AND i.InvestedDate <= ? "
+                + "AND b.is_deleted = 0";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+            LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+            ps.setDate(1, java.sql.Date.valueOf(fromDate));
+            ps.setDate(2, java.sql.Date.valueOf(toDate));
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                total = rs.getDouble("total");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return total;
+    }
+
+    public double getTotalInitialInvestmentByBranchAndMonthRange(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        double total = 0;
+
+        String sql = "SELECT SUM(Capital) AS total FROM InitialInvestment i "
+                + "JOIN HotelBranch b ON i.BranchId = b.id "
+                + "WHERE i.InvestedDate >= ? AND i.InvestedDate <= ? "
+                + "AND i.BranchId = ? "
+                + "AND b.is_deleted = 0";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+            LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+            ps.setDate(1, java.sql.Date.valueOf(fromDate));
+            ps.setDate(2, java.sql.Date.valueOf(toDate));
+            ps.setInt(3, branchId);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                total = rs.getDouble("total");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return total;
+    }
+
 }

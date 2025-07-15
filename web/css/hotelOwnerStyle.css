@@ -511,6 +511,7 @@ body {
 
 .filter-group select,
 .form-group input,
+.filter-group input,
 .filter-group input[type="date"]{
     padding: 10px 12px;
     border: 2px solid #e2e8f0;
@@ -588,6 +589,7 @@ body {
     font-size: 1.6rem;
     font-weight: 700;
     color: #2d3748;
+    margin: 0;
     margin-bottom: 5px;
 }
 
