@@ -55,6 +55,10 @@
                         <i class="fas fa-upload"></i>
                         <span>Upload Reports</span>
                     </a>
+                    <a href="./investment" class="nav-item" data-page="upload">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                        <span>Investment</span>
+                    </a>
                     <a href="./manageBranch" class="nav-item active" data-page="upload">
                         <i class="fa-solid fa-hotel"></i>
                         <span>Manage Branch</span>
@@ -121,7 +125,7 @@
                     <!-- Detailed Table -->
                     <div class="card">
                         <div class="card-header">
-                            <h3><i class="fas fa-table"></i>Initial Investment</h3>
+                            <h3><i class="fas fa-table"></i>Branch details</h3>
 
                         </div>
                         <p>Quantity: <strong>${brancheListSize}</strong></p>
@@ -374,7 +378,7 @@
                     </div>
 
                     <div class="form-card__bottom">
-                        <a href="../hotelOwner/branch" class="btn btn--text">
+                        <a href="../hotelOwner/branch" class="btn btn--text" style="text-decoration: none">
                             <div class=" btn--rounded btn-normal">Cancel</div>
                         </a>
                         <button type="submit" class="btn btn-primary btn--rounded">Change</button>
@@ -558,7 +562,7 @@
                     </div>
 
                     <div class="form-card__bottom">
-                        <a href="../hotelOwner/branch" class="btn btn--text">
+                        <a href="../hotelOwner/branch" class="btn btn--text" style="text-decoration: none">
                             <div class=" btn--rounded btn-normal">Cancel</div>
                         </a>
                         <button type="submit" id="btn-Addform-submit" class="btn btn-primary btn--rounded">Add</button>
