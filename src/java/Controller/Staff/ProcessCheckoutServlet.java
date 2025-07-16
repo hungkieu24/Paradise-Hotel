@@ -41,12 +41,7 @@ public class ProcessCheckoutServlet extends HttpServlet {
         }
 
         UserAccount staffUser = (UserAccount) session.getAttribute("user");
-        String userRole = staffUser.getRole();
-        
-        if (!"Staff".equalsIgnoreCase(userRole) && !"Manager".equalsIgnoreCase(userRole) && !"Admin".equalsIgnoreCase(userRole)) {
-            response.sendRedirect("access-denied.jsp");
-            return;
-        }
+        String userRole = staffUser.getRole(); 
 
         String bookingIdParam = request.getParameter("bookingId");
         String paymentMethod = request.getParameter("paymentMethod");

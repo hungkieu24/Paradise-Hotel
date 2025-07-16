@@ -668,8 +668,8 @@
                             <thead>
                                 <tr>
                                     <th><i class="bi bi-house"></i> Room Type</th>
-                                    <th><i class="bi bi-123"></i> Quantity</th>
-                                    <th><i class="bi bi-currency-dollar"></i> Price per Room</th>
+                                    <th><i class="bi bi-moon"></i> Nights</th>
+                                    <th><i class="bi bi-currency-dollar"></i> Total Price (All Nights)</th>
                                     <th><i class="bi bi-calculator"></i> Subtotal</th>
                                 </tr>
                             </thead>
@@ -702,7 +702,7 @@
                                         <%= currencyFormat.format(brt.getPricePerRoom()) %> VND
                                     </td>
                                     <td class="subtotal-text">
-                                        <%= currencyFormat.format(brt.getTotalPrice()) %> VND
+                                        <%= currencyFormat.format(brt.getPricePerRoom()) %> VND
                                     </td>
                                 </tr>
                                 <% } %>
