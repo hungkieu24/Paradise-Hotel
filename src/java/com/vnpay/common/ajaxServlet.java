@@ -8,7 +8,8 @@ package com.vnpay.common;
 import Model.UserAccount;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import java.io.IOException;import java.net.URLEncoder;
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -46,32 +47,31 @@ public class ajaxServlet extends HttpServlet {
             resp.sendRedirect(req.getContextPath() + "/login.jsp");
             return;
         }
-       
+
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String orderType = "other";
-        
-        
+
         String strAmount = req.getParameter("amountToPay");
-        
+
         Double amount = Double.parseDouble(strAmount);
-        
+
         int amountReal = amount.intValue() * 100;
-        
+
         String bankCode = req.getParameter("bankCode");
-        
+
         String vnp_TxnRef = "ORD" + System.currentTimeMillis() + "-" + String.valueOf(req.getParameter("bookingId"));
         String vnp_IpAddr = Config.getIpAddress(req);
 
         String vnp_TmnCode = Config.vnp_TmnCode;
-        
+
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", vnp_Version);
         vnp_Params.put("vnp_Command", vnp_Command);
         vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
         vnp_Params.put("vnp_Amount", String.valueOf(amountReal));
         vnp_Params.put("vnp_CurrCode", "VND");
-        
+
         if (bankCode != null && !bankCode.isEmpty()) {
             vnp_Params.put("vnp_BankCode", bankCode);
         }
@@ -92,11 +92,11 @@ public class ajaxServlet extends HttpServlet {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
-        
+
         cld.add(Calendar.MINUTE, 15);
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
-        
+
         List fieldNames = new ArrayList(vnp_Params.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
@@ -126,7 +126,5 @@ public class ajaxServlet extends HttpServlet {
         String paymentUrl = Config.vnp_PayUrl + "?" + queryUrl;
         resp.sendRedirect(paymentUrl);
     }
-    
-    
 
 }

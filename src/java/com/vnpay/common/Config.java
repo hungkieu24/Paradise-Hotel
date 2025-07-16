@@ -1,4 +1,3 @@
-
 package com.vnpay.common;
 
 import java.io.UnsupportedEncodingException;
@@ -14,20 +13,33 @@ import java.util.Random;
 import javax.crypto.Mac;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.jsp.PageContext;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import javax.crypto.spec.SecretKeySpec;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
  *
  * @author CTT VNPAY
  */
 public class Config {
-   
 
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_ReturnUrl = "http://localhost:8080/ParadiseHotel/payment-result";
+    public static String vnp_ReturnUrl = "http://localhost:8088/ParadiseHotel/payment-result";
     public static String vnp_TmnCode = "4YUP19I4";
     public static String secretKey = "MDUIFDCRAKLNBPOFIAFNEKFRNMFBYEPX";
     public static String vnp_ApiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
+    public static String vnp_Version = "2.1.0";
+    public static String vnp_Command = "pay";
+    public static String vnp_OrderType = "other";
 
     public static String md5(String message) {
         String digest = null;
@@ -66,14 +78,15 @@ public class Config {
     }
 
     //Util for VNPAY
-    public static String hashAllFields(Map fields) {
-        List fieldNames = new ArrayList(fields.keySet());
+    //Util for VNPAY - SỬA LẠI ĐỂ DÙNG secretKey
+    public static String hashAllFields(Map<String, String> fields) {
+        List<String> fieldNames = new ArrayList<>(fields.keySet());
         Collections.sort(fieldNames);
         StringBuilder sb = new StringBuilder();
-        Iterator itr = fieldNames.iterator();
+        Iterator<String> itr = fieldNames.iterator();
         while (itr.hasNext()) {
-            String fieldName = (String) itr.next();
-            String fieldValue = (String) fields.get(fieldName);
+            String fieldName = itr.next();
+            String fieldValue = fields.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
                 sb.append(fieldName);
                 sb.append("=");
@@ -83,12 +96,12 @@ public class Config {
                 sb.append("&");
             }
         }
-        return hmacSHA512(secretKey,sb.toString());
+        return sb.toString();
     }
-    
+
+    // THÊM METHOD hmacSHA512 nếu chưa có
     public static String hmacSHA512(final String key, final String data) {
         try {
-
             if (key == null || data == null) {
                 throw new NullPointerException();
             }
@@ -103,12 +116,11 @@ public class Config {
                 sb.append(String.format("%02x", b & 0xff));
             }
             return sb.toString();
-
         } catch (Exception ex) {
             return "";
         }
     }
-    
+
     public static String getIpAddress(HttpServletRequest request) {
         String ipAdress;
         try {
@@ -131,6 +143,150 @@ public class Config {
         }
         return sb.toString();
     }
+
+    private static class RefundResult {
+
+        boolean success = false;
+        String message = "";
+        String responseCode = "";
+        String txnRef = "";
+        String transactionNo = "";
+    }
+    // SỬA METHOD hashAllFieldsDebug - DÙNG secretKey THAY VÌ vnp_HashSecret
+
+    public static String hashAllFieldsDebug(Map<String, String> fields) {
+        List<String> fieldNames = new ArrayList<>(fields.keySet());
+        Collections.sort(fieldNames);
+
+        StringBuilder hashData = new StringBuilder();
+        Iterator<String> itr = fieldNames.iterator();
+
+        System.out.println("=== HASH DEBUG INFO ===");
+        System.out.println("Fields to hash (sorted): " + fieldNames);
+
+        while (itr.hasNext()) {
+            String fieldName = itr.next();
+            String fieldValue = fields.get(fieldName);
+
+            if (fieldValue != null && fieldValue.length() > 0) {
+                hashData.append(fieldName);
+                hashData.append('=');
+
+                // THỬ URL ENCODE
+                try {
+                    String encodedValue = URLEncoder.encode(fieldValue, "UTF-8");
+                    hashData.append(encodedValue);
+                    System.out.println("Added to hash: " + fieldName + "=" + fieldValue + " (encoded: " + encodedValue + ")");
+                } catch (Exception e) {
+                    hashData.append(fieldValue);
+                    System.out.println("Added to hash: " + fieldName + "=" + fieldValue + " (no encoding)");
+                }
+
+                if (itr.hasNext()) {
+                    hashData.append('&');
+                }
+            }
+        }
+
+        System.out.println("Final hash string: " + hashData.toString());
+        System.out.println("Secret key: " + secretKey);
+
+        try {
+            String result = hmacSHA512(secretKey, hashData.toString());
+            System.out.println("Generated hash with encoding: " + result);
+            return result;
+        } catch (Exception e) {
+            System.err.println("Error creating hash: " + e.getMessage());
+            return "";
+        }
+    }
+
+    public static String hashAllFieldsNoEncoding(Map<String, String> fields) {
+        List<String> fieldNames = new ArrayList<>(fields.keySet());
+        Collections.sort(fieldNames);
+
+        StringBuilder hashData = new StringBuilder();
+        Iterator<String> itr = fieldNames.iterator();
+
+        while (itr.hasNext()) {
+            String fieldName = itr.next();
+            String fieldValue = fields.get(fieldName);
+
+            if (fieldValue != null && fieldValue.length() > 0) {
+                hashData.append(fieldName);
+                hashData.append('=');
+                hashData.append(fieldValue); // KHÔNG ENCODE
+
+                if (itr.hasNext()) {
+                    hashData.append('&');
+                }
+            }
+        }
+
+        System.out.println("Hash string (no encoding): " + hashData.toString());
+
+        try {
+            String result = hmacSHA512(secretKey, hashData.toString());
+            System.out.println("Generated hash (no encoding): " + result);
+            return result;
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private String callVNPayRefundAPI(Map<String, String> params) throws Exception {
+        URL url = new URL(Config.vnp_ApiUrl);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setDoOutput(true);
+
+        String jsonRequest = new com.google.gson.Gson().toJson(params);
+        System.out.println("JSON Request: " + jsonRequest);
+
+        try (OutputStream os = con.getOutputStream()) {
+            byte[] input = jsonRequest.getBytes("utf-8");
+            os.write(input, 0, input.length);
+        }
+
+        StringBuilder response = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), "utf-8"))) {
+            String responseLine;
+            while ((responseLine = br.readLine()) != null) {
+                response.append(responseLine.trim());
+            }
+        }
+
+        return response.toString();
+    }
+
+    private RefundResult parseVNPayRefundResponse(String response) {
+        RefundResult result = new RefundResult();
+
+        try {
+            System.out.println("VNPay Refund Response: " + response);
+
+            com.google.gson.JsonObject responseJson = com.google.gson.JsonParser.parseString(response).getAsJsonObject();
+            String responseCode = responseJson.get("vnp_ResponseCode").getAsString();
+
+            result.responseCode = responseCode;
+            result.message = responseJson.has("vnp_Message") ? responseJson.get("vnp_Message").getAsString() : "Unknown";
+            result.transactionNo = responseJson.has("vnp_TransactionNo") ? responseJson.get("vnp_TransactionNo").getAsString() : "";
+
+            if ("00".equals(responseCode)) {
+                result.success = true;
+                System.out.println("✅ VNPay refund successful!");
+            } else {
+                result.success = false;
+                System.out.println("❌ VNPay refund failed: " + responseCode + " - " + result.message);
+            }
+
+        } catch (Exception e) {
+            result.success = false;
+            result.message = "Parse response failed: " + e.getMessage();
+            e.printStackTrace();
+        }
+
+        return result;
+    }
 }
-
-
