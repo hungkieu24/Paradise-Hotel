@@ -184,7 +184,6 @@
                     <div id="feedback-container">
                         <h3 class="mb-3">Feedback History</h3>
                         <c:forEach var="feedback" items="${listFeedback}"> 
-
                             <div class="review_card">
                                 <div class="row">
                                     <div class="col-md-2 user_info">
@@ -198,6 +197,11 @@
                                         </div>
                                         <h4 style="word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap;">${feedback.comment}</h4>
 
+                                        <div class="feedback-Image-wrapper" data-feedback-id="${feedback.id}">
+                                            <c:forEach var="img" items="${feedback.imageList}">
+                                                <img class="feedback-Image" src=".${img}" />
+                                            </c:forEach>
+                                        </div>
 
                                         <c:if test="${not empty user and user.id eq feedback.user_id}">
 
@@ -208,7 +212,6 @@
                                                     Edit
                                                 </button>
 
-
                                                 <form action="DeleteFeedbackServlet" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this feedback?');">
                                                     <input type="hidden" name="feedbackId" value="${feedback.id}" />
                                                     <input type="hidden" name="roomTypeId" value="${roomTypeId}" />
@@ -216,8 +219,6 @@
                                                 </form>
                                             </div>
                                         </c:if>
-
-
 
                                     </div>
                                 </div>
@@ -363,6 +364,149 @@
         </div>
         <!-- /back to top -->
 
+        <!-- Lightbox gallery -->
+        <div id="image-lightbox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+             background:rgba(0,0,0,0.85); align-items:center; justify-content:center; z-index:9999;">
+
+            <button id="prev-btn" style="position:absolute; left:20px; font-size:40px; color:white; background:none; border:none; cursor:pointer;">&#10094;</button>
+
+            <img id="lightbox-img" src="" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow:0 0 20px #fff;">
+
+            <button id="next-btn" style="position:absolute; right:20px; font-size:40px; color:white; background:none; border:none; cursor:pointer;">&#10095;</button>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const imageWrappers = document.querySelectorAll('.feedback-Image-wrapper');
+
+                imageWrappers.forEach(wrapper => {
+                    const images = wrapper.querySelectorAll('.feedback-Image');
+                    const imageArray = Array.from(images);
+                    let currentIndex = 0;
+
+                    images.forEach((img, index) => {
+                        img.addEventListener('click', function () {
+                            currentIndex = index;
+                            openLightbox(imageArray, currentIndex);
+                        });
+                    });
+                });
+
+                function openLightbox(images, index) {
+                    // Xoá lightbox cũ nếu có
+                    let oldLightbox = document.getElementById('lightbox');
+                    if (oldLightbox) {
+                        document.body.removeChild(oldLightbox);
+                    }
+
+                    // Tạo overlay
+                    let overlay = document.createElement('div');
+                    overlay.id = 'lightbox';
+                    overlay.style.position = 'fixed';
+                    overlay.style.top = 0;
+                    overlay.style.left = 0;
+                    overlay.style.width = '100%';
+                    overlay.style.height = '100%';
+                    overlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+                    overlay.style.display = 'flex';
+                    overlay.style.alignItems = 'center';
+                    overlay.style.justifyContent = 'center';
+                    overlay.style.zIndex = 9999;
+
+                    // Tạo ảnh
+                    let img = document.createElement('img');
+                    img.src = images[index].src;
+                    img.style.maxWidth = '90%';
+                    img.style.maxHeight = '90%';
+                    img.style.borderRadius = '10px';
+                    img.style.boxShadow = '0 0 20px #fff';
+
+                    // Nút Prev
+                    let prev = document.createElement('button');
+                    prev.innerHTML = '&#10094;';
+                    prev.style.position = 'absolute';
+                    prev.style.left = '20px';
+                    prev.style.top = '50%';
+                    prev.style.transform = 'translateY(-50%)';
+                    prev.style.fontSize = '40px';
+                    prev.style.color = 'white';
+                    prev.style.background = 'none';
+                    prev.style.border = 'none';
+                    prev.style.cursor = 'pointer';
+
+                    // Nút Next
+                    let next = document.createElement('button');
+                    next.innerHTML = '&#10095;';
+                    next.style.position = 'absolute';
+                    next.style.right = '20px';
+                    next.style.top = '50%';
+                    next.style.transform = 'translateY(-50%)';
+                    next.style.fontSize = '40px';
+                    next.style.color = 'white';
+                    next.style.background = 'none';
+                    next.style.border = 'none';
+                    next.style.cursor = 'pointer';
+
+                    // Nút đóng
+                    let closeBtn = document.createElement('span');
+                    closeBtn.innerHTML = '&times;';
+                    closeBtn.style.position = 'absolute';
+                    closeBtn.style.top = '20px';
+                    closeBtn.style.right = '30px';
+                    closeBtn.style.fontSize = '40px';
+                    closeBtn.style.color = 'white';
+                    closeBtn.style.cursor = 'pointer';
+
+                    overlay.appendChild(prev);
+                    overlay.appendChild(img);
+                    overlay.appendChild(next);
+                    overlay.appendChild(closeBtn);
+                    document.body.appendChild(overlay);
+
+                    // Hàm chuyển ảnh
+                    function showImage(idx) {
+                        img.src = images[idx].src;
+                    }
+
+                    prev.onclick = function (e) {
+                        e.stopPropagation();
+                        index = (index - 1 + images.length) % images.length;
+                        showImage(index);
+                    }
+
+                    next.onclick = function (e) {
+                        e.stopPropagation();
+                        index = (index + 1) % images.length;
+                        showImage(index);
+                    }
+
+                    closeBtn.onclick = function () {
+                        document.body.removeChild(overlay);
+                    }
+
+                    overlay.onclick = function (e) {
+                        if (e.target === overlay) {
+                            document.body.removeChild(overlay);
+                        }
+                    }
+
+                    // Hỗ trợ phím mũi tên
+                    document.onkeydown = function (e) {
+                        if (document.getElementById('lightbox')) {
+                            if (e.key === "ArrowLeft") {
+                                index = (index - 1 + images.length) % images.length;
+                                showImage(index);
+                            } else if (e.key === "ArrowRight") {
+                                index = (index + 1) % images.length;
+                                showImage(index);
+                            } else if (e.key === "Escape") {
+                                document.body.removeChild(overlay);
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
 
         <!-- COMMON SCRIPTS -->
         <script src="js/common_scripts.js"></script>
@@ -370,21 +514,21 @@
         <script src="js/datepicker_inline.js"></script>
         <script src="phpmailer/validate.js"></script>
         <script>
-                                                // Progress bars animation
-                                                $(function () {
-                                                    "use strict";
-                                                    var $section = $('#reviews');
-                                                    $(window).on('scroll', function (ev) {
-                                                        var scrollOffset = $(window).scrollTop();
-                                                        var containerOffset = $section.offset().top - window.innerHeight;
-                                                        if (scrollOffset > containerOffset) {
-                                                            $(".progress-bar").each(function () {
-                                                                var each_bar_width = $(this).attr('aria-valuenow');
-                                                                $(this).width(each_bar_width + '%');
-                                                            });
-                                                        }
-                                                    });
-                                                });
+            // Progress bars animation
+            $(function () {
+                "use strict";
+                var $section = $('#reviews');
+                $(window).on('scroll', function (ev) {
+                    var scrollOffset = $(window).scrollTop();
+                    var containerOffset = $section.offset().top - window.innerHeight;
+                    if (scrollOffset > containerOffset) {
+                        $(".progress-bar").each(function () {
+                            var each_bar_width = $(this).attr('aria-valuenow');
+                            $(this).width(each_bar_width + '%');
+                        });
+                    }
+                });
+            });
         </script>
         <script>
             $(document).ready(function () {

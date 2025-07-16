@@ -215,7 +215,8 @@
                                             </ul>
                                         </div>
                                         <div class="box_item_footer d-flex align-items-center justify-content-between">
-                                            <a href="booking?roomTypeId=${r.getRoomTypeID()}" class="btn_4 learn-more">
+                                            <a href="booking?roomTypeId=${r.getRoomTypeID()}&action=oneRoom" class="btn_4 learn-more">
+
                                                 <span class="circle">
                                                     <span class="icon arrow"></span>
                                                 </span>

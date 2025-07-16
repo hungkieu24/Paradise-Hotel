@@ -144,6 +144,7 @@
                             </div>
 
                             <form id="proceed" action="booking">
+                                <input type="hidden" name="action" value="manyRoom">
                                 <input type="hidden" id="selectedRoomList" name="selectedRoomList" value="">
                                 <input type="hidden" id="quanlitySend" name="quanlitySend" value="">
                                 <button type="button" onclick="selectedRoomList1()" class="btn-proceed">Proceed to Booking</button>

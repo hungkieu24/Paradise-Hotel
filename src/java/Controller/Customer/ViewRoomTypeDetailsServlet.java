@@ -11,6 +11,7 @@ import Model.Feedback;
 import Model.RoomType;
 import Model.Service;
 import Model.UserAccount;
+import jakarta.servlet.ServletContext;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -19,6 +20,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +36,7 @@ public class ViewRoomTypeDetailsServlet extends HttpServlet {
             throws ServletException, IOException {
         String sroomTypeId = request.getParameter("roomTypeId");
         int roomTypeId = 0;
-        if (sroomTypeId != null || !sroomTypeId.trim().isEmpty()) {
+        if (sroomTypeId != null && !sroomTypeId.trim().isEmpty()) {
             roomTypeId = Integer.parseInt(sroomTypeId);
         } else {
             response.sendRedirect("./homepage");
@@ -58,12 +60,20 @@ public class ViewRoomTypeDetailsServlet extends HttpServlet {
         int totalPages = (int) Math.ceil((double) feedbackListSize / pageSize);
         List<Feedback> listFeedback = feedbackDAO.getListFeedbackByPage1(page, pageSize, roomTypeId);
 
+        for (Feedback feedback : listFeedback) {
+            String imgFolder = feedback.getImage_url();
+            if (imgFolder != null && !imgFolder.trim().isEmpty()) {
+                List<String> imageList = getImagesFromFolder(imgFolder, getServletContext());
+                feedback.setImageList(imageList);
+            }
+
+        }
+
         ////////////////////////////////////////////////////////////////////////
         UserAccount user = (UserAccount) request.getSession().getAttribute("user");
         request.setAttribute("user", user);
 
         ////////////////////////////////////////////////////////////////////////
-        
         ServiceDAO serviceDAO = new ServiceDAO();
         List<Service> listServices = new ArrayList<>();
 
@@ -78,6 +88,27 @@ public class ViewRoomTypeDetailsServlet extends HttpServlet {
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("roomTypeId", roomTypeId);
         request.getRequestDispatcher("./viewRoomTypeDetail.jsp").forward(request, response);
+    }
+
+    public List<String> getImagesFromFolder(String folderPath, ServletContext context) {
+        List<String> imageList = new ArrayList<>();
+
+        String realPath = context.getRealPath(folderPath); // <-- Sửa ở đây cho chuẩn
+
+        File folder = new File(realPath);
+        if (folder.exists() && folder.isDirectory()) {
+            for (File file : folder.listFiles()) {
+                if (file.isFile() && isImageFile(file.getName())) {
+                    imageList.add(folderPath + "/" + file.getName()); // Giữ nguyên web path để show lên giao diện
+                }
+            }
+        }
+        return imageList;
+    }
+
+    private boolean isImageFile(String filename) {
+        String lower = filename.toLowerCase();
+        return lower.endsWith(".jpg") || lower.endsWith(".png") || lower.endsWith(".jpeg") || lower.endsWith(".gif");
     }
 
     @Override

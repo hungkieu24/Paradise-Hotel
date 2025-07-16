@@ -67,7 +67,6 @@ public class SendFeedbackServlet extends HttpServlet {
         }
 
         String bookingIdRaw = request.getParameter("bookingId");
-        
         int bookingId = Integer.parseInt(bookingIdRaw);
         
         FeedbackDAO feedbackDAO = new FeedbackDAO();

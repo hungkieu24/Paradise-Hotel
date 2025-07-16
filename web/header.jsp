@@ -4,7 +4,7 @@
     Author     : hungk
 --%>
 
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+
 <header class="fixed_header menu_v4 submenu_version">
     <div class="layer"></div><!-- Opacity Mask -->
     <div class="container">

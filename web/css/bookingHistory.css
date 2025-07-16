@@ -413,3 +413,44 @@
 .modal-content form {
     text-align: center;
 }
+
+#refundModal .modal-content {
+    max-width: 500px;
+}
+
+#refundModal textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+#refundModal .modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 15px;
+}
+
+#refundAmountDisplay {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+#refundSuccessModal .modal-content {
+    background: linear-gradient(135deg, #e8f5e8, #f0fff0);
+    border: 2px solid #28a745;
+    box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+}
+
+#refundSuccessModal h2 {
+    color: #28a745;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+#refundSuccessModal button:hover {
+    background: #218838 !important;
+    transform: translateY(-1px);
+}

@@ -84,7 +84,7 @@
                     <ul>
                         <li><a href="editProfile">Personal Info</a></li>
                         <li><a href="bookingHistory">Booking History</a></li>
-                        <li><a href="#">My Booking</a></li>
+                        <li><a href="myBooking">My Booking</a></li>
                         <li><a href="redeemVoucher">Loyalty Status</a> </li>
                         <li><a href="changePassword.jsp">Change Password</a></li>
                         <li><a href="./homepage?action=logout">Log out</a></li>
