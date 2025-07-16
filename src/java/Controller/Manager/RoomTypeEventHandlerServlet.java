@@ -165,11 +165,6 @@ public class RoomTypeEventHandlerServlet extends HttpServlet {
 
     private void handleAddRoomType(HttpServletRequest request, HttpSession session, RoomType roomType,
             List<Integer> amenityIdList, String uploadParamName, int branchID) throws ServletException, IOException {
-        boolean isExistRoomTypeName = roomTypeDAO.isFieldExists(COL_ROOM_TYPE_NAME, roomType.getName(), null);
-        if (isExistRoomTypeName) {
-            setSessionMessage(session, "Room type name already exists", "error");
-            return;
-        }
 
         // Tạo folder lưu ảnh
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
@@ -203,11 +198,6 @@ public class RoomTypeEventHandlerServlet extends HttpServlet {
 
     private void handleEditRoomType(HttpServletRequest request, HttpSession session, RoomType roomType,
             List<Integer> amenityIdList, String uploadParamName, int branchID) throws ServletException, IOException {
-        boolean isExistRoomTypeName = roomTypeDAO.isFieldExists(COL_ROOM_TYPE_NAME, roomType.getName(), roomType.getRoomTypeID());
-        if (isExistRoomTypeName) {
-            setSessionMessage(session, "Room type name already exists", "error");
-            return;
-        }
         // Tạo folder lưu ảnh
         String folderName = HOTEL_BRANCH_IMAGE_FOLDER_PREFIX + branchID + ROOM_TYPE_IMAGE_FOLDER_PREFIX + roomType.getName();
 

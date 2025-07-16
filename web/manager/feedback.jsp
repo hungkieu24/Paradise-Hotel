@@ -49,7 +49,7 @@
                     </button>
                 </div>
                 <div class="sidebar-menu">
-                    <a href="#" class="menu-item ">
+                    <a href="./dashboard" class="menu-item ">
                         <i class="fas fa-chart-line"></i>
                         <span class="menu-text">Dashboard</span>
                     </a>
@@ -77,7 +77,7 @@
                         <i class="fas fa-tags"></i>
                         <span class="menu-text">Manage promotion</span>
                     </a>
-                    <a href="#" class="menu-item">
+                    <a href="../manager-membership" class="menu-item">
                         <i class="fas fa-users"></i>
                         <span class="menu-text">Manage membership</span>
                     </a>
@@ -138,6 +138,7 @@
                                 <thead>
                                     <tr>
                                         <th>User</th>
+                                        <th>Room</th>
                                         <th>Rating</th>
                                         <th>Comment</th>
                                         <th>Created At</th>
@@ -153,6 +154,10 @@
                                                     <img src="../img/avatar/avatar.jpg" class="user-avatar" >
                                                     ${f.getUserAccount().getUsername()}
                                                 </div>
+                                            </td>
+                                            <td>
+                                                ${f.getRoomNumber()} <br>
+                                                ${f.getRoomTypeName()}
                                             </td>
                                             <td>
                                                 <div class="star-wrapper">
@@ -181,6 +186,12 @@
                                             <td>
                                                 <c:choose>
                                                     <c:when test="${f.getStatus() == 'Hidden'}">
+                                                        <button class="btn btn-sm restore js-toggle" 
+                                                                toggle-target="#restore-modal" 
+                                                                data-actor-id="${f.getId()}"
+                                                                style="background: #20b28a; color: #fff">
+                                                            <i class="fa-solid fa-rotate-right"></i>
+                                                        </button>
                                                         <button class="btn btn-sm btn-ban ban js-toggle" 
                                                                 toggle-target="#ban-modal" 
                                                                 data-actor-id="${f.getId()}">
@@ -193,6 +204,12 @@
                                                         </button>
                                                     </c:when>
                                                     <c:when test="${f.getStatus() == 'Blocked'}">
+                                                        <button class="btn btn-sm restore js-toggle" 
+                                                                toggle-target="#restore-modal" 
+                                                                data-actor-id="${f.getId()}"
+                                                                style="background: #20b28a; color: #fff">
+                                                            <i class="fa-solid fa-rotate-right"></i>
+                                                        </button>
                                                         <button class="btn btn-sm btn-danger delete js-toggle" 
                                                                 toggle-target="#delete-modal" 
                                                                 data-actor-id="${f.getId()}">
@@ -396,7 +413,7 @@
                             toggle-target="#delete-modal">
                         Cancel
                     </button>
-                    <form action="" method="post">
+                    <form action="feedback" method="post">
                         <input type="hidden" name="IdDelete" id="IdDelete" value="">
                         <input type="hidden" name="action" value="delete">
                         <button type="submit" class="btn btn--small btn-danger btn--primary modal__btn btn--no-margin" >
@@ -411,13 +428,13 @@
         <!-- Modal Ban -->
         <div id="ban-modal" class="modal hide">
             <div class="modal__content">
-                <div class="modal__text">Do you want to ban this feedback and account? This action cannot be undone</div>
+                <div class="modal__text">Do you want to ban this feedback?</div>
                 <div class="modal__bottom">
                     <button class="btn btn--small btn-primary btn--text modal__btn btn--no-margin js-toggle"
                             toggle-target="#ban-modal">
                         Cancel
                     </button>
-                    <form action="" method="post">
+                    <form action="feedback" method="post">
                         <input type="hidden" name="IdBan" id="IdBan" value="">
                         <input type="hidden" name="action" value="ban">
                         <button type="submit" class="btn btn--small btn-danger btn--primary modal__btn btn--no-margin" >
@@ -438,7 +455,7 @@
                             toggle-target="#warning-modal">
                         Cancel
                     </button>
-                    <form action="" method="post">
+                    <form action="feedback" method="post">
                         <input type="hidden" name="IdWarning" id="IdWarning" value="">
                         <input type="hidden" name="action" value="warning">
                         <button type="submit" class="btn btn--small btn-danger btn--primary modal__btn btn--no-margin" >
@@ -450,6 +467,27 @@
             <div class="modal__overlay js-toggle" toggle-target="#warning-modal"></div>
         </div>
 
+        <!-- Modal restore -->
+        <div id="restore-modal" class="modal hide">
+            <div class="modal__content">
+                <div class="modal__text">Do you want to restore this? </div>
+                <div class="modal__bottom">
+                    <button class="btn btn--small btn-primary btn--text modal__btn btn--no-margin js-toggle"
+                            toggle-target="#restore-modal">
+                        Cancel
+                    </button>
+                    <form action="feedback" method="post">
+                        <input type="hidden" name="Idrestore" id="Idrestore" value="">
+                        <input type="hidden" name="action" value="restore">
+                        <button type="submit" class="btn btn--small btn-danger btn--primary modal__btn btn--no-margin" >
+                            Restore
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="modal__overlay js-toggle" toggle-target="#restore-modal"></div>
+        </div>
+
 
         <!-- Scripts -->
         <script src="../js/Admin.js"></script>
@@ -457,21 +495,26 @@
         <script src="../js/hungkd.js"></script>
         <script src="../js/api.js"></script>
         <script src="../js/validationForm.js"></script>
-        <script src="../js/feedbackManageJs.js"></script>
+        <script src="../js/feedbackManageJs.js">
+        </script>
 
         <script>
-                                    function fillModalDelete(id) {
-                                        document.getElementById("IdDelete").value = id;
-                                    }
-                                    function fillModalBan(id) {
-                                        document.getElementById("IdBan").value = id;
-                                    }
-                                    function fillModalWarning(id) {
-                                        document.getElementById("IdWarning").value = id;
-                                    }
-                                    initButtons("delete.js-toggle", "data-actor-id", fillModalDelete);
-                                    initButtons("ban.js-toggle", "data-actor-id", fillModalBan);
-                                    initButtons("warning.js-toggle", "data-actor-id", fillModalWarning);
+            function fillModalDelete(id) {
+                document.getElementById("IdDelete").value = id;
+            }
+            function fillModalBan(id) {
+                document.getElementById("IdBan").value = id;
+            }
+            function fillModalWarning(id) {
+                document.getElementById("IdWarning").value = id;
+            }
+            function fillModalRestore(id) {
+                document.getElementById("Idrestore").value = id;
+            }
+            initButtons("delete.js-toggle", "data-actor-id", fillModalDelete);
+            initButtons("ban.js-toggle", "data-actor-id", fillModalBan);
+            initButtons("warning.js-toggle", "data-actor-id", fillModalWarning);
+            initButtons("restore.js-toggle", "data-actor-id", fillModalRestore);
         </script>
     </body>
 </html>

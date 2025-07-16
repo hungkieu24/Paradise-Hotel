@@ -160,6 +160,7 @@ public class BookingServlet extends HttpServlet {
         request.getRequestDispatcher("booking.jsp").forward(request, response);
     }
 
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -167,128 +168,91 @@ public class BookingServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
+        PrintWriter out = response.getWriter();
+
         UserAccount user = (UserAccount) request.getSession().getAttribute("user");
         if (user == null) {
-            response.sendRedirect("login.jsp");
+            out.write("{\"status\":\"unauthenticated\", \"message\":\"Please login\"}");
             return;
         }
+
         BookingDAO bookingDAO = new BookingDAO();
+        RoomTypeDAO roomTypeDAO = new RoomTypeDAO();
 
-        //////////////////////////////////////////////////////////////// SERVICE
-        String serviceIdList = request.getParameter("selectedServiceIds");
-        String totalServiceCostStr = request.getParameter("totalServiceCost");
-        double totalServiceCost = 0;
-
-// Danh sách serviceId - quantity
-        Map<Integer, Integer> serviceMap = new HashMap<>();
-
-        if (serviceIdList != null && !serviceIdList.trim().isEmpty()) {
-            String[] entries = serviceIdList.split(",");
-            for (String entry : entries) {
-                String[] parts = entry.trim().split(":");
-                if (parts.length == 2) {
-                    try {
-                        int serviceId = Integer.parseInt(parts[0].trim());
-                        int quantity = Integer.parseInt(parts[1].trim());
-                        if (quantity < 0) {
-                            quantity = 0;
-                        }
-                        serviceMap.put(serviceId, quantity);
-                    } catch (NumberFormatException ex) {
-                        response.getWriter().write("{\"status\":\"error\", \"message\":\"Invalid service ID or quantity\"}");
-                        return;
-                    }
-                }
-            }
+        String action = request.getParameter("action");
+        if (action == null) {
+            out.write("{\"status\":\"error\", \"message\":\"Action is required\"}");
+            return;
         }
 
-// Parse tổng tiền dịch vụ
-        if (totalServiceCostStr != null && !totalServiceCostStr.isEmpty()) {
-            try {
-                totalServiceCost = Double.parseDouble(totalServiceCostStr);
-            } catch (NumberFormatException e) {
-                response.getWriter().write("{\"status\":\"error\", \"message\":\"Invalid total service cost\"}");
+        try {
+            // --- Parse các tham số ---
+            String checkInStr = request.getParameter("checkIn");
+            String checkOutStr = request.getParameter("checkOut");
+            String totalPriceStr = request.getParameter("finalTotalPrice");
+            String note = request.getParameter("note");
+            String serviceIdList = request.getParameter("selectedServiceIds");
+
+            if (checkInStr == null || checkOutStr == null || checkInStr.isEmpty() || checkOutStr.isEmpty()) {
+                out.write("{\"status\":\"error\", \"message\":\"Check-in and Check-out must not be empty\"}");
                 return;
             }
-        }
 
-        ///////////////////////////////////////////////////// CHECKIN - CHECKOUT
-        String checkInStr = request.getParameter("checkIn");
-        String checkOutStr = request.getParameter("checkOut");
-        Timestamp checkInTimestamp = null;
-        Timestamp checkOutTimestamp = null;
-        if (checkInStr == null || checkInStr.isEmpty() || checkOutStr == null || checkOutStr.isEmpty()) {
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"Check-in and Check-out must not be empty\"}");
-            return;
-        }
+            Timestamp checkInTimestamp = Timestamp.valueOf(checkInStr.replace("T", " ") + ":00");
+            Timestamp checkOutTimestamp = Timestamp.valueOf(checkOutStr.replace("T", " ") + ":00");
 
-        try {
-            checkInTimestamp = Timestamp.valueOf(checkInStr.replace("T", " ") + ":00");
-            checkOutTimestamp = Timestamp.valueOf(checkOutStr.replace("T", " ") + ":00");
-        } catch (IllegalArgumentException e) {
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"Invalid date format\"}");
-            return;
-        }
+            if (!checkOutTimestamp.after(checkInTimestamp)) {
+                out.write("{\"status\":\"error\", \"message\":\"Check-out must be after Check-in\"}");
+                return;
+            }
 
-        Timestamp now = new Timestamp(System.currentTimeMillis());
-        long durationMillis = checkOutTimestamp.getTime() - checkInTimestamp.getTime();
+            double totalPrice = Double.parseDouble(totalPriceStr);
 
-        if (checkInTimestamp.before(now) || checkOutTimestamp.before(now)) {
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"Dates must be in the future\"}");
-            return;
-        } else if (!checkOutTimestamp.after(checkInTimestamp)) {
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"Check-out must be after Check-in\"}");
-            return;
-        } else if (durationMillis < 3600 * 1000) {
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"Booking duration must be at least 1 hour\"}");
-            return;
-        } else if (durationMillis > (365L * 24 * 3600 * 1000)) {
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"Booking duration cannot exceed 1 year\"}");
-            return;
-        }
+            Map<Integer, Integer> serviceMap = new HashMap<>();
+            if (serviceIdList != null && !serviceIdList.trim().isEmpty()) {
+                String[] entries = serviceIdList.split(",");
+                for (String entry : entries) {
+                    String[] parts = entry.trim().split(":");
+                    int serviceId = Integer.parseInt(parts[0].trim());
+                    int quantity = Math.max(0, Integer.parseInt(parts[1].trim()));
+                    serviceMap.put(serviceId, quantity);
+                }
+            }
 
-        //////////////////////////////////////////////////////////// TOTAL PRICE
-        String totalPriceStr = request.getParameter("finalTotalPrice");
-        double totalPrice = 0;
-        if (totalPriceStr == null || totalPriceStr.isEmpty()) {
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"Total price is required\"}");
-            return;
-        }
+            int branchId = 0; // chưa xử lý branchId cụ thể
 
-        try {
-            totalPrice = Double.parseDouble(totalPriceStr);
-        } catch (NumberFormatException e) {
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"Invalid total price format\"}");
-            return;
-        }
-
-        String note = request.getParameter("note");
-
-        int branchId = 0;
-        RoomType singleRoom = (RoomType) request.getSession().getAttribute("singleRoom");
-        List<CartItem> cartItems = (List<CartItem>) request.getSession().getAttribute("listCartItem");
-
-        if (singleRoom != null) {
-            branchId = singleRoom.getBranchId();
-        } else if (cartItems != null && !cartItems.isEmpty()) {
-            branchId = cartItems.get(0).getRoomType().getBranchId();
-        } else {
-            response.getWriter().write("{\"status\":\"error\", \"message\":\"No room selected\"}");
-            return;
-        }
-
-        Integer bookingId = bookingDAO.addBookingReturnId(user.getId(),
-                checkInTimestamp, checkOutTimestamp, "Pending", totalPrice,
-                "Unpaid", branchId, note, false);
-
-        if (bookingId != null) {
             boolean allInserted = true;
 
-            // Insert BookingRoomType
-            if (singleRoom != null) {
-                allInserted = bookingDAO.insertBookingRoomType(bookingId,
-                        singleRoom.getRoomTypeID(), 1, singleRoom.getBase_price());
-            } else if (cartItems != null) {
+            if (action.equals("oneRoom")) {
+                int roomTypeId = Integer.parseInt(request.getParameter("roomTypeId"));
+                RoomType room = roomTypeDAO.getRoomTypeById(roomTypeId);
+                branchId = room.getBranchId();
+
+                Integer bookingId = bookingDAO.addBookingReturnId(user.getId(),
+                        checkInTimestamp, checkOutTimestamp, "Pending", totalPrice,
+                        "Unpaid", branchId, note, false);
+
+                if (bookingId == null) {
+                    out.write("{\"status\":\"error\", \"message\":\"Failed to create booking\"}");
+                    return;
+                }
+
+                allInserted = bookingDAO.insertBookingRoomType(bookingId, room.getRoomTypeID(), 1, room.getBase_price());
+            }
+
+            if (action.equals("manyRoom")) {
+                List<CartItem> cartItems = (List<CartItem>) request.getSession().getAttribute("listCartItem");
+                
+                branchId = cartItems.get(0).getRoomType().getBranchId();
+                Integer bookingId = bookingDAO.addBookingReturnId(user.getId(),
+                        checkInTimestamp, checkOutTimestamp, "Pending", totalPrice,
+                        "Unpaid", branchId, note, false);
+
+                if (bookingId == null) {
+                    out.write("{\"status\":\"error\", \"message\":\"Failed to create booking\"}");
+                    return;
+                }
+                
                 for (CartItem item : cartItems) {
                     boolean inserted = bookingDAO.insertBookingRoomType(bookingId,
                             item.getRoomType().getRoomTypeID(), item.getQuantity(),
@@ -298,40 +262,38 @@ public class BookingServlet extends HttpServlet {
                         break;
                     }
                 }
-            }
 
-            // Insert BookingService
-            if (allInserted && !serviceMap.isEmpty()) {
-                for (Map.Entry<Integer, Integer> entry : serviceMap.entrySet()) {
-                    int serviceId = entry.getKey();
-                    int quantity = entry.getValue();
-
-                    boolean serviceInserted = bookingDAO.insertBookingService(bookingId, serviceId, quantity, "Unpaid");
-                    if (!serviceInserted) {
-                        allInserted = false;
-                        break;
+                if (allInserted && !serviceMap.isEmpty()) {
+                    for (Map.Entry<Integer, Integer> entry : serviceMap.entrySet()) {
+                        boolean inserted = bookingDAO.insertBookingService(bookingId, entry.getKey(), entry.getValue(), "Unpaid");
+                        if (!inserted) {
+                            allInserted = false;
+                            break;
+                        }
                     }
                 }
             }
 
             if (allInserted) {
-                HttpSession session = request.getSession();
-                session.removeAttribute("listCartItem");
-                session.removeAttribute("singleRoom");
-                session.removeAttribute("listServices");
-                session.removeAttribute("totalRoomQuantity");
-                session.removeAttribute("totalRoom");
-                session.removeAttribute("services");
-
-                response.getWriter().write("{\"status\":\"success\"}");
+                clearBookingSession(request.getSession());
+                out.write("{\"status\":\"success\"}");
             } else {
-                response.getWriter().write("{\"status\":\"error\", \"message\":\"Failed to save booking details\"}");
+                out.write("{\"status\":\"error\", \"message\":\"Failed to save booking details\"}");
             }
 
-        } else {
-            response.getWriter().write("{\"status\":\"fail\"}");
+        } catch (Exception e) {
+            e.printStackTrace();
+            out.write("{\"status\":\"error\", \"message\":\"" + e.getMessage().replace("\"", "'") + "\"}");
         }
+    }
 
+// Hàm xóa session dùng chung
+    private void clearBookingSession(HttpSession session) {
+        session.removeAttribute("listCartItem");
+        session.removeAttribute("listServices");
+        session.removeAttribute("totalRoomQuantity");
+        session.removeAttribute("totalRoom");
+        session.removeAttribute("services");
     }
 
 }

@@ -36,9 +36,9 @@
                         <i class="fas fa-chart-line"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="./uploadReports.jsp" class="nav-item " data-page="upload">
-                        <i class="fas fa-upload"></i>
-                        <span>Upload Reports</span>
+                    <a href="./investment" class="nav-item" data-page="upload">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                        <span>Investment</span>
                     </a>
                     <a href="./manageBranch" class="nav-item " data-page="upload">
                         <i class="fa-solid fa-hotel"></i>
@@ -58,10 +58,6 @@
                         <p id="page-description">View revenue, expenses, and profit analysis for all hotel branches</p>
                     </div>
                     <div class="header-right">
-                        <div class="notification-bell">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge">3</span>
-                        </div>
                         <div class="admin-profile">
                             <div class="profile-dropdown">
                                 <div class="profile-avatar">
@@ -69,14 +65,12 @@
                                 </div>
                                 <div class="dropdown-content">
                                     <div class="dropdown-header">
-                                        <strong>Hotel owner</strong>
-                                        <small>admin@system.com</small>
+                                        <strong>${sessionScope.user.getUsername()}</strong>
+                                        <small>${sessionScope.user.getEmail()}</small>
                                     </div>
                                     <a href="#">Profile Settings</a>
-                                    <a href="#">Account Security</a>
-                                    <a href="#">Preferences</a>
-                                    <hr />
-                                    <a href="#" class="sign-out">Sign Out</a>
+                                    <hr>
+                                    <a href="../login?action=logout" class="sign-out">Sign Out</a>
                                 </div>
                             </div>
                         </div>
@@ -101,22 +95,39 @@
                                     </select>
                                 </div>
                                 <div class="filter-group">
-                                    <label for="monthFilter">From Date</label>
-                                    <input type="date" name="fromDate" id="fromDate" value="${param.fromDate}">
+                                    <label >Month From: </label>
+                                    <select name="monthFrom" class="page-actions-select" required>
+                                        <c:forEach var="i" begin="1" end="12">
+                                            <option value="${i}" ${i == monthFrom ? 'selected' : ''}>
+                                                ${monthNames[i - 1]}
+                                            </option>
+                                        </c:forEach>
+                                    </select>
                                 </div>
                                 <div class="filter-group">
-                                    <label for="monthFilter">To Date</label>
-                                    <input type="date" name="toDate" id="toDate" value="${param.toDate}">
+                                    <label class="page-actions-label">Year From: </label>
+                                    <input type="text" name="yearFrom" class="page-actions-input" value="${yearFrom}" required />
                                 </div>
-                                <button class="btn-primary" onclick="applyFilters()">
-                                    <i class="fas fa-search"></i> Apply Filters
-                                </button>
+                                <div class="filter-group">
+                                    <label class="page-actions-label">Month To: </label>
+                                    <select name="monthTo" class="page-actions-select" required>
+                                        <c:forEach var="i" begin="1" end="12">
+                                            <option value="${i}" ${i == monthTo ? 'selected' : ''}>
+                                                ${monthNames[i - 1]}
+                                            </option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label class="page-actions-label">Year To: </label>
+                                    <input type="text" name="yearTo" class="page-actions-input" value="${yearTo}" required />
+                                </div>
+                                <div class="page-action">
+                                    <button type="submit" class="btn btn-primary btn-filter">Filter</button>
+                                </div>
                             </form>
-                            <button class="btn-secondary" onclick="exportReport()">
-                                <i class="fas fa-file-export"></i> Export Report
-                            </button>
                         </div>
-                        <p style="margin-top: 10px ">Total Month: <strong>${monthRange}</strong></p>
+                        <p style="margin-top: 10px ">Total Month: <strong>${totalMonths}</strong></p>
                     </div>
 
                     <!-- Summary Cards -->
@@ -128,7 +139,7 @@
                             <div class="card-content">
                                 <h3>Total Revenue</h3>
                                 <p class="amount" id="totalRevenue">
-                                    <fmt:formatNumber value="${systemTotals.Revenue}" type="currency" />
+                                    <fmt:formatNumber value="${totalRevenue}" type="currency" />
                                 </p>
                             </div>
                         </div>
@@ -140,7 +151,7 @@
                             <div class="card-content">
                                 <h3>Total Expenses</h3>
                                 <p class="amount" id="totalExpenses">
-                                    <fmt:formatNumber value="${systemTotals.Expenses}" type="currency" />
+                                    <fmt:formatNumber value="${totalExpense}" type="currency" />
                                 </p>
                             </div>
                         </div>
@@ -151,8 +162,8 @@
                             </div>
                             <div class="card-content">
                                 <h3>Net Profit</h3>
-                                <p class="amount" id="netProfit" style="color: ${systemTotals.NetProfit >= 0 ? 'green' : 'red'};">
-                                    <fmt:formatNumber value="${systemTotals.NetProfit}" type="currency" />
+                                <p class="amount" id="netProfit" style="color: ${Profit >= 0 ? 'green' : 'red'};">
+                                    <fmt:formatNumber value="${Profit}" type="currency" />
                                 </p>
                             </div>
                         </div>
@@ -164,7 +175,7 @@
                             <div class="card-content">
                                 <h3>Profit Margin</h3>
                                 <p class="amount" id="profitMargin">
-                                    <fmt:formatNumber value="${systemTotals.ProfitMargin}" maxFractionDigits="2" />%
+                                    <fmt:formatNumber value="${ProfitRate}" maxFractionDigits="2" />%
                                 </p>
                             </div>
                         </div>
@@ -181,7 +192,7 @@
 
                         <div class="card chart-card">
                             <div class="card-header">
-                                <h3><i class="fas fa-chart-bar"></i> Branch Comparison</h3>
+                                <h3 id="chart-title"> </h3>
                             </div>
                             <canvas id="branchChart"></canvas>
                         </div>
@@ -268,8 +279,8 @@
                     </div>
                     <div class="pagination">
                         <c:set var="queryParams" value="" />
-                        <c:if test="${not empty action}">
-                            <c:set var="queryParams" value="&action=${action}" />
+                        <c:if test="${not empty action and not empty branchId and not empty monthFrom and not empty yearFrom and not empty monthTo and not empty yearTo}">
+                            <c:set var="queryParams" value="&action=${action}&branchId=${branchId}&monthFrom=${monthFrom}&yearFrom=${yearFrom}&monthTo=${monthTo}&yearTo=${yearTo}" />
                         </c:if>
 
                         <c:if test="${currentPage > 1}">
@@ -311,7 +322,7 @@
         <script>
             let profitChart;
             let branchChart;
-
+            let branchChartInstance;
             function updateProfitChart(labels, data) {
                 const ctx = document.getElementById('profitChart').getContext('2d');
 
@@ -407,12 +418,76 @@
                 });
             }
 
+            function updateBranchChartHaveBranchID(branchData) {
+                const labels = Object.keys(branchData); // ["2025-06", "2025-07", "2025-08"]
+
+                const revenueData = labels.map(month => branchData[month].revenue);
+                const expensesData = labels.map(month => branchData[month].expenses);
+                const profitData = labels.map(month => branchData[month].profit);
+
+                const ctx = document.getElementById('branchChart').getContext('2d');
+
+                // Destroy chart if exists to prevent duplicate
+                if (branchChartInstance) {
+                    branchChartInstance.destroy();
+                }
+
+                branchChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Revenue',
+                                data: revenueData,
+                                backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                            },
+                            {
+                                label: 'Expenses',
+                                data: expensesData,
+                                backgroundColor: 'rgba(255, 99, 132, 0.6)'
+                            },
+                            {
+                                label: 'Profit',
+                                data: profitData,
+                                backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
+                        interaction: {
+                            mode: 'nearest',
+                            axis: 'x',
+                            intersect: false
+                        },
+                        scales: {
+                            x: {
+                                stacked: false
+                            },
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
             document.addEventListener("DOMContentLoaded", function () {
                 const branchId = document.getElementById('branchFilter')?.value || 0;
                 const fromDate = document.getElementById('fromDate')?.value || '';
                 const toDate = document.getElementById('toDate')?.value || '';
 
-                const url = `/ParadiseHotel/hotelOwner/chartData?branchId=${param.branchId}&fromDate=${param.fromDate}&toDate=${param.toDate}`;
+                const url = `/ParadiseHotel/hotelOwner/chartData?branchId=${branchId}&monthFrom=${monthFrom}&yearFrom=${yearFrom}&monthTo=${monthTo}&yearTo=${yearTo}`;
 
                 fetch(url)
                         .then(res => res.json())
@@ -420,11 +495,25 @@
                             console.log("Profit Chart:", json.profitChart);
                             console.log("Branch Chart:", json.branchChart);  // 👈 kiểm tra dữ liệu có rỗng không
                             updateProfitChart(json.profitChart.labels, json.profitChart.data);
-                            updateBranchChart(json.branchChart);
+                            renderBranchChartWrapper(json.branchId, json.branchChart);
                         })
                         .catch(err => console.error('Lỗi khi tải biểu đồ:', err));
 
             });
+
+            function renderBranchChartWrapper(branchId, branchChartData) {
+                const chartTitle = document.getElementById('chart-title');
+                if (branchId == 0) {
+                    // So sánh nhiều branch => labels là tên branch
+                    updateBranchChart(branchChartData);
+                    chartTitle.innerHTML = `<i class="fas fa-chart-bar"></i> Branch Comparison`;
+                } else {
+                    // So sánh theo tháng cho 1 branch => labels là các tháng
+                    updateBranchChartHaveBranchID(branchChartData);
+                    chartTitle.innerHTML = `<i class="fas fa-chart-bar"></i> Revenue vs Expenses vs Profit (Monthly)`;
+                }
+            }
+
         </script>
 
 
