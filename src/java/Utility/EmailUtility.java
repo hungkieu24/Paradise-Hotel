@@ -108,8 +108,33 @@ public class EmailUtility {
         Transport.send(message);
 
     }
+  
+  public static void sendRefundEmail(String toEmail, String subject, String htmlContent) throws Exception {
+        final String fromEmail = "hung70919@gmail.com";
+        final String password = "swav xtfi qiqe oeqz";
 
-    public static void sendInvoice(String toEmail, String subject,
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+
+        Session session = Session.getInstance(props, new jakarta.mail.Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(fromEmail, password);
+            }
+        });
+
+        Message message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(fromEmail));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
+        message.setSubject(subject);
+        message.setContent(htmlContent, "text/html; charset=UTF-8");
+
+        Transport.send(message);
+    }
+
+public static void sendInvoice(String toEmail, String subject,
         String messageText, String totalAmount,
         List<Room> bookingRoomList, UserAccount user,
         Booking bookingCurrent, List<BookingRoomType> bookingRoomTypes
@@ -361,5 +386,4 @@ public class EmailUtility {
         // Gửi email
         Transport.send(message);
     }
-
 }

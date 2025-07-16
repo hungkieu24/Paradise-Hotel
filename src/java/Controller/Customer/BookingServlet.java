@@ -220,6 +220,7 @@ public class BookingServlet extends HttpServlet {
             }
 
             int branchId = 0; // chưa xử lý branchId cụ thể
+            Integer bookingId = null; // Khai báo ở đây
 
             boolean allInserted = true;
 
@@ -228,7 +229,7 @@ public class BookingServlet extends HttpServlet {
                 RoomType room = roomTypeDAO.getRoomTypeById(roomTypeId);
                 branchId = room.getBranchId();
 
-                Integer bookingId = bookingDAO.addBookingReturnId(user.getId(),
+                bookingId = bookingDAO.addBookingReturnId(user.getId(),
                         checkInTimestamp, checkOutTimestamp, "Pending", totalPrice,
                         "Unpaid", branchId, note, false);
 
@@ -242,9 +243,9 @@ public class BookingServlet extends HttpServlet {
 
             if (action.equals("manyRoom")) {
                 List<CartItem> cartItems = (List<CartItem>) request.getSession().getAttribute("listCartItem");
-                
+
                 branchId = cartItems.get(0).getRoomType().getBranchId();
-                Integer bookingId = bookingDAO.addBookingReturnId(user.getId(),
+                bookingId = bookingDAO.addBookingReturnId(user.getId(),
                         checkInTimestamp, checkOutTimestamp, "Pending", totalPrice,
                         "Unpaid", branchId, note, false);
 
@@ -252,7 +253,7 @@ public class BookingServlet extends HttpServlet {
                     out.write("{\"status\":\"error\", \"message\":\"Failed to create booking\"}");
                     return;
                 }
-                
+
                 for (CartItem item : cartItems) {
                     boolean inserted = bookingDAO.insertBookingRoomType(bookingId,
                             item.getRoomType().getRoomTypeID(), item.getQuantity(),
@@ -276,7 +277,7 @@ public class BookingServlet extends HttpServlet {
 
             if (allInserted) {
                 clearBookingSession(request.getSession());
-                out.write("{\"status\":\"success\"}");
+                out.write("{\"status\":\"success\", \"bookingId\":" + bookingId + "}");
             } else {
                 out.write("{\"status\":\"error\", \"message\":\"Failed to save booking details\"}");
             }

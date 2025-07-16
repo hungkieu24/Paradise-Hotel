@@ -77,7 +77,7 @@
                     <ul class="level-1">
                         <li><a href="#">Personal Info</a></li>
                         <li><a href="editProfile">Change Personal Info</a></li>
-                        <li><a href="#">Booking History</a></li>
+                        <li><a href="bookingHistory">Booking History</a></li>
                         <li><a href="myBooking">Your Booking</a></li>
                         <li><a href="#">Loyalty Status</a> </li>
                         <li><a href="#">Change Password</a></li>
@@ -159,13 +159,11 @@
                                         <p class="card-text mt-2" style="font-weight: bold; color:
                                            <c:choose>
                                                <c:when test="${b.status eq 'Completed'}">green</c:when>
-                                               <c:when test="${b.status eq 'Pending'}">orange</c:when>
                                                <c:when test="${b.status eq 'Cancelled'}">red</c:when>
                                                <c:otherwise>#555</c:otherwise>
                                            </c:choose>">
                                             <c:choose>
                                                 <c:when test="${b.status eq 'Completed'}">Completed</c:when>
-                                                <c:when test="${b.status eq 'Pending'}">Pending</c:when>
                                                 <c:when test="${b.status eq 'Cancelled'}">Cancelled</c:when>
                                                 <c:otherwise>${b.status}</c:otherwise>
                                             </c:choose>

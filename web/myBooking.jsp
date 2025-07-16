@@ -157,6 +157,17 @@
                                             </p>
                                             <p class="card-text mb-1">RoomType: ${b.roomTypeName}</p>
                                             <p class="card-text mb-1">Total Price: <fmt:formatNumber value="${b.totalPrice}" type="currency" currencySymbol="₫"/></p>
+
+                                            <c:if test="${b.paymentStatus == 'Refunded'}">
+                                                <div class="refund-info" style="background: #e8f5e8; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                                                    <h4 style="color: #28a745; margin: 0 0 5px 0;">✅ ĐÃ HOÀN TIỀN</h4>
+                                                    <p><strong>🏦 Mã giao dịch VNPay:</strong> ${b.refundTransactionNo}</p>
+                                                    <p><strong>📅 Ngày hoàn tiền:</strong> ${b.refundDate}</p>
+                                                    <p><strong>💰 Số tiền hoàn:</strong> <fmt:formatNumber value="${b.totalPrice}" type="currency" currencySymbol="VND"/></p>
+                                                    <p style="color: #666; font-size: 12px;">⏰ Tiền đã được VNPay xử lý và sẽ về tài khoản trong 1-3 ngày làm việc</p>
+                                                </div>
+                                            </c:if>
+
                                             <p class="card-text mt-2" style="font-weight: bold; color:
                                                <c:choose>
                                                    <c:when test="${b.status eq 'Pending'}">orange</c:when>
@@ -174,6 +185,10 @@
 
                                                 <c:if test="${b.status == 'Pending'}">
                                                     <button type="button" class="btn_1 small danger" onclick="showCancelForm('${b.id}')">Cancel Booking</button>
+                                                </c:if>   
+                                                <!-- Thêm nút hoàn tiền cho booking đã thanh toán -->
+                                                <c:if test="${b.status == 'Paid'}">
+                                                    <button type="button" class="btn_1 small warning" onclick="showRefundForm('${b.id}', '${b.totalPrice}')">Hoàn tiền</button>
                                                 </c:if>
                                             </div>
 
@@ -218,6 +233,55 @@
                             </div>
                         </form>
                     </div>
+                    <!-- Refund Form Modal -->
+                    <div id="refundModal" class="modal" style="display: none;">
+                        <div class="modal-content">
+                            <span class="close" onclick="closeRefundForm()">×</span>
+                            <h2>Hoàn tiền Booking</h2>
+                            <form id="refundForm" method="post" action="vnpay-refund">
+                                <input type="hidden" name="bookingId" id="refundBookingId">
+                                <input type="hidden" name="amount" id="refundAmount">
+
+                                <p><strong>Booking ID:</strong> #<span id="refundBookingIdDisplay"></span></p>
+                                <p><strong>Số tiền hoàn:</strong> <span id="refundAmountDisplay"></span> VND</p>
+
+                                <label for="refundReason">Lý do hoàn tiền: <span style="color: red;">*</span></label>
+                                <textarea name="refundReason" id="refundReason" rows="4" 
+                                          placeholder="Vui lòng nhập lý do hoàn tiền (bắt buộc)" 
+                                          required minlength="10"></textarea>
+
+                                <div style="margin-top: 15px;">
+                                    <button type="submit" class="btn_1">Xác nhận hoàn tiền</button>
+                                    <button type="button" class="btn_1" onclick="closeRefundForm()">Hủy</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <% 
+  String refundMsg = (String) session.getAttribute("refundMsg");
+  if (refundMsg != null) { 
+                    %>
+                    <div id="refundSuccessModal" class="modal" style="display: block;">
+                        <div class="modal-content" style="max-width: 500px;">
+                            <span class="close" onclick="closeRefundSuccessModal()">×</span>
+                            <div style="text-align: center;">
+                                <h2 style="color: #28a745; margin-bottom: 20px;">
+                                    <i class="fa fa-check-circle"></i> Thông báo hoàn tiền
+                                </h2>
+                                <div style="text-align: left; line-height: 1.6;">
+                                    <%= refundMsg %>
+                                </div>
+                                <button onclick="closeRefundSuccessModal()" 
+                                        style="margin-top: 20px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                    Đã hiểu
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <% 
+                    session.removeAttribute("refundMsg"); 
+                    } 
+                    %>
                     <!-- Pagination -->
                     <div class="pagination d-flex justify-content-center mt-4"> 
                         <c:if test="${currentPage > 1}">
@@ -365,6 +429,123 @@
                 document.getElementById("editModal").style.display = "none";
             }
         </script>
+        <!--        <script>
+                    function showRefundForm(bookingId, totalPrice) {
+                        const confirmMsg = "Bạn có chắc chắn muốn hoàn tiền cho booking #" + bookingId + "?\n" +
+                                "Số tiền: " + totalPrice + " VND\n" +
+                                "Lưu ý: Quá trình hoàn tiền có thể mất 3-5 ngày làm việc.";
+        
+                        if (confirm(confirmMsg)) {
+                            const button = event.target;
+                            const originalText = button.innerHTML;
+                            button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
+                            button.disabled = true;
+        
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = 'vnpay-refund';
+        
+                            const bookingIdInput = document.createElement('input');
+                            bookingIdInput.type = 'hidden';
+                            bookingIdInput.name = 'bookingId';
+                            bookingIdInput.value = bookingId;
+        
+                            const amountInput = document.createElement('input');
+                            amountInput.type = 'hidden';
+                            amountInput.name = 'amount';
+                            amountInput.value = totalPrice;
+        
+                            const reasonInput = document.createElement('input');
+                            reasonInput.type = 'hidden';
+                            reasonInput.name = 'refundReason';
+                            reasonInput.value = 'Customer requested refund';
+        
+                            form.appendChild(bookingIdInput);
+                            form.appendChild(amountInput);
+                            form.appendChild(reasonInput);
+        
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    }
+        
+        // Show refund button only for eligible bookings
+                    function canShowRefundButton(booking) {
+                        return booking.status === 'Paid' &&
+                                booking.payment_status === 'Paid' &&
+                                booking.status !== 'CheckedIn' &&
+                                booking.status !== 'Completed' &&
+                                booking.status !== 'Cancelled' &&
+                                new Date(booking.check_in) > new Date(); // Before check-in date
+                    }
+                </script>-->
+        <script>
+            function showRefundForm(bookingId, totalPrice) {
+                // Set values cho modal
+                document.getElementById('refundBookingId').value = bookingId;
+                document.getElementById('refundAmount').value = totalPrice;
+                document.getElementById('refundAmountDisplay').textContent = new Intl.NumberFormat('vi-VN').format(totalPrice);
 
+                // Hiển thị modal
+                document.getElementById('refundModal').style.display = 'block';
+            }
+
+            function closeRefundForm() {
+                document.getElementById('refundModal').style.display = 'none';
+                // Reset form
+                document.getElementById('refundForm').reset();
+            }
+
+// Xử lý submit form refund
+            // Xử lý submit form refund
+            document.addEventListener('DOMContentLoaded', function () {
+                const refundForm = document.getElementById('refundForm');
+                if (refundForm) {
+                    refundForm.addEventListener('submit', function (e) {
+                        const submitBtn = this.querySelector('button[type="submit"]');
+
+                        // Show VNPay processing steps
+                        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang kết nối VNPay...';
+                        submitBtn.disabled = true;
+
+                        // Thêm progress indicator
+                        const progressDiv = document.createElement('div');
+                        progressDiv.id = 'refund-progress';
+                        progressDiv.innerHTML = `
+                <div style="margin-top: 10px; padding: 10px; background: #f0f8ff; border-radius: 5px;">
+                    <p>🔄 Đang xử lý hoàn tiền qua VNPay...</p>
+                    <p>⏳ Vui lòng đợi trong giây lát</p>
+                </div>
+            `;
+                        this.appendChild(progressDiv);
+
+                        // Form sẽ tự submit
+                    });
+                }
+            });
+        </script>
+        <script>
+            function closeRefundSuccessModal() {
+                document.getElementById('refundSuccessModal').style.display = 'none';
+            }
+
+// Tự động đóng modal sau 10 giây
+            document.addEventListener('DOMContentLoaded', function () {
+                const modal = document.getElementById('refundSuccessModal');
+                if (modal) {
+                    setTimeout(function () {
+                        modal.style.display = 'none';
+                    }, 10000); // 10 giây
+                }
+            });
+
+// Đóng modal khi click outside
+            window.onclick = function (event) {
+                const modal = document.getElementById('refundSuccessModal');
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        </script>
     </body>
 </html>
