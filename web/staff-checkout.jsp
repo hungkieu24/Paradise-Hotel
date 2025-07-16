@@ -772,14 +772,10 @@
                         </div>
                         
                         <!-- Payment Methods -->
-                        <div class="payment-methods">
-                            
+                        <div class="payment-methods">                     
                             <form action="vnpayajax" method="post" id="checkoutForm">
                                 <input type="hidden" name="bookingId" value="<%= booking.getId() %>">
-                                <input type="hidden" name="amountToPay" value="<%= checkoutDetails.get("amountToPay") %>">
-                                
-                               
-                                
+                                <input type="hidden" name="amountToPay" value="<%= checkoutDetails.get("amountToPay") %>">                                 
                                 <div class="checkout-actions">
                                     <a href="staff-bookings-list" class="btn-back">
                                         <i class="bi bi-arrow-left"></i>

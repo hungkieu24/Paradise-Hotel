@@ -12,8 +12,10 @@
     SimpleDateFormat sdfDateTime = new SimpleDateFormat("dd/MM/yyyy HH:mm");
     int currentPage = request.getAttribute("currentPage") != null ? (Integer)request.getAttribute("currentPage") : 1;
     int totalPage = request.getAttribute("totalPage") != null ? (Integer)request.getAttribute("totalPage") : 1;
+    int totalBookings = request.getAttribute("totalBookings") != null ? (Integer)request.getAttribute("totalBookings") : 0;
+    int pageSize = request.getAttribute("pageSize") != null ? (Integer)request.getAttribute("pageSize") : 10;
    
-    String staffName = "";
+    String staffName = "hieu1235";
     if (session.getAttribute("user") != null) {
         staffName = ((UserAccount)session.getAttribute("user")).getUsername();
     }
@@ -62,7 +64,7 @@
             }
             .sidebar {
                 height: 100vh;
-                width: 220px;
+                width: 250px;
                 position: fixed;
                 top: 0;
                 left: 0;
@@ -147,12 +149,34 @@
                 padding: 15px;
                 margin-bottom: 20px;
             }
-            .filter-section {
-                background: white;
-                padding: 20px;
-                border-radius: 10px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                margin-bottom: 20px;
+            
+            /* Responsive CSS for filter section */
+            @media (max-width: 992px) {
+                .filter-section form {
+                    flex-direction: column !important;
+                    align-items: stretch !important;
+                }
+                
+                .filter-section .d-flex[style*="gap"] {
+                    justify-content: center;
+                    margin-top: 0.5rem;
+                }
+                
+                .filter-section .flex-fill {
+                    min-width: 100% !important;
+                    margin-bottom: 0.5rem;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .filter-section {
+                    padding: 12px 15px !important;
+                }
+                
+                .filter-section .btn {
+                    width: 100% !important;
+                    margin-bottom: 0.25rem !important;
+                }
             }
         </style>
     </head>
@@ -169,7 +193,8 @@
                     <div class="header-right">
                         <div class="user-info">
                             <i class="fas fa-user-circle"></i>
-                            <span><%= staffName != null && !staffName.isEmpty() ? staffName : "staff" %></span>
+                            <span><%= staffName %></span>
+                            <small class="text-muted ms-2">2025-07-15 13:48:26 UTC</small>
                         </div>
                     </div>
                 </header>
@@ -220,7 +245,7 @@
                         <!-- Statistics Cards -->
                         <div class="row mb-4">
                             <%
-                                int totalBookings = bookings != null ? bookings.size() : 0;
+                                int displayedBookings = bookings != null ? bookings.size() : 0;
                                 int paidBookings = 0, checkedInBookings = 0, pendingBookings = 0;
                                 
                                 if (bookings != null) {
@@ -258,45 +283,66 @@
                             </div>
                         </div>
 
-                        <!-- Filter Section -->
-                        <div class="filter-section">
-                            <h5 class="mb-3"><i class="bi bi-funnel"></i> Filter & Search</h5>
-                            <form class="row g-3" id="filter-form" method="get" action="staff-bookings-list">
-                                <div class="col-md-3">
-                                    <label class="form-label">Search Customer</label>
-                                    <input class="form-control" type="search" name="keyword" placeholder="Customer name..." value="<%= keyword %>">
+                        <!-- Filter Section - Compact Layout with Inline Styles -->
+                        <div class="filter-section" style="background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #e9ecef;">
+                            <form class="d-flex align-items-center gap-3 flex-wrap" id="filter-form" method="get" action="staff-bookings-list" style="gap: 1rem;">
+                                <input type="hidden" name="pageSize" value="<%= pageSize %>">
+                                
+                                <!-- Search Customer -->
+                                <div class="flex-fill" style="min-width: 200px;">
+                                    <input class="form-control" type="search" name="keyword" 
+                                           placeholder="🔍 Search customer..." value="<%= keyword %>"
+                                           style="font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 4px;">
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Status</label>
-                                    <select class="form-select" name="status">
-                                        <option value="">All Status</option>
-                                        <option value="Pending" <%= "Pending".equalsIgnoreCase(status) ? "selected" : "" %>>Pending</option>
-                                        <option value="Paid" <%= "Paid".equalsIgnoreCase(status) ? "selected" : "" %>>Paid</option>
-                                        <option value="CheckedIn" <%= "CheckedIn".equalsIgnoreCase(status) ? "selected" : "" %>>CheckedIn</option>
-                                        <option value="CheckedOut" <%= "CheckedOut".equalsIgnoreCase(status) ? "selected" : "" %>>CheckedOut</option>
-                                        <option value="Completed" <%= "Completed".equalsIgnoreCase(status) ? "selected" : "" %>>Completed</option>
-                                        <option value="Cancelled" <%= "Cancelled".equalsIgnoreCase(status) ? "selected" : "" %>>Cancelled</option>
-                                        <option value="NoShow" <%= "NoShow".equalsIgnoreCase(status) ? "selected" : "" %>>NoShow</option>
+                                
+                                <!-- Status -->
+                                <div style="min-width: 140px;">
+                                    <select class="form-select" name="status" style="font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 4px;">
+                                        <option value="">📋 All Status</option>
+                                        <option value="Pending" <%= "Pending".equalsIgnoreCase(status) ? "selected" : "" %>>⏳ Pending</option>
+                                        <option value="Paid" <%= "Paid".equalsIgnoreCase(status) ? "selected" : "" %>>💳 Paid</option>
+                                        <option value="CheckedIn" <%= "CheckedIn".equalsIgnoreCase(status) ? "selected" : "" %>>✅ CheckedIn</option>
+                                        <option value="CheckedOut" <%= "CheckedOut".equalsIgnoreCase(status) ? "selected" : "" %>>🏃 CheckedOut</option>
+                                        <option value="Completed" <%= "Completed".equalsIgnoreCase(status) ? "selected" : "" %>>🎉 Completed</option>
+                                        <option value="Cancelled" <%= "Cancelled".equalsIgnoreCase(status) ? "selected" : "" %>>❌ Cancelled</option>
+                                        <option value="NoShow" <%= "NoShow".equalsIgnoreCase(status) ? "selected" : "" %>>👻 NoShow</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">From Date</label>
-                                    <input type="date" class="form-control" name="fromDate" value="<%= fromDate %>"/>
+                                
+                                <!-- From Date -->
+                                <div style="min-width: 150px;">
+                                    <input type="date" class="form-control" name="fromDate" 
+                                           value="<%= fromDate %>" title="From Date"
+                                           style="font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 4px;"/>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">To Date</label>
-                                    <input type="date" class="form-control" name="toDate" value="<%= toDate %>"/>
+                                
+                                <!-- To Date -->
+                                <div style="min-width: 150px;">
+                                    <input type="date" class="form-control" name="toDate" 
+                                           value="<%= toDate %>" title="To Date"
+                                           style="font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 4px;"/>
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">&nbsp;</label>
-                                    <div class="d-flex gap-2">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-search"></i> Filter
-                                        </button>
-                                        <a href="staff-bookings-list" class="btn btn-outline-secondary">
-                                            <i class="bi bi-x-circle"></i> Clear
-                                        </a>
-                                    </div>
+                                
+                                <!-- Items per page -->
+                                <div style="min-width: 80px;">
+                                    <select class="form-select" id="pageSizeSelect" onchange="changePageSize(this.value)"
+                                            style="font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 4px;">
+                                        <option value="5" <%= pageSize == 5 ? "selected" : "" %>>5</option>
+                                        <option value="10" <%= pageSize == 10 ? "selected" : "" %>>10</option>
+                                        <option value="15" <%= pageSize == 15 ? "selected" : "" %>>15</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="d-flex" style="gap: 0.5rem;">
+                                    <button type="submit" class="btn btn-primary" 
+                                            style="padding: 0.375rem 0.75rem; font-size: 0.875rem; border-radius: 4px; font-weight: 500;">
+                                        <i class="bi bi-search"></i> Search
+                                    </button>
+                                    <a href="staff-bookings-list" class="btn btn-outline-secondary" 
+                                       style="padding: 0.375rem 0.75rem; font-size: 0.875rem; border-radius: 4px; font-weight: 500; text-decoration: none;">
+                                        <i class="bi bi-arrow-clockwise"></i> Reset
+                                    </a>
                                 </div>
                             </form>
                         </div>
@@ -306,7 +352,7 @@
                             <div class="card-header bg-primary text-white">
                                 <h5 class="mb-0">
                                     <i class="bi bi-table"></i> Bookings List
-                                    <span class="badge bg-light text-primary ms-2"><%= totalBookings %></span>
+                                    <span class="badge bg-light text-primary ms-2"><%= displayedBookings %></span>
                                 </h5>
                             </div>
                             <div class="card-body p-0">
@@ -387,7 +433,7 @@
                                                 <td>
                                                     <div class="booking-info">
                                                         <i class="bi bi-door-closed me-1"></i>
-                                                        <%= b.getRoomTypes() != null ? b.getRoomTypes() : "N/A" %>
+                                                        <%= b.getRoomTypes() != null ? b.getRoomTypes() : "Not Assigned" %>
                                                     </div>
                                                 </td>
                                                 <td>
@@ -439,7 +485,6 @@
                                                         </form>
                                                         <% } %>
 
-
                                                         <!-- View Customer Button -->
                                                         <a href="view-user-info?bookingId=<%= b.getId() %>" 
                                                            class="btn btn-info btn-sm" 
@@ -475,11 +520,19 @@
                                 <!-- Pagination -->
                                 <% if (totalPage > 1) { %>
                                 <div class="pagination justify-content-center py-3">
+                                    <% 
+                                        String queryParams = "";
+                                        if (keyword != null && !keyword.isEmpty()) queryParams += "&keyword=" + java.net.URLEncoder.encode(keyword, "UTF-8");
+                                        if (status != null && !status.isEmpty()) queryParams += "&status=" + java.net.URLEncoder.encode(status, "UTF-8");
+                                        if (fromDate != null && !fromDate.isEmpty()) queryParams += "&fromDate=" + java.net.URLEncoder.encode(fromDate, "UTF-8");
+                                        if (toDate != null && !toDate.isEmpty()) queryParams += "&toDate=" + java.net.URLEncoder.encode(toDate, "UTF-8");
+                                        queryParams += "&pageSize=" + pageSize;
+                                    %>
                                     <% for (int i = 1; i <= totalPage; i++) { %>
                                     <% if (i == currentPage) { %>
                                     <span class="active"><%= i %></span>
                                     <% } else { %>
-                                    <a href="staff-bookings-list?page=<%= i %>&keyword=<%= keyword %>&status=<%= status %>&fromDate=<%= fromDate %>&toDate=<%= toDate %>"><%= i %></a>
+                                    <a href="staff-bookings-list?page=<%= i %><%= queryParams %>"><%= i %></a>
                                     <% } %>
                                     <% } %>
                                 </div>
@@ -525,28 +578,33 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="js/main.js"></script>
         <script>
-                                    // Auto-refresh every 5 minutes
-                                    setTimeout(function () {
-                                        window.location.reload();
-                                    }, 300000);
+            setTimeout(function () {
+                window.location.reload();
+            }, 300000);
 
-                                    // Confirm before check-in/check-out
-                                    document.querySelectorAll('form[action="staff-booking-action"]').forEach(form => {
-                                        form.addEventListener('submit', function (e) {
-                                            const action = this.querySelector('input[name="action"]').value;
-                                            const bookingId = this.querySelector('input[name="bookingId"]').value;
+            document.querySelectorAll('form[action="staff-booking-action"]').forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    const action = this.querySelector('input[name="action"]').value;
+                    const bookingId = this.querySelector('input[name="bookingId"]').value;
 
-                                            if (action === 'checkin') {
-                                                if (!confirm(`Are you sure you want to check-in booking #${bookingId}?`)) {
-                                                    e.preventDefault();
-                                                }
-                                            } else if (action === 'checkout') {
-                                                if (!confirm(`Are you sure you want to check-out booking #${bookingId}?`)) {
-                                                    e.preventDefault();
-                                                }
-                                            }
-                                        });
-                                    });
+                    if (action === 'checkin') {
+                        if (!confirm(`Are you sure you want to check-in booking #${bookingId}?`)) {
+                            e.preventDefault();
+                        }
+                    } else if (action === 'checkout') {
+                        if (!confirm(`Are you sure you want to check-out booking #${bookingId}?`)) {
+                            e.preventDefault();
+                        }
+                    }
+                });
+            });
+            
+            function changePageSize(newSize) {
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('pageSize', newSize);
+                currentUrl.searchParams.set('page', '1');
+                window.location.href = currentUrl.toString();
+            }
         </script>
     </body>
 </html>
