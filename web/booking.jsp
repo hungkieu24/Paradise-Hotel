@@ -139,6 +139,8 @@
 
             <div class="checkout-container">
                 <form action="booking" method="post" id="booking-form">
+                    <input type="hidden" name="roomTypeId" value="${empty param.roomTypeId ? '' : param.roomTypeId}">
+                    <input type="hidden" name="action" value="${param.action}">
                     <div class="left-column">
 
                         <!-- Customer info -->
@@ -215,10 +217,8 @@
                                             <fmt:formatNumber value="${singleRoom.base_price}" type="number" groupingUsed="true" maxFractionDigits="0" /> VND
                                         </span>
                                     </li>
-                                </ul>
+                                </ul
                             </c:if>
-
-
 
                             <c:if test="${not empty listCartItem}">
                                 <ul class="room-summary">
@@ -244,8 +244,6 @@
 
                             <hr>
 
-
-
                             <div class="selected-services-summary">
                                 <h3>Selected Services</h3>
                                 <ul id="service-list"></ul>
@@ -256,36 +254,32 @@
                             </div>
 
                             <br>
-
                             <hr>
 
                             <div class="rank">
-
                                 <p>
                                     <strong>Your Rank: ${loyaltyPoint.level}</strong> 
                                     (${loyaltyPoint.discountPercent}% discount)
                                 </p>
                                 <p>Discount applied: <span id="discount-applied">0 VND</span></p>
-
                             </div>
-
 
                             <div class="total">
                                 <strong>Total after discount: 
                                     <span id="final-total">0 VND</span>
-
                                 </strong>
                             </div>
+
                             <!-- Submit Button inside summary -->
-                            <button type="submit" class="btn btn-danger">Book now</button>
+                            <form id="payment-form" action="vnpayajax" method="post">
+                                <input type="hidden" name="bookingId" id="bookingId" value="">
+                                <button type="submit" class="btn btn-danger">Book now</button>
+                            </form>
+
                         </div>
                     </div>
-
-
                 </form>
             </div>
-
-
         </main>
 
         <footer class="revealed">
@@ -434,7 +428,6 @@
                 form.addEventListener("submit", function (e) {
                     updateSelectedServices();
                     if (hasServiceQtyError) {
-                        e.preventDefault();
                         showToast("❌ Please fix service quantity errors before booking", "#e53935");
                         return;
                     }
@@ -482,10 +475,27 @@
                             .then(data => {
                                 console.log(data);
                                 if (data.status === "success") {
-                                    showToast("✅ Booking success!");
-                                    setTimeout(() => {
-                                        window.location.href = "booking"; // gọi lại servlet với session đã clear
-                                    }, 1500);
+                                    var amountToPay = document.getElementById('finalTotalPrice').value;
+                                    var bookingId = data.bookingId; // Lấy từ response
+
+                                    var form = document.createElement('form');
+                                    form.method = 'POST';
+                                    form.action = 'vnpayajax';
+
+                                    var input1 = document.createElement('input');
+                                    input1.type = 'hidden';
+                                    input1.name = 'amountToPay';
+                                    input1.value = amountToPay;
+                                    form.appendChild(input1);
+
+                                    var input2 = document.createElement('input');
+                                    input2.type = 'hidden';
+                                    input2.name = 'bookingId';
+                                    input2.value = bookingId;
+                                    form.appendChild(input2);
+
+                                    document.body.appendChild(form);
+                                    form.submit();
                                 } else if (data.status === "error" && data.message) {
                                     showToast("❌ " + data.message, "#e53935");
                                 } else {
@@ -499,9 +509,6 @@
                 });
             });
         </script>
-
-
-
     </body>
 </html>
 

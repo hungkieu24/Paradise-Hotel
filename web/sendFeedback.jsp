@@ -62,7 +62,6 @@
         <div class="layer"></div><!-- Opacity Mask -->
 
 
-
         <div class="nav_panel">
             <a href="#" class="closebt open_close_nav_panel"><i class="bi bi-x"></i></a>
             <div class="logo_panel"><img src="img/logo_sticky.png" width="135" height="45" alt=""></div>
@@ -173,20 +172,20 @@
 
 
                     </div>
-<!--                    /upload anh 
-                                        <div class="col-xl-4 col-lg-5 order-lg-2">
-                    
-                                            <div class="form-group">
-                                                <label>Upload Images (Optional)</label>
-                                                <input type="file" id="imageInput" name="images" multiple accept="image/*" class="form-control-file">
-                                                <p class="form_error" id="image_error"></p>
-                                            </div>
-                                            <div class="wrapper-images" id="imagePreviewWrapper">
-                                                <div class="images">
-                    
-                                                </div>
-                                            </div>
-                                        </div>-->
+                    <!--upload anh -->
+                    <div class="col-xl-4 col-lg-5 order-lg-2">
+
+                        <div class="form-group">
+                            <label>Upload Images (Optional)</label>
+                            <input type="file" id="imageInput" name="images" multiple accept="image/*" class="form-control-file">
+                            <p class="form_error" id="image_error"></p>
+                        </div>
+                        <div class="wrapper-images" id="imagePreviewWrapper">
+                            <div class="images">
+
+                            </div>
+                        </div>
+                    </div>
                     </form>  
                 </div>
                 <!-- /row -->

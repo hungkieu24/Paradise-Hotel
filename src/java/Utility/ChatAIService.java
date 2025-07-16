@@ -18,7 +18,7 @@ import DBcontext.DBContext;
 public class ChatAIService {
 
     //phải hidden
-    private final String OPENAI_API_KEY = "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";
+    private final String OPENAI_API_KEY = "";
     private final String OPENAI_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
     // schema mô phỏng để AI hiểu về database  cần được sửa lại cho chính xác
     private final String DB_SCHEMA_CONTEXT = """
@@ -34,11 +34,10 @@ Người dùng có thể hỏi các yêu cầu như:
 - Xem chi tiết một loại phòng
 - Link đặt phòng hoặc chi tiết phòng
 - Xem lịch sử đặt phòng
-- Chào hỏi
 
 Chỉ sinh câu SQL SELECT an toàn theo SQL Server.
 Không bao giờ sinh DELETE, UPDATE, INSERT.
-Chỉ trả lại câu lệnh SQL trong một dòng hoặc trả lời những câu chào hỏi của khách.
+Chỉ trả lại câu lệnh SQL trong một dòng.
 """;
 
     public String generateSQL(String userMessage) throws IOException {

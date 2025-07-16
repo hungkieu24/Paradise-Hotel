@@ -18,6 +18,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.File;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -73,12 +77,25 @@ public class SearchRoomServlet extends HttpServlet {
         String status = request.getParameter("status");
         String roomType = request.getParameter("roomType");
         String search = request.getParameter("search");
+        String startParam = request.getParameter("startDate");
+        String endParam = request.getParameter("endDate");
+        LocalDateTime checkIn;
+        LocalDateTime checkOut;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        if (startParam == null || startParam.isEmpty() || endParam == null || endParam.isEmpty()) {
+            checkIn = LocalDate.now().atStartOfDay();
+            checkOut = checkIn.plusDays(5);
+        } else {
+            checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
+            checkOut = LocalDate.parse(endParam, formatter).atStartOfDay();
+        }
         // Get total matching rooms for pagination
         int totalRooms = rDao.getTotalRoomsByBranch(branchId, status, roomType, search);
         int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
 
-        List<Room> rooms = rDao.getRoomsByBranch(branchId, status, roomType, search, page, pageSize);
-        if(rooms.isEmpty()){
+        List<Room> rooms = rDao.getRoomsByBranch(branchId, status, roomType, search, page, pageSize, checkIn, checkOut);
+        if (rooms.isEmpty()) {
             request.setAttribute("warning", "No rooms found matching filter criteria.");
         }
         // Build roomImageMap
@@ -103,6 +120,8 @@ public class SearchRoomServlet extends HttpServlet {
         request.setAttribute("currentPage", page);
         request.setAttribute("pageSize", pageSize);
         request.setAttribute("totalPages", totalPages);
+        request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
+        request.setAttribute("endDate", java.util.Date.from(checkOut.atZone(ZoneId.systemDefault()).toInstant()));
         request.getRequestDispatcher("roomManage.jsp").forward(request, response);
     }
 

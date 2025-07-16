@@ -275,13 +275,24 @@ public class BookingDAO extends DBcontext.DBContext {
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, status);
             ps.setInt(2, bookingId);
-            int rowsAffected = ps.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            System.out.println("Error in updateBookingStatus: " + e.getMessage());
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
-        return false;
+    }
+
+    //hoang
+    public boolean updateBookingPaymentStatus(int bookingId, String paymentStatus) {
+        String sql = "UPDATE Booking SET payment_status = ? WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, paymentStatus);
+            ps.setInt(2, bookingId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**
@@ -312,6 +323,21 @@ public class BookingDAO extends DBcontext.DBContext {
             ps.setString(1, cancelReason);
             ps.setTimestamp(2, new Timestamp(System.currentTimeMillis())); // Thời gian hủy
             ps.setInt(3, bookingId);
+            int rowsAffected = ps.executeUpdate();
+            ps.close();
+            return rowsAffected > 0; // Trả về true nếu cập nhật thành công
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean cancelBookingVNPay(int bookingId) {
+        String sql = "UPDATE Booking SET status = 'Cancelled', cancel_time = ? WHERE id = ? AND status IN ('Paid')";
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setTimestamp(21, new Timestamp(System.currentTimeMillis())); // Thời gian hủy
+            ps.setInt(2, bookingId);
             int rowsAffected = ps.executeUpdate();
             ps.close();
             return rowsAffected > 0; // Trả về true nếu cập nhật thành công
@@ -2124,13 +2150,114 @@ public class BookingDAO extends DBcontext.DBContext {
         }
     }
 
-    public static void main(String[] args) {
-        BookingDAO bookingDAO = new BookingDAO();
-        List<Booking> bookings = bookingDAO.searchBookingsByBranchWithFilter(
-                1, "J", "Pending", "2025-05-01", "2025-07-31"
-        );
-        for (Booking booking : bookings) {
-            System.out.println(booking);
+    public boolean updateBookingForRefund(int bookingId, String status, String paymentStatus, String cancelReason) {
+        String sql = "UPDATE Booking SET status = ?, payment_status = ?, cancel_reason = ?, cancel_time = GETDATE() WHERE id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setString(2, paymentStatus);
+            ps.setString(3, cancelReason);
+            ps.setInt(4, bookingId);
+
+            int rowsAffected = ps.executeUpdate();
+            System.out.println("✅ Booking refund updated: " + rowsAffected + " rows, Reason: " + cancelReason);
+            return rowsAffected > 0;
+
+        } catch (Exception e) {
+            System.err.println("❌ Error updating booking for refund: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean updatePaymentStatus(int bookingId, String status) {
+        try {
+            System.out.println("Updating VNPayPayment status for booking " + bookingId + " to " + status);
+
+            String sql = "UPDATE VNPayPayment SET status = ? WHERE booking_id = ?";
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, status);
+                ps.setInt(2, bookingId);
+
+                int rowsAffected = ps.executeUpdate();
+                boolean result = rowsAffected > 0;
+                System.out.println("VNPayPayment updated: " + result + " (rows affected: " + rowsAffected + ")");
+                return result;
+            }
+        } catch (Exception e) {
+            System.err.println("Error updating VNPayPayment status: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean isBookingRefundable(int bookingId) {
+        try {
+            String sql = "SELECT status, payment_status, check_in FROM Booking WHERE id = ?";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, bookingId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                String status = rs.getString("status");
+                String paymentStatus = rs.getString("payment_status");
+                Timestamp checkIn = rs.getTimestamp("check_in");
+
+                // Business rules for refund
+                boolean isPaid = "Paid".equals(status) && "Paid".equals(paymentStatus);
+                boolean notCheckedIn = !"CheckedIn".equals(status) && !"Completed".equals(status);
+
+                // Time-based rule: can refund before check-in date
+                boolean beforeCheckIn = checkIn.after(new Timestamp(System.currentTimeMillis()));
+
+                return isPaid && notCheckedIn && beforeCheckIn;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public Booking getBookingForRefund(int bookingId) {
+        try {
+            String sql = "SELECT * FROM Booking WHERE id = ?";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, bookingId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                Booking booking = new Booking();
+                booking.setId(rs.getInt("id"));
+                booking.setStatus(rs.getString("status"));
+                booking.setPaymentStatus(rs.getString("payment_status"));
+                booking.setTotalPrice(rs.getDouble("total_price"));
+                booking.setCheckIn(rs.getTimestamp("check_in"));
+                booking.setCheckOut(rs.getTimestamp("check_out"));
+                return booking;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public boolean refundPaymentByBookingId(int bookingId) {
+        try {
+            System.out.println("Marking payment as refunded for booking: " + bookingId);
+
+            String sql = "UPDATE VNPayPayment SET status = 'Refunded' WHERE booking_id = ?";
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setInt(1, bookingId);
+
+                int rowsAffected = ps.executeUpdate();
+                boolean result = rowsAffected > 0;
+                System.out.println("Payment refund status updated: " + result + " (rows affected: " + rowsAffected + ")");
+                return result;
+            }
+        } catch (Exception e) {
+            System.err.println("Error updating payment refund status: " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
     }
 

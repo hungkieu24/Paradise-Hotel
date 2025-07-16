@@ -19,7 +19,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.io.InputStream;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +51,14 @@ public class AccountServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        UserAccount user = (UserAccount) session.getAttribute("user");
+
+        if (checkLogin(user, session, response)) {
+            response.sendRedirect("../login.jsp");
+            return;
+        }
+        
         UserAccountDAO accountDAO = new UserAccountDAO();
         String action = request.getParameter("action");
         String keyword = request.getParameter("searchKeyword");
@@ -116,6 +123,14 @@ public class AccountServlet extends HttpServlet {
         request.setAttribute("hotelBranchList", hotelBranchList);
         request.setAttribute("userAccountList", userAccountList);
         request.getRequestDispatcher("./account.jsp").forward(request, response);
+    }
+
+    private boolean checkLogin(UserAccount user, HttpSession session, HttpServletResponse response) throws IOException {
+        if (user == null) {
+            setSessionMessage(session, "You need to login!", "error");
+            return true;
+        }
+        return false;
     }
 
     private void setSessionMessage(HttpSession session, String message, String type) {

@@ -5,8 +5,11 @@
 package Model;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Feedback {
+
     private int id;
     private String user_id;
     private int booking_id;
@@ -17,20 +20,23 @@ public class Feedback {
     private String status;
     private String admin_action;
     private boolean is_deleted;
-    
+
     private UserAccount userAccount;
     private int roomTypeId;
     // Additional fields for display
     private String username;
     private String userAvatarUrl;
+    private List<String> imageList;
 
+    private String roomTypeName;
+    private String roomNumber;
     public Feedback() {
     }
-    
+
     // Constructor with all fields
-    public Feedback(int id, String user_id, int booking_id, int rating, 
-                   String comment, String image_url, Timestamp created_at, 
-                   String status, String admin_action) {
+    public Feedback(int id, String user_id, int booking_id, int rating,
+            String comment, String image_url, Timestamp created_at,
+            String status, String admin_action) {
         this.id = id;
         this.user_id = user_id;
         this.booking_id = booking_id;
@@ -59,7 +65,7 @@ public class Feedback {
         this.username = username;
         this.userAvatarUrl = userAvatarUrl;
     }
-    
+
     public Feedback(int id, int booking_id, int rating, String comment, String image_url, Timestamp created_at, String status, String admin_action, UserAccount userAccount) {
         this.id = id;
         this.booking_id = booking_id;
@@ -71,6 +77,7 @@ public class Feedback {
         this.admin_action = admin_action;
         this.userAccount = userAccount;
     }
+
     public Feedback(String user_id, int booking_id, int rating, String comment, Timestamp created_at, String status) {
         this.user_id = user_id;
         this.booking_id = booking_id;
@@ -90,7 +97,7 @@ public class Feedback {
         this.status = status;
         this.admin_action = admin_action;
     }
-    
+
     public Feedback(int booking_id, int rating, String comment, Timestamp created_at, String username) {
         this.booking_id = booking_id;
         this.rating = rating;
@@ -98,7 +105,7 @@ public class Feedback {
         this.created_at = created_at;
         this.username = username;
     }
-    
+
     public Feedback(int rating, String comment, Timestamp created_at, String status) {
         this.rating = rating;
         this.comment = comment;
@@ -137,9 +144,33 @@ public class Feedback {
         this.roomTypeId = roomTypeId;
     }
 
-    
-    
-    
+    public List<String> getImageList() {
+        if (imageList == null) {
+            imageList = new ArrayList<>();
+        }
+        return imageList;
+    }
+
+    public void setImageList(List<String> imageList) {
+        this.imageList = imageList;
+    }
+
+    public String getRoomTypeName() {
+        return roomTypeName;
+    }
+
+    public void setRoomTypeName(String roomTypeName) {
+        this.roomTypeName = roomTypeName;
+    }
+
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+
+    public void setRoomNumber(String roomNumber) {
+        this.roomNumber = roomNumber;
+    }
+
     // Getters and Setters
     public int getId() {
         return id;
@@ -220,7 +251,7 @@ public class Feedback {
     public void setUserAccount(UserAccount userAccount) {
         this.userAccount = userAccount;
     }
-    
+
     public String getUsername() {
         return username;
     }
@@ -251,30 +282,36 @@ public class Feedback {
     }
 
     public String getShortComment(int maxLength) {
-        if (comment == null) return "";
-        if (comment.length() <= maxLength) return comment;
+        if (comment == null) {
+            return "";
+        }
+        if (comment.length() <= maxLength) {
+            return comment;
+        }
         return comment.substring(0, maxLength) + "...";
     }
 
     public String getFormattedCreatedAt() {
-        if (created_at == null) return "";
+        if (created_at == null) {
+            return "";
+        }
         return created_at.toString();
     }
 
     @Override
     public String toString() {
-        return "Feedback{" +
-                "id=" + id +
-                ", user_id='" + user_id + '\'' +
-                ", booking_id=" + booking_id +
-                ", rating=" + rating +
-                ", comment='" + comment + '\'' +
-                ", image_url='" + image_url + '\'' +
-                ", created_at=" + created_at +
-                ", status='" + status + '\'' +
-                ", admin_action='" + admin_action + '\'' +
-                ", username='" + username + '\'' +
-                ", userAvatarUrl='" + userAvatarUrl + '\'' +
-                '}';
+        return "Feedback{"
+                + "id=" + id
+                + ", user_id='" + user_id + '\''
+                + ", booking_id=" + booking_id
+                + ", rating=" + rating
+                + ", comment='" + comment + '\''
+                + ", image_url='" + image_url + '\''
+                + ", created_at=" + created_at
+                + ", status='" + status + '\''
+                + ", admin_action='" + admin_action + '\''
+                + ", username='" + username + '\''
+                + ", userAvatarUrl='" + userAvatarUrl + '\''
+                + '}';
     }
 }
