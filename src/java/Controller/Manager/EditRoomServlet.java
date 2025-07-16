@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package Controller.Manager;
 
 import Dal.RoomDAO;
@@ -22,6 +18,10 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.io.File;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -66,6 +66,19 @@ public class EditRoomServlet extends HttpServlet {
         int pageSize = 5;
         String pageParam = request.getParameter("page");
         String sizeParam = request.getParameter("size");
+        String startParam = request.getParameter("startDate");
+        String endParam = request.getParameter("endDate");
+        LocalDateTime checkIn;
+        LocalDateTime checkOut;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        if (startParam == null || startParam.isEmpty() || endParam == null || endParam.isEmpty()) {
+            checkIn = LocalDate.now().atStartOfDay();
+            checkOut = checkIn.plusDays(5);
+        } else {
+            checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
+            checkOut = LocalDate.parse(endParam, formatter).atStartOfDay();
+        }
         if (pageParam != null && !pageParam.isEmpty()) {
             page = Integer.parseInt(pageParam);
         }
@@ -203,7 +216,7 @@ public class EditRoomServlet extends HttpServlet {
             request.setAttribute("error", "Failed to update room.");
             int totalRooms = rDao.getTotalRoomsByBranchId(branchId);
             int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
-            List<Room> rooms = rDao.getAllRoomByBranchId(branchId, page, pageSize);
+            List<Room> rooms = rDao.getAllRoomByBranchId(branchId, page, pageSize, checkIn, checkOut);
             Room roomObj = rDao.getRoomById(roomId);
             List<RoomType> roomTypes = rt.getAllRoomType();
             Map<String, List<String>> roomImageMap = new HashMap<>();
@@ -233,6 +246,8 @@ public class EditRoomServlet extends HttpServlet {
             request.setAttribute("currentPage", page);
             request.setAttribute("pageSize", pageSize);
             request.setAttribute("totalPages", totalPages);
+            request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
+            request.setAttribute("endDate", java.util.Date.from(checkOut.atZone(ZoneId.systemDefault()).toInstant()));
             request.getRequestDispatcher("roomManage.jsp").forward(request, response);
         }
     }

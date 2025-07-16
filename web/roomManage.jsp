@@ -6,6 +6,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -170,14 +171,6 @@
                                     <input type="text" id="roomSearch" name="search" placeholder="Search rooms..." value="${param.search}" onchange="this.form.submit()">
                                 </div>
                             </form>
-                            <div class="view-toggle">
-                                <button class="view-btn active" data-view="grid">
-                                    <i class="fas fa-th"></i>
-                                </button>
-                                <button class="view-btn" data-view="table">
-                                    <i class="fas fa-list"></i>
-                                </button>
-                            </div>
 
                             <input type="hidden" name="branchId" value="${branchId}">
                             <button class="btn btn-primary" onclick="openRoomModal()">
@@ -206,61 +199,19 @@
                                         </option>
                                     </c:forEach>
                                 </select>
+                                <fmt:formatDate value="${startDate}" pattern="yyyy-MM-dd" var="startDateFormatted" />
+                                <fmt:formatDate value="${endDate}" pattern="yyyy-MM-dd" var="endDateFormatted" />
+                                <input type="date" id="startDate" style="border:1px solid hsl(220 13% 91%); border-radius: 0.375rem; width: 100px" name="startDate" value="${startDateFormatted}" onchange="this.form.submit()">
+                                <input type="date" id="endDate" style="border:1px solid hsl(220 13% 91%); border-radius: 0.375rem; width: 100px" name="endDate" value="${endDateFormatted}" onchange="this.form.submit()">
                             </div>
                         </form>
-                        <!-- Xem lại đoạn này để code backend -->
-                        <div class="rooms-grid" id="roomsGrid" style="display: none;">
-                            <c:if test="${not empty rooms}">
-                                <c:forEach var="room" items="${rooms}">
-                                    <div class="room-card" data-status="${room.status}" data-type="${room.roomType.name}" data-room="${room.roomNumber}"
-                                         data-room-id="${room.id}">
-                                        <div class="room-header">
-                                            <div class="room-number">${room.roomNumber}</div>
-                                            <div class="room-status status-${room.status.toLowerCase()}">${room.status}</div>
-                                        </div>
-                                        <div class="room-info">
-                                            <h4>${room.roomType.name}</h4>
-                                            <div class="room-details">
-                                                <div class="detail-item">
-                                                    <i class="fas fa-dollar-sign"></i>
-                                                    <span>${room.roomType.base_price} VND</span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <i class="fas fa-male"></i>
-                                                    <span>${room.roomType.capacity_adult} Adult</span>
-                                                </div>
-                                                <div class="detail-item">
-                                                    <i class="fas fa-child"></i>
-                                                    <span>${room.roomType.capacity_child} Child</span>
-                                                </div>
-                                            </div>
-                                            <div class="amenities">
-                                                <small>${room.roomType.description}</small>
-                                            </div>
-                                        </div>
-                                        <div class="room-actions">
-                                            <button class="btn btn-sm btn-secondary" onclick="editRoom(${room.id})">
-                                                <i class="fas fa-edit"></i>
-                                                Edit
-                                            </button>
-                                            <button class="btn btn-sm btn-danger" onclick="deleteRoom(${room.id})">
-                                                <i class="fas fa-trash"></i>
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                </c:forEach>
-                            </c:if>
-                            <c:if test="${empty rooms}">
-                                <div class="empty-state">
-                                    <i class="fas fa-bed">
-                                        <h3>Don't see room</h3>
-                                        <p>Can you create new room</p>
-                                </div>
-                            </c:if>
-
-                            <!-- Thêm các phòng mẫu khác nếu cần -->
-                        </div>
+                        <c:if test="${empty rooms}">
+                            <div class="empty-state">
+                                <i class="fas fa-bed">
+                                    <h3>Don't see room</h3>
+                                    <p>Can you create new room</p>
+                            </div>
+                        </c:if>
 
                         <div class="rooms-table" id="roomsTable" ">
                             <table>
@@ -272,7 +223,8 @@
                                         <th>Price</th>
                                         <th>Capacity adult</th>
                                         <th>Capacity child</th>
-                                        <th>Image</th>
+                                        <th>In</th>
+                                        <th>Out</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -286,13 +238,8 @@
                                             <td>${room.roomType.base_price} VND</td>
                                             <td>${room.roomType.capacity_adult} pax</td>
                                             <td>${room.roomType.capacity_child} pax</td>
-                                            <td>
-                                                <c:set var="imgs" value="${roomImageMap[room.roomNumber]}" />
-                                                <c:if test="${not empty imgs}">
-                                                    <img src="${imgs[0]}" alt="Room Image" width="40" height="30"
-                                                         style="object-fit: cover; border-radius: 4px; margin-right: 2px"/>
-                                                </c:if>
-                                            </td>
+                                            <td>${room.checkIn}</td>
+                                            <td>${room.checkOut}</td>
                                             <td>
                                                 <button class="btn btn-sm btn-secondary" onclick="editRoom(this)"
                                                         data-id = "${room.id}"
@@ -322,6 +269,10 @@
                                     <input type="hidden" name="page" value="${currentPage - 1}">
                                     <input type="hidden" name="size" value="${pageSize}">
                                     <input type="hidden" name="branchId" value="${branchId}">
+                                    <fmt:formatDate value="${startDate}" pattern="yyyy-MM-dd" var="startDateFormatted" />
+                                    <fmt:formatDate value="${endDate}" pattern="yyyy-MM-dd" var="endDateFormatted" />
+                                    <input type="hidden" name="startDate" value="${startDateFormatted}" >
+                                    <input type="hidden"  name="endDate" value="${endDateFormatted}" >
                                     <button type="submit">Previous</button>
                                 </form>
                             </c:if>
@@ -330,6 +281,10 @@
                                     <input type="hidden" name="page" value="${i}">
                                     <input type="hidden" name="size" value="${pageSize}">
                                     <input type="hidden" name="branchId" value="${branchId}">
+                                    <fmt:formatDate value="${startDate}" pattern="yyyy-MM-dd" var="startDateFormatted" />
+                                    <fmt:formatDate value="${endDate}" pattern="yyyy-MM-dd" var="endDateFormatted" />
+                                    <input type="hidden" name="startDate" value="${startDateFormatted}" >
+                                    <input type="hidden"  name="endDate" value="${endDateFormatted}" >
                                     <button type="submit" ${i == currentPage ? 'disabled' : ''}>${i}</button>
                                 </form>
                             </c:forEach>
@@ -338,6 +293,10 @@
                                     <input type="hidden" name="page" value="${currentPage + 1}">
                                     <input type="hidden" name="size" value="${pageSize}">
                                     <input type="hidden" name="branchId" value="${branchId}">
+                                    <fmt:formatDate value="${startDate}" pattern="yyyy-MM-dd" var="startDateFormatted" />
+                                    <fmt:formatDate value="${endDate}" pattern="yyyy-MM-dd" var="endDateFormatted" />
+                                    <input type="hidden" name="startDate" value="${startDateFormatted}" >
+                                    <input type="hidden"  name="endDate" value="${endDateFormatted}" >
                                     <button type="submit">Next</button>
                                 </form>
                             </c:if>
@@ -662,7 +621,7 @@
                     icon: 'error',
                     title: 'Error',
                     text: errorMsg
-                }).then(()=>{
+                }).then(() => {
                     document.getElementById("typeFilter").value = '';
                     document.getElementById("statusFilter").value = '';
                     document.querySelector('form[action="searchRooms"]').submit();
@@ -678,7 +637,7 @@
                     icon: 'warning',
                     title: 'Warning',
                     text: warningMsg
-                }).then(()=>{
+                }).then(() => {
                     document.getElementById("typeFilter").value = '';
                     document.getElementById("statusFilter").value = '';
                     document.querySelector('form[action="searchRooms"]').submit();
