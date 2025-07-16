@@ -178,7 +178,7 @@
                         <div class="form-group">
                             <label>Upload Images (Optional)</label>
                             <input type="file" id="imageInput" name="images" multiple accept="image/*" class="form-control-file">
-                            <p class="form_error" id="image_error"></p>
+                            <p class="form__error" id="image_error"></p>
                         </div>
                         <div class="wrapper-images" id="imagePreviewWrapper">
                             <div class="images">
@@ -274,25 +274,40 @@
         <script src="js/common_scripts.js"></script>
         <script src="js/common_functions.js"></script>
         <script src="./js/image.js"></script>
-        <script src="./js/toastMessage.js"></script>
+        <script src="./js/validationForm.js"></script>
+        <script src="./js/toastMessage.js">
+        </script>
         <script>
-                                $(document).ready(function () {
-                                    function updateStars(value) {
-                                        let stars = "";
-                                        for (let i = 0; i < value; i++) {
-                                            stars += "⭐";
-                                        }
-                                        $("#star_display").html(stars);
-                                    }
+            $(document).ready(function () {
+                function updateStars(value) {
+                    let stars = "";
+                    for (let i = 0; i < value; i++) {
+                        stars += "⭐";
+                    }
+                    $("#star_display").html(stars);
+                }
 
-                                    // Khởi tạo hiển thị sao ban đầu
-                                    updateStars($("#star_rating").val());
+                // Khởi tạo hiển thị sao ban đầu
+                updateStars($("#star_rating").val());
 
-                                    // Cập nhật khi thay đổi
-                                    $("#star_rating").on("input change", function () {
-                                        updateStars($(this).val());
-                                    });
-                                });
+                // Cập nhật khi thay đổi
+                $("#star_rating").on("input change", function () {
+                    updateStars($(this).val());
+                });
+            });
+            
+            Validator({
+                form: '#sendFeedback',
+                formGroupSelector: '.form__group',
+                errorSelector: '.form__error',
+                rules: [
+                    Validator.isImageFile('#imageInput', 'File must be an image (.jpg, .png, .gif, .webp)'),
+                    Validator.maxFileCount('#imageInput', 5),
+                ],
+                onsubmit: function (formValue) {
+                    document.querySelector('#sendFeedback').submit();
+                }
+            })
         </script>
 
     </body>
