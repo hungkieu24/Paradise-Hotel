@@ -8,12 +8,14 @@ import Dal.HotelBranchDAO;
 import Dal.InitialInvestmentDAO;
 import Model.HotelBranch;
 import Model.InitialInvestment;
+import Model.UserAccount;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.text.DateFormatSymbols;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -30,6 +32,14 @@ public class InvestmentServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        UserAccount user = (UserAccount) session.getAttribute("user");
+
+        if (checkLogin(user, session, response)) {
+            response.sendRedirect("../login.jsp");
+            return;
+        }
+        
         String action = request.getParameter("action");
         InitialInvestmentDAO investmentDAO = new InitialInvestmentDAO();
         HotelBranchDAO branchDAO = new HotelBranchDAO();
@@ -68,6 +78,19 @@ public class InvestmentServlet extends HttpServlet {
         request.getRequestDispatcher("./investment.jsp").forward(request, response);
     }
 
+    private boolean checkLogin(UserAccount user, HttpSession session, HttpServletResponse response) throws IOException {
+        if (user == null) {
+            setSessionMessage(session, "You need to login!", "error");
+            return true;
+        }
+        return false;
+    }
+
+    private void setSessionMessage(HttpSession session, String message, String type) {
+        session.setAttribute("message", message);
+        session.setAttribute("messageType", type);
+    }
+    
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

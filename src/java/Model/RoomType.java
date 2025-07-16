@@ -22,7 +22,7 @@ public class RoomType {
     private int branchId;
     private boolean isDeleted;
     private Branch branch;
-
+    private List<String> Amenity; 
 
     public RoomType() {
     }
@@ -148,6 +148,14 @@ public class RoomType {
 
     public void setIsDeleted(boolean isDeleted) {
         this.isDeleted = isDeleted;
+    }
+
+    public List<String> getAmenity() {
+        return Amenity;
+    }
+
+    public void setAmenity(List<String> Amenity) {
+        this.Amenity = Amenity;
     }
     
     @Override

@@ -125,15 +125,23 @@
                 </button>
             </div>
             <div class="sidebar-menu">
-                <a href="#" class="menu-item">
+                <a href="./manager/dashboard" class="menu-item ">
                     <i class="fas fa-chart-line"></i>
                     <span class="menu-text">Dashboard</span>
                 </a>
-                <a href="rooms" class="menu-item">
+                <a href="rooms" class="menu-item ">
                     <i class="fas fa-bed"></i>
                     <span class="menu-text">Manage room</span>
                 </a>
-                <a href="#" class="menu-item">
+                <a href="./manager/roomType" class="menu-item">
+                    <i class="fas fa-bed"></i>
+                    <span class="menu-text">Manage room type</span>
+                </a>
+                <a href="./manager/revenue" class="menu-item">
+                    <i class="fa-solid fa-dollar-sign"></i>
+                    <span class="menu-text">Manage Revenue & Expense</span>
+                </a>
+                <a href="./manager/feedback" class="menu-item">
                     <i class="fas fa-comments"></i>
                     <span class="menu-text">Manage feedback</span>
                 </a>
@@ -149,7 +157,7 @@
                     <i class="fas fa-users"></i>
                     <span class="menu-text">Manage membership</span>
                 </a>
-                <a href="#" class="menu-item logout">
+                <a href="../login?action=logout" class="menu-item logout">
                     <i class="fas fa-sign-out-alt"></i>
                     <span class="menu-text">logout</span>
                 </a>
@@ -266,7 +274,7 @@
                                         <td>${service.description}</td>
                                         <!-- image -->
                                         <td>
-                                            
+
                                             <button class="btn btn-sm btn-secondary" onclick="editService(this)"
                                                     data-id="${service.id}"
                                                     data-name="${service.name}"

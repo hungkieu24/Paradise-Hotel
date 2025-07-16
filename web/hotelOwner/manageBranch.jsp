@@ -51,10 +51,6 @@
                         <i class="fas fa-chart-line"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="./uploadReports.jsp" class="nav-item " data-page="upload">
-                        <i class="fas fa-upload"></i>
-                        <span>Upload Reports</span>
-                    </a>
                     <a href="./investment" class="nav-item" data-page="upload">
                         <i class="fa-solid fa-dollar-sign"></i>
                         <span>Investment</span>
@@ -77,10 +73,6 @@
                         <p id="page-description">View branches, add and adjust for all hotel branche</p>
                     </div>
                     <div class="header-right">
-                        <div class="notification-bell">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge">3</span>
-                        </div>
                         <div class="admin-profile">
                             <div class="profile-dropdown">
                                 <div class="profile-avatar">
@@ -88,14 +80,12 @@
                                 </div>
                                 <div class="dropdown-content">
                                     <div class="dropdown-header">
-                                        <strong>Hotel owner</strong>
-                                        <small>admin@system.com</small>
+                                        <strong>${sessionScope.user.getUsername()}</strong>
+                                        <small>${sessionScope.user.getEmail()}</small>
                                     </div>
                                     <a href="#">Profile Settings</a>
-                                    <a href="#">Account Security</a>
-                                    <a href="#">Preferences</a>
-                                    <hr />
-                                    <a href="#" class="sign-out">Sign Out</a>
+                                    <hr>
+                                    <a href="../login?action=logout" class="sign-out">Sign Out</a>
                                 </div>
                             </div>
                         </div>
