@@ -905,6 +905,36 @@ public class FeedbackDAO extends DBcontext.DBContext {
         return 0; // Trường hợp không có dữ liệu
     }
 
+    public boolean banFeedback(int feedbackId) {
+        String updateFeedbackSql = "UPDATE Feedback SET admin_action = 'Banned', status = 'Blocked' WHERE id = ?";
+
+        try {
+            PreparedStatement updateFeedbackStmt = connection.prepareStatement(updateFeedbackSql);
+            updateFeedbackStmt.setInt(1, feedbackId);
+            int rowsFeedback = updateFeedbackStmt.executeUpdate();
+
+            return rowsFeedback > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean restoreFeedback(int feedbackId) {
+        String sql = "UPDATE Feedback SET status = 'Visible', admin_action = 'None' WHERE id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, feedbackId);
+            int rows = stmt.executeUpdate();
+
+            return rows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public static void main(String[] args) {
         FeedbackDAO aO = new FeedbackDAO();
         int d = aO.countSearchFeedbackByBranchAndKeyword(1, "gre");

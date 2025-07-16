@@ -103,13 +103,6 @@ public class PaymentResultServlet extends HttpServlet {
                 System.out.println("Final amount (VND): " + amount);
                 System.out.println("Booking ID: " + bookingId);
 
-                HttpSession session = request.getSession();
-                UserAccount user = (UserAccount) session.getAttribute("user");
-                if (user == null) {
-                    response.sendRedirect("login.jsp");
-                    return;
-                }
-
                 // Add signature validation check
                 // Add signature validation check
                 if (!isValidSignature) {
@@ -282,14 +275,12 @@ public class PaymentResultServlet extends HttpServlet {
 
             UserAccountDAO userDAO = new UserAccountDAO();
 
-            UserAccount user = userDAO.findById(bookingCurrent.getUserId());
+            UserAccount user2 = userDAO.findById(bookingCurrent.getUserId());
 
             LoyaltyPointDAO loyaltyPointDAO = new LoyaltyPointDAO();
 
             loyaltyPointDAO.addPoints(bookingCurrent.getUserId(), (int) amount / 100000, "Payment success " + amount);
             boolean loyaltyUpdated = loyaltyPointDAO.updateTotalSpending(bookingCurrent.getUserId(), amount);
-
-            HttpSession session = request.getSession(false);
 
             UserAccount staff = (UserAccount) session.getAttribute("user");
             Integer branchId = staff.getBranchId();
@@ -302,9 +293,9 @@ public class PaymentResultServlet extends HttpServlet {
             java.util.Date checkInTime = bookingCurrent.getCheckIn();
 
             try {
-                EmailUtility.sendInvoice(user.getEmail(), "Invoice",
+                EmailUtility.sendInvoice(user2.getEmail(), "Invoice",
                         vnp_Amount,
-                        vnp_Amount, bookingRoomList, user, bookingCurrent,
+                        vnp_Amount, bookingRoomList, user2, bookingCurrent,
                         bookingRoomTypes);
             } catch (Exception e) {
             }
