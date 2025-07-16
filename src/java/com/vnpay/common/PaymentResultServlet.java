@@ -4,6 +4,7 @@ import Dal.BookingDAO;
 import Dal.BookingRoomTypeDAO;
 import Dal.InvoiceDAO;
 import Dal.LoyaltyPointDAO;
+import Dal.RoomDAO;
 import Dal.UserAccountDAO;
 import Dal.VNPayPaymentDAO;
 import Model.Booking;
@@ -281,7 +282,9 @@ public class PaymentResultServlet extends HttpServlet {
 
             loyaltyPointDAO.addPoints(bookingCurrent.getUserId(), (int) amount / 100000, "Payment success " + amount);
             boolean loyaltyUpdated = loyaltyPointDAO.updateTotalSpending(bookingCurrent.getUserId(), amount);
-
+            RoomDAO roomDAO = new RoomDAO();
+            roomDAO.updateRoomStatusAfterCheckout(bookingId, "Available");
+          
             UserAccount staff = (UserAccount) session.getAttribute("user");
             Integer branchId = staff.getBranchId();
 

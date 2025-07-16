@@ -143,114 +143,120 @@ public class CheckoutServlet extends HttpServlet {
         request.getRequestDispatcher("staff-checkout.jsp").forward(request, response);
     }
 
-    /**
-     * Calculate checkout details with proper BigDecimal handling
-     */
-    private Map<String, Object> calculateCheckoutDetails(Booking booking, 
-            List<BookingRoomType> bookingRoomTypes, List<Service> services, UserAccount customer) {
-        Map<String, Object> details = new HashMap<>();
-        
-        try {
-            // Calculate room total using BigDecimal properly
-            BigDecimal totalRoomPriceBD = BigDecimal.ZERO;
-            if (bookingRoomTypes != null && !bookingRoomTypes.isEmpty()) {
-                for (BookingRoomType brt : bookingRoomTypes) {
-                    // Use the existing getTotalPrice() method from BookingRoomType
-                    // This method already handles BigDecimal multiplication correctly
-                    BigDecimal roomSubtotal = brt.getTotalPrice();
-                    if (roomSubtotal != null) {
-                        totalRoomPriceBD = totalRoomPriceBD.add(roomSubtotal);
-                    }
-                }
-            }
-            
-            // Convert BigDecimal to double for the rest of calculations
-            double totalRoomPrice = totalRoomPriceBD.doubleValue();
 
-            // Calculate service totals
-            double totalServicePrice = 0.0;
-            double paidServicePrice = 0.0;
-            double unpaidServicePrice = 0.0;
-            
-            if (services != null && !services.isEmpty()) {
-                for (Service service : services) {
-                    double serviceTotal = service.getPrice() * service.getQuantity();
-                    totalServicePrice += serviceTotal;
+ private Map<String, Object> calculateCheckoutDetails(Booking booking, 
+        List<BookingRoomType> bookingRoomTypes, List<Service> services, UserAccount customer) {
+    Map<String, Object> details = new HashMap<>();
+    
+    try {
+        // Calculate room total - FIX: Kiểm tra xem getTotalPrice() có đúng logic không
+        BigDecimal totalRoomPriceBD = BigDecimal.ZERO;
+        if (bookingRoomTypes != null && !bookingRoomTypes.isEmpty()) {
+            for (BookingRoomType brt : bookingRoomTypes) {
+                BigDecimal roomSubtotal;
+                
+                // FIX: Xử lý đúng logic tính tiền phòng
+                // Kiểm tra xem dữ liệu có nhất quán không
+                if (brt.getPricePerRoom() != null && brt.getQuantity() > 0) {
+                    // Cách 1: Sử dụng getTotalPrice() nếu chắc chắn logic đúng
+                    roomSubtotal = brt.getPricePerRoom();
                     
-                    if ("Paid".equalsIgnoreCase(service.getBookingServiceStatus())) {
-                        paidServicePrice += serviceTotal;
-                    } else {
-                        unpaidServicePrice += serviceTotal;
-                    }
+                    // Cách 2: Tính toán lại để đảm bảo (uncomment nếu cần)
+                    // BigDecimal expectedTotal = brt.getPricePerRoom().multiply(BigDecimal.valueOf(brt.getQuantity()));
+                    // roomSubtotal = expectedTotal;
+        
+                } else {
+                    roomSubtotal = BigDecimal.ZERO;
+                }
+                
+                if (roomSubtotal != null) {
+                    totalRoomPriceBD = totalRoomPriceBD.add(roomSubtotal);
                 }
             }
+        }
+        
+        // Convert BigDecimal to double for the rest of calculations
+        double totalRoomPrice = totalRoomPriceBD.doubleValue();
 
-            // Calculate rank discount
-            double rankDiscountPercent = 0.0;
-            if (customer != null && customer.getRank() != null) {
-                switch (customer.getRank().toLowerCase()) {
-                    case "silver": 
-                        rankDiscountPercent = 5.0; 
-                        break;
-                    case "gold": 
-                        rankDiscountPercent = 10.0; 
-                        break;
-                    case "vip": 
-                        rankDiscountPercent = 15.0; 
-                        break;
-                    default: 
-                        rankDiscountPercent = 0.0;
-                        break;
+        // Calculate service totals
+        double totalServicePrice = 0.0;
+        double paidServicePrice = 0.0;
+        double unpaidServicePrice = 0.0;
+        
+        if (services != null && !services.isEmpty()) {
+            for (Service service : services) {
+                double serviceTotal = service.getPrice() * service.getQuantity();
+                totalServicePrice += serviceTotal;
+                
+                // FIX: Kiểm tra null safety cho status
+                String status = service.getBookingServiceStatus();
+                if (status != null && "Paid".equalsIgnoreCase(status.trim())) {
+                    paidServicePrice += serviceTotal;
+                } else {
+                    unpaidServicePrice += serviceTotal;
                 }
             }
-            
-            // Apply discount only to unpaid amount
-            double discountableAmount = totalRoomPrice + unpaidServicePrice;
-            double rankDiscount = discountableAmount * (rankDiscountPercent / 100.0);
-
-            // Calculate what customer needs to pay now
-            double amountToPay = Math.max(0, discountableAmount - rankDiscount);
-
-            // Total bill (including already paid services)
-            double grandTotal = totalRoomPrice + totalServicePrice - rankDiscount;
-
-            // Store all calculated values
-            details.put("totalRoomPrice", totalRoomPrice);
-            details.put("totalServicePrice", totalServicePrice);
-            details.put("paidServicePrice", paidServicePrice);
-            details.put("unpaidServicePrice", unpaidServicePrice);
-            details.put("rankDiscountPercent", rankDiscountPercent);
-            details.put("rankDiscount", rankDiscount);
-            details.put("amountToPay", amountToPay);
-            details.put("grandTotal", grandTotal);
-            details.put("voucherDiscount", 0.0);
-
-            // Log calculation details for debugging
-            System.out.println("Checkout calculation completed:");
-            System.out.println("- Total Room Price: " + totalRoomPrice);
-            System.out.println("- Total Service Price: " + totalServicePrice);
-            System.out.println("- Paid Service Price: " + paidServicePrice);
-            System.out.println("- Unpaid Service Price: " + unpaidServicePrice);
-            System.out.println("- Rank Discount: " + rankDiscount + " (" + rankDiscountPercent + "%)");
-            System.out.println("- Amount to Pay: " + amountToPay);
-            
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            
-            // Set default values in case of error
-            details.put("totalRoomPrice", 0.0);
-            details.put("totalServicePrice", 0.0);
-            details.put("paidServicePrice", 0.0);
-            details.put("unpaidServicePrice", 0.0);
-            details.put("rankDiscountPercent", 0.0);
-            details.put("rankDiscount", 0.0);
-            details.put("amountToPay", 0.0);
-            details.put("grandTotal", 0.0);
-            details.put("voucherDiscount", 0.0);
         }
 
-        return details;
+        // Calculate rank discount
+        double rankDiscountPercent = 0.0;
+        if (customer != null && customer.getRank() != null) {
+            String rank = customer.getRank().toLowerCase().trim();
+            switch (rank) {
+                case "silver": 
+                    rankDiscountPercent = 5.0; 
+                    break;
+                case "gold": 
+                    rankDiscountPercent = 10.0; 
+                    break;
+                case "vip": 
+                    rankDiscountPercent = 15.0; 
+                    break;
+                default: 
+                    rankDiscountPercent = 0.0;
+                    break;
+            }
+        }
+        
+        // Apply discount only to unpaid amount
+        double discountableAmount = totalRoomPrice + unpaidServicePrice;
+        double rankDiscount = discountableAmount * (rankDiscountPercent / 100.0);
+
+        // Calculate what customer needs to pay now
+        double amountToPay = Math.max(0, discountableAmount - rankDiscount);
+
+        // Total bill (including already paid services)
+        double grandTotal = totalRoomPrice + totalServicePrice - rankDiscount;
+
+        // Store all calculated values
+        details.put("totalRoomPrice", totalRoomPrice);
+        details.put("totalServicePrice", totalServicePrice);
+        details.put("paidServicePrice", paidServicePrice);
+        details.put("unpaidServicePrice", unpaidServicePrice);
+        details.put("rankDiscountPercent", rankDiscountPercent);
+        details.put("rankDiscount", rankDiscount);
+        details.put("amountToPay", amountToPay);
+        details.put("grandTotal", grandTotal);
+        details.put("voucherDiscount", 0.0);
+
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        System.err.println("Error in calculateCheckoutDetails: " + e.getMessage());
+        
+        // Set default values in case of error
+        details.put("totalRoomPrice", 0.0);
+        details.put("totalServicePrice", 0.0);
+        details.put("paidServicePrice", 0.0);
+        details.put("unpaidServicePrice", 0.0);
+        details.put("rankDiscountPercent", 0.0);
+        details.put("rankDiscount", 0.0);
+        details.put("amountToPay", 0.0);
+        details.put("grandTotal", 0.0);
+        details.put("voucherDiscount", 0.0);
     }
+
+    return details;
+}
 }
             
