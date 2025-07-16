@@ -11,6 +11,7 @@ import java.sql.Date;
  * @author hungk
  */
 public class InitialInvestment {
+    private int id;
     private int BranchId;
     private double Capital;
     private Date InvestedDate;
@@ -30,6 +31,21 @@ public class InitialInvestment {
         this.Capital = Capital;
         this.InvestedDate = InvestedDate;
         this.branch = branch;
+    }
+
+    public InitialInvestment(int id, double Capital, Date InvestedDate, HotelBranch branch) {
+        this.id = id;
+        this.Capital = Capital;
+        this.InvestedDate = InvestedDate;
+        this.branch = branch;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public HotelBranch getBranch() {

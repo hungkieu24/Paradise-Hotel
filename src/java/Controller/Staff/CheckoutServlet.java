@@ -234,15 +234,9 @@ public class CheckoutServlet extends HttpServlet {
             System.out.println("- Rank Discount: " + rankDiscount + " (" + rankDiscountPercent + "%)");
             System.out.println("- Amount to Pay: " + amountToPay);
             
-//            ramework logging
-//            logger.debug("Checkout calculation completed: roomPrice={}, servicePrice={}, paidService={}, "
-//                       + "unpaidService={}, discount={}, amountToPay={}",
-//                       totalRoomPrice, totalServicePrice, paidServicePrice,
-//                       unpaidServicePrice, rankDiscount, amountToPay);
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("Error in calculateCheckoutDetails: " + e.getMessage());
             
             // Set default values in case of error
             details.put("totalRoomPrice", 0.0);
@@ -259,3 +253,4 @@ public class CheckoutServlet extends HttpServlet {
         return details;
     }
 }
+            

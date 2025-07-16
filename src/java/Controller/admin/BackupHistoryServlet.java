@@ -6,6 +6,7 @@ package Controller.admin;
 
 import Dal.BackupHistoryDAO;
 import Model.BackupHistory;
+import Model.UserAccount;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -30,6 +31,13 @@ public class BackupHistoryServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        UserAccount user = (UserAccount) session.getAttribute("user");
+
+        if (checkLogin(user, session, response)) {
+            response.sendRedirect("../login.jsp");
+            return;
+        }
         BackupHistoryDAO backupHistoryDAO = new BackupHistoryDAO();
         String action = request.getParameter("action");
         String keyword = request.getParameter("searchKeyword");
@@ -83,6 +91,14 @@ public class BackupHistoryServlet extends HttpServlet {
         request.getRequestDispatcher("./backup.jsp").forward(request, response);
     }
 
+    private boolean checkLogin(UserAccount user, HttpSession session, HttpServletResponse response) throws IOException {
+        if (user == null) {
+            setSessionMessage(session, "You need to login!", "error");
+            return true;
+        }
+        return false;
+    }
+
     private void setSessionMessage(HttpSession session, String message, String type) {
         session.setAttribute("message", message);
         session.setAttribute("messageType", type);
@@ -101,19 +117,19 @@ public class BackupHistoryServlet extends HttpServlet {
                 handleFullBackup(request, response, session);
                 return;
             }
-            if (typeBackup.equals("Partial")) {
-                handlePartialBackup(request, response, session);
+            if (typeBackup.equals("Differential")) {
+                handleDifferentialBackup(request, response, session);
                 return;
             }
         }
 
         if (action.equals("downloadFullBackup")) {
-            handleDownloadFullBackup(request, response);
+            handleDownloadBackupFile(request, response);
             return;
         }
 
         if (action.equals("downloadPartialBackup")) {
-            handleDownloadPartialBackup(request, response);
+            handleDownloadBackupFile(request, response);
             return;
         }
 
@@ -179,7 +195,83 @@ public class BackupHistoryServlet extends HttpServlet {
         response.sendRedirect("./backup");
     }
 
-    private void handlePartialBackup(HttpServletRequest request, HttpServletResponse response, HttpSession session)
+    private void handleDifferentialBackup(HttpServletRequest request, HttpServletResponse response, HttpSession session)
+            throws IOException {
+
+        BackupHistoryDAO backupHistoryDAO = new BackupHistoryDAO();
+
+        if (!backupHistoryDAO.hasFullBackup()) {
+            setSessionMessage(session, "No FULL BACKUP found. Please create a FULL BACKUP before running a DIFFERENTIAL BACKUP.", "error");
+            response.sendRedirect("./backup");
+            return;
+        }
+
+        String backupFolderPath = "D:\\backup";
+        String dbName = "HotelBookingSystemDB";
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String fileName = dbName + "_DIFF_" + timestamp + ".bak";
+        String fullPath = backupFolderPath + File.separator + fileName;
+
+        // Bước 1: Tạo thư mục nếu chưa tồn tại
+        File folder = new File(backupFolderPath);
+        if (!folder.exists()) {
+            boolean created = folder.mkdirs();
+            if (!created) {
+                setSessionMessage(session, "Unable to create folder backup: " + backupFolderPath, "error");
+                response.sendRedirect("./backup");
+                return;
+            }
+        }
+
+        double estimatedSizeMb = 0.0;
+        int logId = backupHistoryDAO.insertBackupHistoryReturnId("DIFFERENTIAL", fullPath, estimatedSizeMb);
+
+        if (logId != -1) {
+            File backupFile = backupHistoryDAO.backupDatabaseDifferential(backupFolderPath, dbName, fullPath);
+            if (backupFile != null) {
+                double actualSizeMb = backupFile.length() / (1024.0 * 1024.0);
+
+                backupHistoryDAO.updateFileSizeById(logId, actualSizeMb);
+                setSessionMessage(session, "Create differential backup successfully!", "success");
+            } else {
+                backupHistoryDAO.deleteBackupHistoryById(logId);
+                setSessionMessage(session, "Differential backup failed: Cannot create .bak file.", "error");
+            }
+        } else {
+            setSessionMessage(session, "Failed to insert log entry. Backup not attempted.", "error");
+        }
+
+        response.sendRedirect("./backup");
+    }
+
+    private void handleDownloadBackupFile(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String fullPath = request.getParameter("backupPath");
+
+        if (fullPath == null || fullPath.trim().isEmpty()) {
+            setSessionMessage(request.getSession(), "Invalid backup path.", "error");
+            return;
+        }
+
+        File file = new File(fullPath);
+        if (!file.exists()) {
+            setSessionMessage(request.getSession(), "Backup file not found: " + fullPath, "error");
+            return;
+        }
+
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition", "attachment;filename=\"" + file.getName() + "\"");
+        response.setContentLengthLong(file.length());
+
+        try (FileInputStream in = new FileInputStream(file); OutputStream out = response.getOutputStream()) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+        }
+    }
+
+    private void handlePartialBackup1(HttpServletRequest request, HttpServletResponse response, HttpSession session)
             throws IOException {
         BackupHistoryDAO backupHistoryDAO = new BackupHistoryDAO();
         List<String> tablesToBackup = backupHistoryDAO.getAllTableNames();

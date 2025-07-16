@@ -118,7 +118,7 @@ public class LoginServlet extends HttpServlet {
             String role = user.getRole();
             if ("admin".equalsIgnoreCase(role)) {
                 session.setAttribute("userRole", "admin");
-                response.sendRedirect("admindashboard.jsp");
+                response.sendRedirect("./admin/account");
             } else if ("Customer".equalsIgnoreCase(role)) {
                 session.setAttribute("userRole", "Customer");
                 response.sendRedirect("homepage");
@@ -133,7 +133,9 @@ public class LoginServlet extends HttpServlet {
                 }
                 response.sendRedirect("staff-bookings-list");
             } else if ("Manager".equalsIgnoreCase(role)) {
-                response.sendRedirect("manager-membership");
+                response.sendRedirect("./manager/dashboard");
+            } else if ("HotelOwner".equalsIgnoreCase(role)) {
+                response.sendRedirect("./hotelOwner/financialDashboard");
             } else {
                 session.setAttribute("userRole", role);
                 response.sendRedirect("homepage");

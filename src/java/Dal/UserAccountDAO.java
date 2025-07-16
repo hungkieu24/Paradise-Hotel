@@ -10,8 +10,6 @@ import Model.UserAccount;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
 import org.mindrot.jbcrypt.BCrypt;
 
 /**
@@ -57,7 +55,7 @@ public class UserAccountDAO extends DBContext {
         return null;
     }
 
-    public boolean register(String username, String password, String email, String avatar_url, String phonenumber) {
+    public boolean register(UserAccount account) {
         try {
             // 1. Tìm ID lớn nhất hiện có
             String getMaxIdSql = "SELECT MAX(CAST(SUBSTRING(id, 2, LEN(id)) AS INT)) AS maxId FROM UserAccount";
@@ -71,17 +69,27 @@ public class UserAccountDAO extends DBContext {
             }
 
             // 2. Thêm người dùng mới
-            String insertUserSql = "INSERT INTO UserAccount (id, username, password, email, avatar_url, role, status, phonenumber) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String insertUserSql = "INSERT INTO UserAccount (id, username, password, email, avatar_url, role, status, phonenumber, login_type, last_login_at) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement ps2 = connection.prepareStatement(insertUserSql);
             ps2.setString(1, newId);
-            ps2.setString(2, username);
-            ps2.setString(3, password);
-            ps2.setString(4, email);
-            ps2.setString(5, avatar_url);
+            ps2.setString(2, account.getUsername());
+            if (account.getPassword() != null) {
+                ps2.setString(3, account.getPassword());
+            } else {
+                ps2.setNull(3, Types.VARCHAR);
+            }
+            ps2.setString(4, account.getEmail());
+            ps2.setString(5, account.getAvatar_url());
             ps2.setString(6, "Customer");
             ps2.setString(7, "Active");
-            ps2.setString(8, phonenumber);
+            if (account.getPhonenumber() != null) {
+                ps2.setString(8, account.getPhonenumber());
+            } else {
+                ps2.setNull(8, Types.VARCHAR);
+            }
+            ps2.setString(9, account.getLogin_type());
+            ps2.setTimestamp(10, new Timestamp(System.currentTimeMillis()));
 
             int rowsUser = ps2.executeUpdate();
 
@@ -465,12 +473,12 @@ public class UserAccountDAO extends DBContext {
 
     //lay thong tin khach hang
     public UserAccount getUserInfoById(String userId) {
-        String sql = "SELECT u.*, lp.level AS rank " +
-                     "FROM UserAccount u " +
-                     "LEFT JOIN LoyaltyPoint lp ON u.id = lp.user_id " +
-                     "WHERE u.id = ?";
+        String sql = "SELECT u.*, lp.level AS rank "
+                + "FROM UserAccount u "
+                + "LEFT JOIN LoyaltyPoint lp ON u.id = lp.user_id "
+                + "WHERE u.id = ?";
         try (
-             PreparedStatement ps = connection.prepareStatement(sql)) {
+                PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, userId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -612,7 +620,7 @@ public class UserAccountDAO extends DBContext {
         }
         return false;
     }
-  
+
     // author : hung
     // Content: get all user account
     public List<UserAccount> getAllUsersAccount() {
@@ -1032,7 +1040,7 @@ public class UserAccountDAO extends DBContext {
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, userId);
-           try (ResultSet rs = ps.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     Timestamp ts = rs.getTimestamp("created_at");
@@ -1066,7 +1074,7 @@ public class UserAccountDAO extends DBContext {
         return null; // Không tìm thấy user
     }
 
-     // Lấy thông tin user bởi id (int)
+    // Lấy thông tin user bởi id (int)
     public UserAccount findAccountByNumericId(int numericId) {
         String sql = "SELECT * FROM UserAccount WHERE id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -1153,12 +1161,24 @@ public class UserAccountDAO extends DBContext {
         ua.setPhonenumber(rs.getString("phonenumber"));
 
         // Có thể null nếu là customer
-        try { ua.setBranchId(rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null); } catch (Exception ignore) {}
+        try {
+            ua.setBranchId(rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null);
+        } catch (Exception ignore) {
+        }
 
         // Nếu join thêm các trường bên ngoài bảng UserAccount
-        try { ua.setBranchName(rs.getString("branchName")); } catch (Exception ignore) {}
-        try { ua.setFullname(rs.getString("full_name")); } catch (Exception ignore) {}
-        try { ua.setRank(rs.getString("rank")); } catch (Exception ignore) {}
+        try {
+            ua.setBranchName(rs.getString("branchName"));
+        } catch (Exception ignore) {
+        }
+        try {
+            ua.setFullname(rs.getString("full_name"));
+        } catch (Exception ignore) {
+        }
+        try {
+            ua.setRank(rs.getString("rank"));
+        } catch (Exception ignore) {
+        }
 
         return ua;
     }
@@ -1290,6 +1310,73 @@ public class UserAccountDAO extends DBContext {
         }
 
         return false;
+    }
+
+    public boolean isEmailRegisteredWithGoogle(String email) {
+        String sql = "SELECT COUNT(*) FROM UserAccount WHERE email = ? AND login_type = 'Google'";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, email);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                return count > 0; // Nếu có ít nhất 1 bản ghi thì đã đăng ký bằng Google rồi
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false; // Không có bản ghi => chưa đăng ký bằng Google
+    }
+
+    public boolean isEmailRegisteredWithLocal(String email) {
+        String sql = "SELECT COUNT(*) FROM UserAccount WHERE email = ? AND login_type = 'Local'";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, email);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                return count > 0; // Nếu có ít nhất 1 bản ghi thì đã đăng ký bằng Local rồi
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false; // Không có bản ghi => chưa đăng ký bằng Local
+    }
+
+    public boolean isGoogleAccountExists(String email) {
+        String sql = "SELECT COUNT(*) FROM UserAccount WHERE email = ? AND login_type = 'Google'";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, email);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                return count > 0; // Nếu có Google account rồi
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false; // Chưa có Google account
+    }
+
+    public void updateLastLogin(String userId) {
+        String sql = "UPDATE UserAccount SET last_login_at = ? WHERE id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            stmt.setString(2, userId);
+
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {

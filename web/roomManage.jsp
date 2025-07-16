@@ -137,7 +137,7 @@
                         <i class="fas fa-users"></i>
                         <span class="menu-text">Manage membership</span>
                     </a>
-                    <a href="#" class="menu-item logout">
+                    <a href="../login?action=logout" class="menu-item logout">
                         <i class="fas fa-sign-out-alt"></i>
                         <span class="menu-text">logout</span>
                     </a>

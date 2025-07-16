@@ -55,26 +55,98 @@
             min-height: 100vh;
             background: #f8f9fa;
         }
-        
+
+        /* SIDEBAR - DARK BLUE, ICONS WHITE, BRAND BLUE */
         .sidebar {
-            width: 220px;
+            width: 250px;
             height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
-            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-            color: #ecf0f1;
+            background: #232342; /* dark blue */
+            color: #fff;
             z-index: 1000;
             overflow-y: auto;
+            border: none;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
         }
-        
+        .sidebar-header {
+            padding: 24px 20px 12px 20px;
+            background: #232342;
+            border-bottom: 2px solid #e3e6f0;
+        }
+        .sidebar-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .sidebar-brand i {
+            color: #3382e8;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        .sidebar-brand span {
+            color: #3382e8;
+            font-size: 1.15rem;
+            font-weight: 600;
+            line-height: 1.1;
+            letter-spacing: 0.5px;
+        }
+        .sidebar-menu {
+            padding: 18px 0 0 0;
+            flex: 1;
+        }
+        .sidebar-menu .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            padding: 12px 28px;
+            text-decoration: none;
+            font-size: 1.04rem;
+            font-weight: 500;
+            border-radius: 5px;
+            margin: 2px 0;
+            transition: background 0.2s, color 0.2s;
+            white-space: nowrap;
+        }
+        .sidebar-menu .menu-item i {
+            font-size: 1.15rem;
+            width: 22px;
+            text-align: center;
+            color: #fff;
+        }
+        .sidebar-menu .menu-item.active, .sidebar-menu .menu-item:hover {
+            background: rgba(255,255,255,0.10);
+            color: #fff;
+        }
+        .sidebar-menu .menu-item.active i,
+        .sidebar-menu .menu-item:hover i {
+            color: #fff;
+        }
+        .sidebar-menu .menu-item.logout {
+            color: #e54b4b;
+            font-weight: 600;
+        }
+        .sidebar-menu .menu-item.logout i {
+            color: #e54b4b;
+        }
+
+        /* Divider line below header */
+        .sidebar-header {
+            border-bottom: 1.5px solid #e3e6f0;
+        }
+
+        /* Main Content */
         .main-content {
-            margin-left: 220px;
+            margin-left: 250px;
             flex: 1;
             background: #fff;
             min-height: 100vh;
         }
-        
+
         /* Header */
         .content-header {
             background: linear-gradient(135deg, #007bff, #0056b3);
@@ -82,14 +154,14 @@
             padding: 25px 40px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        
+
         .header-top {
             display: flex;
             justify-content: between;
             align-items: center;
             margin-bottom: 15px;
         }
-        
+
         .page-title {
             font-size: 1.75rem;
             font-weight: 600;
@@ -98,7 +170,7 @@
             align-items: center;
             gap: 12px;
         }
-        
+
         .user-info {
             display: flex;
             align-items: center;
@@ -109,33 +181,33 @@
             backdrop-filter: blur(10px);
             margin-left: auto;
         }
-        
+
         .branch-info {
             background: rgba(255,255,255,0.1);
             padding: 15px 20px;
             border-radius: 10px;
             border-left: 4px solid rgba(255,255,255,0.5);
         }
-        
+
         .branch-title {
             font-size: 1.1rem;
             font-weight: 600;
             margin-bottom: 5px;
         }
-        
+
         .branch-subtitle {
             font-size: 0.9rem;
             opacity: 0.9;
             margin: 0;
         }
-        
+
         /* Content */
         .content-body {
             padding: 30px 40px;
             max-width: 1400px;
             margin: 0 auto;
         }
-        
+
         /* Statistics Cards */
         .stats-row {
             display: grid;
@@ -143,7 +215,7 @@
             gap: 20px;
             margin-bottom: 30px;
         }
-        
+
         .stats-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -153,17 +225,17 @@
             box-shadow: 0 4px 15px rgba(102,126,234,0.3);
             transition: transform 0.3s ease;
         }
-        
+
         .stats-card:hover {
             transform: translateY(-5px);
         }
-        
+
         .stats-number {
             font-size: 2rem;
             font-weight: 700;
             margin-bottom: 5px;
         }
-        
+
         .stats-label {
             font-size: 0.85rem;
             opacity: 0.9;
@@ -172,7 +244,7 @@
             justify-content: center;
             gap: 6px;
         }
-        
+
         /* Filter Section */
         .filter-section {
             background: white;
@@ -182,14 +254,14 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             border: 1px solid #e3e6f0;
         }
-        
+
         .filter-row {
             display: grid;
             grid-template-columns: 2fr 1fr 1fr 1fr auto;
             gap: 15px;
             align-items: end;
         }
-        
+
         /* Table */
         .assignments-table {
             background: white;
@@ -197,13 +269,13 @@
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        
+
         .table-header {
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             padding: 20px 25px;
             border-bottom: 1px solid #e9ecef;
         }
-        
+
         .table-title {
             font-size: 1.2rem;
             font-weight: 600;
@@ -213,12 +285,12 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .table-responsive {
             max-height: 700px;
             overflow-y: auto;
         }
-        
+
         .table th {
             background: #f8f9fa;
             font-weight: 600;
@@ -228,17 +300,17 @@
             top: 0;
             z-index: 10;
         }
-        
+
         .table td {
             padding: 15px;
             vertical-align: middle;
             border-color: #f1f3f4;
         }
-        
+
         .table tbody tr:hover {
             background: rgba(13,110,253,0.05);
         }
-        
+
         /* Status Badges */
         .status-badge {
             padding: 6px 12px;
@@ -246,72 +318,72 @@
             font-size: 0.8rem;
             font-weight: 500;
         }
-        
+
         /* Customer Info */
         .customer-info {
             display: flex;
             flex-direction: column;
             gap: 3px;
         }
-        
+
         .customer-name {
             font-weight: 600;
             color: #2c3e50;
         }
-        
+
         .customer-contact {
             font-size: 0.8rem;
             color: #6c757d;
         }
-        
+
         /* Room Info */
         .room-info {
             display: flex;
             flex-direction: column;
             gap: 3px;
         }
-        
+
         .room-number {
             font-weight: 600;
             color: #007bff;
             font-size: 1.1rem;
         }
-        
+
         .room-type {
             font-size: 0.85rem;
             color: #6c757d;
         }
-        
+
         /* Date Info */
         .date-info {
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
-        
+
         .date-main {
             font-weight: 500;
             color: #2c3e50;
             font-size: 0.9rem;
         }
-        
+
         .date-sub {
             font-size: 0.75rem;
             color: #6c757d;
         }
-        
+
         /* Actions */
         .action-buttons {
             display: flex;
             gap: 5px;
             flex-wrap: wrap;
         }
-        
+
         .btn-sm {
             padding: 6px 12px;
             font-size: 0.8rem;
         }
-        
+
         /* Navigation */
         .nav-buttons {
             display: flex;
@@ -319,7 +391,7 @@
             align-items: center;
             margin-bottom: 25px;
         }
-        
+
         .btn-back {
             background: #6c757d;
             color: white;
@@ -332,13 +404,13 @@
             gap: 8px;
             transition: all 0.3s ease;
         }
-        
+
         .btn-back:hover {
             background: #5a6268;
             color: white;
             transform: translateY(-2px);
         }
-        
+
         .btn-refresh {
             background: #007bff;
             color: white;
@@ -350,12 +422,12 @@
             gap: 8px;
             transition: all 0.3s ease;
         }
-        
+
         .btn-refresh:hover {
             background: #0056b3;
             transform: translateY(-2px);
         }
-        
+
         /* Pagination */
         .pagination-container {
             display: flex;
@@ -365,35 +437,35 @@
             background: #f8f9fa;
             border-top: 1px solid #e9ecef;
         }
-        
+
         .pagination-info {
             color: #6c757d;
             font-size: 0.9rem;
         }
-        
+
         .pagination {
             margin: 0;
         }
-        
+
         .page-link {
             border-radius: 6px;
             margin: 0 2px;
             border-color: #e9ecef;
         }
-        
+
         /* Empty State */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
             color: #6c757d;
         }
-        
+
         .empty-icon {
             font-size: 4rem;
             color: #dee2e6;
             margin-bottom: 20px;
         }
-        
+
         /* Alerts */
         .alert {
             border: none;
@@ -402,45 +474,45 @@
             border-left: 4px solid;
             margin-bottom: 20px;
         }
-        
+
         .alert-success {
             background: linear-gradient(135deg, #d4edda, #c3e6cb);
             border-left-color: #28a745;
             color: #155724;
         }
-        
+
         .alert-danger {
             background: linear-gradient(135deg, #f8d7da, #f1aeb5);
             border-left-color: #dc3545;
             color: #721c24;
         }
-        
+
         /* Responsive */
         @media (max-width: 768px) {
             .main-content {
                 margin-left: 0;
             }
-            
+
             .sidebar {
                 transform: translateX(-100%);
             }
-            
+
             .content-header {
                 padding: 20px;
             }
-            
+
             .content-body {
                 padding: 20px;
             }
-            
+
             .filter-row {
                 grid-template-columns: 1fr;
             }
-            
+
             .stats-row {
                 grid-template-columns: repeat(2, 1fr);
             }
-            
+
             .nav-buttons {
                 flex-direction: column;
                 gap: 10px;
@@ -457,9 +529,7 @@
             <i class="fas fa-building"></i>
             <span class="brand-text"><%= branchName %></span>
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle">
-            <i class="fas fa-bars"></i>
-        </button>
+      
     </div>
     <div class="sidebar-menu">
  
@@ -486,23 +556,7 @@
     </div>
 </nav>
         
-        <main class="main-content">
-            <!-- Header -->
-            <header class="content-header">
-                <div class="header-top">
-                    <h1 class="page-title">
-                        <i class="bi bi-table"></i>
-                        Room Assignments
-                    </h1>
-                    <div class="user-info">
-                        <i class="bi bi-person-circle"></i>
-                        <span>Staff: <strong><%= staffName %></strong></span>
-
-                    </div>
-                </div>
-             
-            </header>
-            
+        <main class="main-content">          
             <div class="content-body">
                 <!-- Success/Error Messages -->
                 <% if (errorMessage != null && !errorMessage.isEmpty()) { %>
@@ -579,12 +633,7 @@
                             <i class="bi bi-credit-card"></i>Paid
                         </div>
                     </div>
-                    <div class="stats-card">
-                        <div class="stats-number"><%= statistics.get("completed") != null ? statistics.get("completed") : 0 %></div>
-                        <div class="stats-label">
-                            <i class="bi bi-check-all"></i>Completed
-                        </div>
-                    </div>
+                   
                 </div>
                 <% } %>
 
