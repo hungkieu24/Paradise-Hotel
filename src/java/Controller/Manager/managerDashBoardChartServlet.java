@@ -56,7 +56,7 @@ public class managerDashBoardChartServlet extends HttpServlet {
         int yearTo = Integer.parseInt(request.getParameter("yearTo"));
 
         // Lấy Profit Trend
-        Map<String, Double> profitTrend = branchMonthlyReportDAO.getMonthlyProfitTrendByBranchAndMonthYear(branchId, monthFrom, yearFrom, monthTo, yearTo);
+        Map<String, Double> profitTrend = branchMonthlyReportDAO.getMonthlyProfitTrendByBranchAndDateRange(branchId, monthFrom, yearFrom, monthTo, yearTo);
         Map<String, Integer> statusCounts = bookingDAO.getBookingStatusCountsByBranchAndMonthYearRange(branchId, monthFrom, yearFrom, monthTo, yearTo);
         Map<String, Integer> serviceUsage = serviceDAO.getServiceUsageByBranchAndMonthRange(branchId, monthFrom, yearFrom, monthTo, yearTo);
 

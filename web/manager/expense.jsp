@@ -51,7 +51,7 @@
                     </button>
                 </div>
                 <div class="sidebar-menu">
-                    <a href="#" class="menu-item ">
+                    <a href="./dashboard" class="menu-item ">
                         <i class="fas fa-chart-line"></i>
                         <span class="menu-text">Dashboard</span>
                     </a>
@@ -79,7 +79,7 @@
                         <i class="fas fa-tags"></i>
                         <span class="menu-text">Manage promotion</span>
                     </a>
-                    <a href="#" class="menu-item">
+                    <a href="../manager-membership" class="menu-item">
                         <i class="fas fa-users"></i>
                         <span class="menu-text">Manage membership</span>
                     </a>

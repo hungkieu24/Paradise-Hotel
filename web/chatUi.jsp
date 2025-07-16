@@ -16,7 +16,7 @@
     <body>
         <!--Chat icon-->
         <div id="chat-icon" onclick="toggleChatWindow()">
-            <i class="fas fa-robot" style="font-size: 50px; color: #ea6b6b;"></i>
+            <img class="chat-icon__img" src="./img/robo.gif">
         </div>
 
         <!-- Chat Popup -->
@@ -34,8 +34,8 @@
             <div class="chat-footer">
                 <input type="text" id="chat-input" placeholder="Send message..." 
                        onkeydown="if (event.key === 'Enter') {
-                            sendMessage();
-                        }">
+                                   sendMessage();
+                               }">
                 <button onclick="sendMessage()">Send</button>
             </div>
         </div>

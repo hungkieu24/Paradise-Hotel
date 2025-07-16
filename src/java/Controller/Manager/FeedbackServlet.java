@@ -76,6 +76,7 @@ public class FeedbackServlet extends HttpServlet {
 
             totalPages = (int) Math.ceil((double) listSize / pageSize);
 
+            request.setAttribute("branch", branch);
             request.setAttribute("action", action);
             request.setAttribute("keyword", keyword);
             request.setAttribute("rating", ratingStr);
@@ -118,7 +119,7 @@ public class FeedbackServlet extends HttpServlet {
                 int IdBan = Integer.parseInt(request.getParameter("IdBan"));
                 Feedback feedback = feedbackDAO.getFeedbackById(IdBan);
                 String userID = feedback.getUser_id();
-                boolean success = feedbackDAO.banFeedbackAndUser(userID, IdBan);
+                boolean success = feedbackDAO.banFeedback(IdBan);
 
                 // Đặt thông báo session
                 setSessionMessage(session, success ? "Ban feeback successful!" : "Failure to ban feeback!",
@@ -132,6 +133,16 @@ public class FeedbackServlet extends HttpServlet {
 
                 // Đặt thông báo session
                 setSessionMessage(session, success ? "Hide feeback successful!" : "Failure to hide feeback!",
+                        success ? "success" : "error");
+                response.sendRedirect("./feedback");
+                return;
+            }
+            if (action.equals("restore")) {
+                int Idrestore = Integer.parseInt(request.getParameter("Idrestore"));
+                boolean success = feedbackDAO.restoreFeedback(Idrestore);
+
+                // Đặt thông báo session
+                setSessionMessage(session, success ? "Restore feeback successful!" : "Failure to restore feeback!",
                         success ? "success" : "error");
                 response.sendRedirect("./feedback");
                 return;

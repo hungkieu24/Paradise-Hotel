@@ -9,7 +9,7 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
 #chat-icon {
     position: fixed;
     bottom: 24px;
-    right: 24px;
+    right: 74px;
 /*    background: #fff;*/
     border-radius: 50%;
 /*    box-shadow: 0 2px 8px rgba(0,0,0,0.12);*/
@@ -26,8 +26,8 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
 }
 #chat-window {
     position: fixed;
-    bottom: 84px;
-    right: 24px;
+    bottom: 93px;
+    right: 80px;
     width: 350px;
     max-height: 480px;
     background: #fff;
@@ -38,6 +38,14 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     z-index: 10000;
     overflow: hidden;
 }
+
+.chat-icon__img {
+    width: 60px; 
+    height: 60px; 
+    border-radius: 50%; 
+    object-fit: contain;
+}
+
 .chat-header {
     background: #f9f9fb;
     padding: 12px 16px;

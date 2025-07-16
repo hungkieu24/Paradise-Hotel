@@ -59,9 +59,6 @@
             <c:remove var="message" scope="session" />
             <c:remove var="messageType" scope="session" />
         </c:if>
-        <div id="preloader">
-            <div data-loader="circle-side"></div>
-        </div><!-- /Page Preload -->
 
 
         <%@ include file="./header.jsp"%>

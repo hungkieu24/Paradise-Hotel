@@ -47,6 +47,7 @@
 
         <div class="layer"></div><!-- Opacity Mask -->
 
+        <%@ include file="./header.jsp"%>
         <!-- Header --><!-- /Header -->
         <main>
 
@@ -70,16 +71,26 @@
                     </c:when>
                     <c:otherwise>
                         <c:forEach items="${availableRoomTypes}" var="r">
-                            <div class="row_list_version_1">
-                                <div class="pinned-image rounded_container pinned-image--medium">
-                                    <div class="pinned-image__container">
-                                        <img src="img/rooms/${r.getImage_url()}" alt="">
+                           
+
+                            <div class="row_list_version_2">
+                                <div class="row g-0 align-items-center">
+                                    <div class="col-xl-8">
+                                        <div class="owl-carousel owl-theme carousel_item_1 kenburns rounded-img owl-loaded owl-drag">
+                                            <div class="owl-stage-outer">
+                                                <div class="owl-stage" >
+                                                    <div class="owl-item active center" style="width: 936px;">
+                                                        <div class="item">
+                                                            <img src="./img/room1.jpg" alt=""></a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- /carousel -->
                                     </div>
-                                </div>
-                                <!-- /pinned-image -->
-                                <div class="row justify-content-start">
-                                    <div class="col-lg-8">
-                                        <div class="box_item_info" data-jarallax-element="-30">
+                                    <div class="col-xl-4">
+                                        <div class="box_item_info" data-jarallax-element="-25" style="transform: translate3d(0px, 5.36017px, 0px);">
                                             <small>
                                                 From 
                                                 <fmt:formatNumber value="${r.getBase_price()}" type="number" groupingUsed="true" maxFractionDigits="0" />
@@ -87,27 +98,34 @@
                                             </small>
                                             <h2>${r.getName()}</h2>
                                             <p>${r.getDescription()}</p>
+                                            <p>Branch: <strong>${r.getBranch().getName()}</strong> </p>
                                             <div class="facilities clearfix">
                                                 <ul>
-                                                    <li><i class="customicon-double-bed"></i> King Size Bed</li>
-                                                    <li><i class="customicon-wifi"></i> Free Wifi</li>
-                                                    <li><i class="customicon-television"></i> 32 Inc TV</li>
+                                                    <c:forEach items="${r.getAmenity()}" var="a">
+                                                        <li>
+                                                            ${a}
+                                                        </li>
+                                                    </c:forEach>
                                                 </ul>
                                             </div>
                                             <div class="box_item_footer d-flex align-items-center justify-content-between">
-                                                <a href="#0" class="btn_4 learn-more">
+                                                <a href="booking?roomTypeId=${r.getRoomTypeID()}&action=oneRoom" class="btn_4 learn-more">
                                                     <span class="circle">
                                                         <span class="icon arrow"></span>
                                                     </span>
                                                     <span class="button-text">Book Now</span>
                                                 </a>
-                                                <a href="room-details.html" class="animated_link">
-                                                    <strong>Read more</strong>
+                                                <a href="viewRoomTypeDetail?roomTypeId=${r.getRoomTypeID()}" class="animated_link">
+                                                    <strong>Details</strong>
                                                 </a>
                                             </div>
-                                        </div>
+                                            <!-- /box_item_footer -->
+                                            <div id="jarallax-container-1" style="position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; overflow: hidden; z-index: -100; clip-path: polygon(0px 0px, 100% 0px, 100% 100%, 0px 100%);"><div style="pointer-events: none; transform-style: preserve-3d; backface-visibility: hidden; position: fixed;"></div></div></div>
+                                        <!-- /box_item_info -->
                                     </div>
+                                    <!-- /col -->
                                 </div>
+                                <!-- /row -->
                             </div>
                         </c:forEach>
                     </c:otherwise>

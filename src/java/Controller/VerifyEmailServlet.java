@@ -74,7 +74,13 @@ public class VerifyEmailServlet extends HttpServlet {
             PasswordUtils passwordUtils = new PasswordUtils();
             String hashedPassword = passwordUtils.hashPassword(rawPassword);
             UserAccountDAO uadao = new UserAccountDAO();
-            boolean registered = uadao.register(username, hashedPassword, email, "img/avatar/avatar.jpg", phone);
+            UserAccount account = new UserAccount();
+            account.setUsername(username);
+            account.setPassword(hashedPassword);
+            account.setEmail(email);
+            account.setAvatar_url("img/avatar/avatar.jpg");
+            account.setPhonenumber(phone);
+            boolean registered = uadao.register(account);
             if (registered) {
                 setSessionMessage(session, "Register successfully!", "success");
                 response.sendRedirect("./login.jsp");

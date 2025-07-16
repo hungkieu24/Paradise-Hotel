@@ -49,7 +49,7 @@
             }
             .sidebar {
                 height: 100vh;
-                width: 220px;
+                width: 250px;
                 position: fixed;
                 top: 0;
                 left: 0;

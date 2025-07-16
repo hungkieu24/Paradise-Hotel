@@ -10,9 +10,7 @@
             <i class="fas fa-building"></i>
             <span class="brand-text"><%= branchName %></span>
         </div>
-        <button class="sidebar-toggle" id="sidebarToggle">
-            <i class="fas fa-bars"></i>
-        </button>
+     
     </div>
     <div class="sidebar-menu">
 

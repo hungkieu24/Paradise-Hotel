@@ -62,10 +62,10 @@
                         <p id="page-description">Manage user accounts, roles, and permissions</p>
                     </div>
                     <div class="header-right">
-                        <div class="notification-bell">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge">3</span>
-                        </div>
+                        <!--                        <div class="notification-bell">
+                                                    <i class="fas fa-bell"></i>
+                                                    <span class="notification-badge">3</span>
+                                                </div>-->
                         <div class="admin-profile">
                             <div class="profile-dropdown">
                                 <div class="profile-avatar">
@@ -73,14 +73,12 @@
                                 </div>
                                 <div class="dropdown-content">
                                     <div class="dropdown-header">
-                                        <strong>Admin User</strong>
-                                        <small>admin@system.com</small>
+                                        <strong>${sessionScope.user.getUsername()}</strong>
+                                        <small>${sessionScope.user.getEmail()}</small>
                                     </div>
                                     <a href="#">Profile Settings</a>
-                                    <a href="#">Account Security</a>
-                                    <a href="#">Preferences</a>
                                     <hr>
-                                    <a href="#" class="sign-out">Sign Out</a>
+                                    <a href="../login?action=logout" class="sign-out">Sign Out</a>
                                 </div>
                             </div>
                         </div>

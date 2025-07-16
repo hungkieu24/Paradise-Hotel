@@ -51,9 +51,9 @@
                         <i class="fas fa-chart-line"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="./uploadReports.jsp" class="nav-item " data-page="upload">
-                        <i class="fas fa-upload"></i>
-                        <span>Upload Reports</span>
+                    <a href="./investment" class="nav-item" data-page="upload">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                        <span>Investment</span>
                     </a>
                     <a href="./manageBranch" class="nav-item active" data-page="upload">
                         <i class="fa-solid fa-hotel"></i>
@@ -73,10 +73,6 @@
                         <p id="page-description">View branches, add and adjust for all hotel branche</p>
                     </div>
                     <div class="header-right">
-                        <div class="notification-bell">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge">3</span>
-                        </div>
                         <div class="admin-profile">
                             <div class="profile-dropdown">
                                 <div class="profile-avatar">
@@ -84,14 +80,12 @@
                                 </div>
                                 <div class="dropdown-content">
                                     <div class="dropdown-header">
-                                        <strong>Hotel owner</strong>
-                                        <small>admin@system.com</small>
+                                        <strong>${sessionScope.user.getUsername()}</strong>
+                                        <small>${sessionScope.user.getEmail()}</small>
                                     </div>
                                     <a href="#">Profile Settings</a>
-                                    <a href="#">Account Security</a>
-                                    <a href="#">Preferences</a>
-                                    <hr />
-                                    <a href="#" class="sign-out">Sign Out</a>
+                                    <hr>
+                                    <a href="../login?action=logout" class="sign-out">Sign Out</a>
                                 </div>
                             </div>
                         </div>
@@ -121,7 +115,7 @@
                     <!-- Detailed Table -->
                     <div class="card">
                         <div class="card-header">
-                            <h3><i class="fas fa-table"></i>Initial Investment</h3>
+                            <h3><i class="fas fa-table"></i>Branch details</h3>
 
                         </div>
                         <p>Quantity: <strong>${brancheListSize}</strong></p>
@@ -374,7 +368,7 @@
                     </div>
 
                     <div class="form-card__bottom">
-                        <a href="../hotelOwner/branch" class="btn btn--text">
+                        <a href="../hotelOwner/branch" class="btn btn--text" style="text-decoration: none">
                             <div class=" btn--rounded btn-normal">Cancel</div>
                         </a>
                         <button type="submit" class="btn btn-primary btn--rounded">Change</button>
@@ -558,7 +552,7 @@
                     </div>
 
                     <div class="form-card__bottom">
-                        <a href="../hotelOwner/branch" class="btn btn--text">
+                        <a href="../hotelOwner/branch" class="btn btn--text" style="text-decoration: none">
                             <div class=" btn--rounded btn-normal">Cancel</div>
                         </a>
                         <button type="submit" id="btn-Addform-submit" class="btn btn-primary btn--rounded">Add</button>

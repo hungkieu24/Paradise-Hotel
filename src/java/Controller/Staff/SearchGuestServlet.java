@@ -33,6 +33,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import DBcontext.DBContext;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @WebServlet(name="SearchGuestServlet", urlPatterns={"/searchGuest"})
 public class SearchGuestServlet extends HttpServlet {
@@ -183,16 +185,15 @@ public class SearchGuestServlet extends HttpServlet {
         }
     }
     
-   private void handleCreateBooking(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
+private void handleCreateBooking(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
     String userIdStr = request.getParameter("userId");
     String checkIn = request.getParameter("checkIn");
     String checkOut = request.getParameter("checkOut");
     String[] roomIds = request.getParameterValues("roomIds");
     String note = request.getParameter("specialRequests");
-    System.out.println(Arrays.toString(roomIds));
 
-    // Sửa lỗi: kiểm tra null hoặc rỗng trước khi parseInt
+    // Kiểm tra serviceCount
     int serviceCount = 0;
     String serviceCountStr = request.getParameter("serviceCount");
     if (serviceCountStr != null && !serviceCountStr.trim().isEmpty()) {
@@ -208,6 +209,7 @@ public class SearchGuestServlet extends HttpServlet {
         response.sendRedirect("searchGuest?error=missing-booking-info");
         return;
     }
+
     UserAccount staff = (UserAccount) request.getSession().getAttribute("user");
     Integer branchId = (staff != null) ? staff.getBranchId() : null;
     LocalDateTime checkInLdt = LocalDateTime.parse(checkIn, formatter);
@@ -216,36 +218,47 @@ public class SearchGuestServlet extends HttpServlet {
     Timestamp checkInTimestamp = Timestamp.valueOf(checkInLdt);
     Timestamp checkOutTimestamp = Timestamp.valueOf(checkOutLdt);
 
-    BookingDAO bookingDAO = new BookingDAO();
-    System.out.println(branchId);
-    int id = bookingDAO.addBooking2(userIdStr, checkInTimestamp, checkOutTimestamp, 
-            "Paid", 2000000, "Unpaid", branchId, note, false);
+    // Tính số đêm
+    long numberOfNights = calculateNumberOfNights(checkInLdt, checkOutLdt);
+
+    // Khởi tạo DAO
     RoomDAO roomDAO = new RoomDAO();
     RoomTypeDAO roomTypeDAO = new RoomTypeDAO();
+    ServiceDAO serviceDAO = new ServiceDAO();
 
-    RoomAssignmentDAO roomAssignmentDAO =  new RoomAssignmentDAO();
-    double price = 0;
+    // Tính giá phòng trước - sử dụng List<Room>
+    double totalRoomPrice = 0;
+    List<Room> selectedRooms = new ArrayList<>();
+    
     for (String roomIdStr : roomIds) {
         try {
             if (roomIdStr != null && !roomIdStr.trim().isEmpty()) {
                 int roomId = Integer.parseInt(roomIdStr);
                 Room room = roomDAO.getRoomById(roomId);
-                roomDAO.updateRoomStatus(roomId, "Occupied");
                 RoomType roomType = roomTypeDAO.getRoomTypeById(room.getRoomTypeId());
-                price += roomType.getBase_price();
-                roomAssignmentDAO.createRoomAssignment(id, roomId);
-                roomAssignmentDAO.insertBookingRoomType(id, room.getRoomTypeId(), 1, roomType.getBase_price());
+                
+                // Set roomType vào room để sử dụng sau
+                room.setRoomType(roomType);
+                
+                double roomPrice = roomType.getBase_price() * numberOfNights;
+                totalRoomPrice += roomPrice;
+                
+                selectedRooms.add(room);
             }
         } catch (NumberFormatException ex) {
             System.err.println("Invalid room ID: " + roomIdStr);
         }
     }
-    List<BookingService> selectedServices = new ArrayList<>();
+
+    // Tính giá dịch vụ trước - sử dụng List<Service>
+    double totalServicePrice = 0;
+    List<Service> selectedServices = new ArrayList<>();
+    
     for (int i = 0; i < serviceCount; i++) {
         String serviceIdParam = request.getParameter("serviceId" + i);
         String quantityParam = request.getParameter("quantity" + i);
         String paymentStatus = request.getParameter("paymentStatus" + i);
-        ServiceDAO serviceDAO = new ServiceDAO();
+        
         if (serviceIdParam != null && !serviceIdParam.trim().isEmpty() &&
             quantityParam != null && !quantityParam.trim().isEmpty() &&
             paymentStatus != null && !paymentStatus.trim().isEmpty()) {
@@ -253,23 +266,87 @@ public class SearchGuestServlet extends HttpServlet {
                 int serviceId = Integer.parseInt(serviceIdParam);
                 int quantity = Integer.parseInt(quantityParam);
                 Service service = serviceDAO.getServiceById(serviceId);
-                price += 1.0 * service.getPrice() * quantity;
-                BookingService bookingService = new BookingService();
-                bookingService.setServiceId(serviceId);
-                bookingService.setQuantity(quantity);
-                bookingService.setPaidStatus(paymentStatus);
-                bookingService.setBookingId(id);
-                BookingServiceDAO bookingServiceDAO = new BookingServiceDAO();
-                bookingServiceDAO.addOrUpdateServiceToBooking(bookingService);
+                
+                // Set thông tin booking vào service
+                service.setQuantity(quantity);
+                service.setPaidStatus(paymentStatus);
+                
+                double servicePrice = service.getPrice() * quantity;
+                totalServicePrice += servicePrice;
+                
+                selectedServices.add(service);
             } catch (NumberFormatException ex) {
                 System.err.println("Invalid serviceId or quantity: " + serviceIdParam + ", " + quantityParam);
             }
         }
     }
-    bookingDAO.updateBookingPrice(id, price);
+
+    // Tính tổng giá cuối cùng
+    double finalTotalPrice = totalRoomPrice + totalServicePrice;
+
+    // Tạo booking với giá đúng
+    BookingDAO bookingDAO = new BookingDAO();
+    int id = bookingDAO.addBooking2(userIdStr, checkInTimestamp, checkOutTimestamp, 
+            "CheckedIn", finalTotalPrice, "Unpaid", branchId, note, false);
+    
+    // Xử lý room assignments
+    RoomAssignmentDAO roomAssignmentDAO = new RoomAssignmentDAO();
+    
+    for (Room room : selectedRooms) {
+        try {
+            roomDAO.updateRoomStatus(room.getId(), "Occupied");
+            roomAssignmentDAO.createRoomAssignment(id, room.getId());
+            
+            double roomTotalPrice = room.getRoomType().getBase_price() * numberOfNights;
+            roomAssignmentDAO.insertBookingRoomType(id, room.getRoomTypeId(), 
+                                                  (int)numberOfNights, roomTotalPrice);
+        } catch (Exception ex) {
+            System.err.println("Error processing room " + room.getId() + ": " + ex.getMessage());
+        }
+    }
+
+    // Xử lý services
+    BookingServiceDAO bookingServiceDAO = new BookingServiceDAO();
+    
+    for (Service service : selectedServices) {
+        try {
+            BookingService bookingService = new BookingService();
+            bookingService.setServiceId(service.getId());
+            bookingService.setQuantity(service.getQuantity());
+            bookingService.setPaidStatus(service.getPaidStatus());
+            bookingService.setBookingId(id);
+            
+            bookingServiceDAO.addOrUpdateServiceToBooking(bookingService);
+        } catch (Exception ex) {
+            System.err.println("Error processing service " + service.getId() + ": " + ex.getMessage());
+        }
+    }
+    
     response.sendRedirect("searchGuest?success=booking-created");
 }
-   
 
-
+// Phương thức tính số đêm
+private long calculateNumberOfNights(LocalDateTime checkIn, LocalDateTime checkOut) {
+    final int STANDARD_CHECKIN_HOUR = 7;  // 7:00 AM
+    final int STANDARD_CHECKOUT_HOUR = 14; // 2:00 PM
+    
+    LocalDate checkInDate = checkIn.toLocalDate();
+    LocalDate checkOutDate = checkOut.toLocalDate();
+    
+    long daysBetween = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
+    
+    if (daysBetween == 0) {
+        return 1;
+    } else if (daysBetween == 1) {
+        if (checkOut.getHour() < STANDARD_CHECKOUT_HOUR) {
+            long totalHours = ChronoUnit.HOURS.between(checkIn, checkOut);
+            if (totalHours < 12) {
+                return 1;
+            }
+        }
+        return 1;
+    } else {
+        return daysBetween;
+    }
+}
 }

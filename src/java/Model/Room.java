@@ -1,5 +1,7 @@
 package Model;
 
+import java.time.LocalDateTime;
+
 public class Room {
 
     private int id;
@@ -135,4 +137,23 @@ public class Room {
     public void setAssigned(boolean isAssigned) {
         this.isAssigned = isAssigned;
     }
+    private LocalDateTime checkIn;
+    private LocalDateTime checkOut;
+
+    public LocalDateTime getCheckIn() {
+        return checkIn;
+    }
+
+    public void setCheckIn(LocalDateTime checkIn) {
+        this.checkIn = checkIn;
+    }
+
+    public LocalDateTime getCheckOut() {
+        return checkOut;
+    }
+
+    public void setCheckOut(LocalDateTime checkOut) {
+        this.checkOut = checkOut;
+    }
+    
 }

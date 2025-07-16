@@ -74,13 +74,14 @@ CREATE TABLE Amenity (
     id INT PRIMARY KEY IDENTITY(1,1),
     name NVARCHAR(100) NOT NULL,
     description NVARCHAR(255),
+	branch_id INT NOT NULL,
     is_deleted BIT DEFAULT 0
 );
 
 CREATE TABLE RoomAmenity (
-    room_id INT,
+    room_type_id INT,
     amenity_id INT,
-    PRIMARY KEY (room_id, amenity_id)
+    PRIMARY KEY (room_type_id, amenity_id)
 );
 
 -- 4. SERVICE
@@ -228,10 +229,10 @@ CREATE TABLE Invoice (
 CREATE TABLE Expense (
     id INT PRIMARY KEY IDENTITY(1,1),
     branch_id INT NOT NULL,
-    expense_type VARCHAR(50),
+    expense_type NVARCHAR(50),
     amount DECIMAL(18,2) NOT NULL,
     description NVARCHAR(MAX),
-    expense_date DATETIME DEFAULT GETDATE(),
+    expense_date DATE DEFAULT GETDATE(),
     created_by VARCHAR(10)
 );
 
@@ -241,7 +242,12 @@ CREATE TABLE LoyaltyPoint (
     points INT,
     level VARCHAR(10) CHECK (level IN ('Member', 'Silver', 'Gold', 'VIP')) DEFAULT 'Member',
     last_updated DATETIME DEFAULT GETDATE(),
-    expired_at DATETIME
+    expired_at DATETIME,
+	total_spending DECIMAL(18,2) DEFAULT 0,
+    lifetime_points INT DEFAULT 0,
+    points_used INT DEFAULT 0,
+    last_tier_check DATETIME DEFAULT GETDATE(),
+    next_tier_spending_needed DECIMAL(18,2) DEFAULT 0
 );
 
 CREATE TABLE PointTransaction (
@@ -278,6 +284,13 @@ CREATE TABLE MemberTierHistory (
     new_level VARCHAR(10) CHECK (new_level IN ('Member', 'Silver', 'Gold', 'VIP')),
     changed_at DATETIME DEFAULT GETDATE(),
     reason NVARCHAR(MAX)
+);
+
+CREATE TABLE MemberTierRule (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    level VARCHAR(10) CHECK (level IN ('Member', 'Silver', 'Gold', 'VIP')) NOT NULL UNIQUE,
+    min_spending DECIMAL(18,2) NOT NULL,
+    description NVARCHAR(255)
 );
 
 CREATE TABLE BackupHistory (
@@ -328,7 +341,6 @@ CREATE TABLE CartRoomType (
 CREATE TABLE BenefitRank (
     id INT PRIMARY KEY IDENTITY(1,1),
     level VARCHAR(10) CHECK (level IN ('Member', 'Silver', 'Gold', 'VIP')) UNIQUE NOT NULL,
-    point_rate DECIMAL(5,2) NOT NULL,
     discount_percent DECIMAL(5,2),
     benefit NVARCHAR(MAX),
     is_deleted BIT DEFAULT 0
@@ -343,6 +355,51 @@ CREATE TABLE VoucherRedemptionRule (
     FOREIGN KEY (voucher_id) REFERENCES Voucher(id)
 );
 
+CREATE TABLE BranchMonthlyReport (
+    Id INT IDENTITY PRIMARY KEY,
+    BranchId INT NOT NULL,
+    ReportMonth DATE NOT NULL,
+    Revenue DECIMAL(18, 2) NOT NULL,
+    Expenses DECIMAL(18, 2) NOT NULL,
+    Profit DECIMAL(18, 2) NOT NULL,       -- Do code tính: Revenue - Expenses
+    ProfitRate DECIMAL(5, 2) NOT NULL,    -- Do code tính: (Profit / Capital) * 100
+    FilePath NVARCHAR(255),
+    CreatedAt DATETIME DEFAULT GETDATE()
+);
+
+CREATE TABLE InitialInvestment (
+	id INT PRIMARY KEY IDENTITY(1,1),
+    BranchId INT NOT NULL,
+    Capital DECIMAL(18, 2) NOT NULL,
+    InvestedDate DATE NOT NULL DEFAULT GETDATE()
+);
+
+CREATE TABLE FeedbackComment (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    feedback_id INT NOT NULL,
+    parent_comment_id INT NULL,
+    user_id VARCHAR(10) NOT NULL,
+    content NVARCHAR(MAX) NOT NULL,
+    image_url NVARCHAR(MAX),
+    created_at DATETIME DEFAULT GETDATE(),
+    is_edited BIT DEFAULT 0,
+    is_deleted BIT DEFAULT 0,
+    FOREIGN KEY (feedback_id) REFERENCES Feedback(id),
+    FOREIGN KEY (parent_comment_id) REFERENCES FeedbackComment(id)
+);
+
+CREATE TABLE Revenue (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    branch_id INT NOT NULL,
+    revenue_type NVARCHAR(100),         -- Ví dụ: "Online Booking", "Tiền mặt", "Dịch vụ spa"
+    amount DECIMAL(18,2) NOT NULL,
+    revenue_date DATE DEFAULT GETDATE(),
+    source VARCHAR(20) NOT NULL,       -- "SYSTEM" hoặc "MANUAL"
+    description NVARCHAR(MAX),         -- Ghi chú thêm nếu có
+    created_by VARCHAR(10),            -- ID người tạo bản ghi
+    created_at DATETIME DEFAULT GETDATE()
+);
+
 -- 13. FOREIGN KEYS
 ALTER TABLE UserAccount ADD CONSTRAINT FK_UserAccount_Branch FOREIGN KEY (branch_id) REFERENCES HotelBranch (id);
 ALTER TABLE HotelBranch ADD CONSTRAINT FK_HotelBranch_Owner FOREIGN KEY (owner_id) REFERENCES UserAccount (id);
@@ -350,8 +407,8 @@ ALTER TABLE HotelBranch ADD CONSTRAINT FK_HotelBranch_Manager FOREIGN KEY (manag
 ALTER TABLE RoomType ADD CONSTRAINT FK_RoomType_Branch FOREIGN KEY (branch_id) REFERENCES HotelBranch (id);
 ALTER TABLE Room ADD CONSTRAINT FK_Room_Branch FOREIGN KEY (branch_id) REFERENCES HotelBranch (id);
 ALTER TABLE Room ADD CONSTRAINT FK_Room_RoomType FOREIGN KEY (room_type_id) REFERENCES RoomType (id);
-ALTER TABLE RoomAmenity ADD CONSTRAINT FK_RoomAmenity_Room FOREIGN KEY (room_id) REFERENCES Room (id);
-ALTER TABLE RoomAmenity ADD CONSTRAINT FK_RoomAmenity_Amenity FOREIGN KEY (amenity_id) REFERENCES Amenity (id);
+ALTER TABLE RoomAmenity ADD CONSTRAINT FK_RoomAmenity_RoomType FOREIGN KEY (room_type_id) REFERENCES RoomType(id);
+ALTER TABLE RoomAmenity ADD CONSTRAINT FK_RoomAmenity_Amenity FOREIGN KEY (amenity_id) REFERENCES Amenity(id);
 ALTER TABLE Booking ADD CONSTRAINT FK_Booking_User FOREIGN KEY (user_id) REFERENCES UserAccount (id);
 ALTER TABLE Booking ADD CONSTRAINT FK_Booking_CreatedBy FOREIGN KEY (created_by) REFERENCES UserAccount (id);
 ALTER TABLE Booking ADD CONSTRAINT FK_Booking_Promotion FOREIGN KEY (promotion_id) REFERENCES SeasonalPromotion (id);
@@ -386,6 +443,13 @@ ALTER TABLE CartRoomType ADD CONSTRAINT FK_CartRoomType_RoomType FOREIGN KEY (ro
 ALTER TABLE Voucher ADD CONSTRAINT FK_Voucher_Branch FOREIGN KEY (branch_id) REFERENCES HotelBranch (id);
 ALTER TABLE SeasonalPromotion ADD CONSTRAINT FK_SeasonalPromotion_Branch FOREIGN KEY (branch_id) REFERENCES HotelBranch (id);
 ALTER TABLE SeasonalPromotion ADD CONSTRAINT FK_SeasonalPromotion_RoomType FOREIGN KEY (room_type_id) REFERENCES RoomType (id);
+ALTER TABLE BranchMonthlyReport ADD CONSTRAINT FK_BranchMonthlyReport_Branch FOREIGN KEY (BranchId) REFERENCES HotelBranch(Id);
+ALTER TABLE InitialInvestment ADD CONSTRAINT FK_InitialInvestment_Branch FOREIGN KEY (BranchId) REFERENCES HotelBranch(id);
+ALTER TABLE Revenue ADD CONSTRAINT FK_Revenue_Branch FOREIGN KEY (branch_id) REFERENCES HotelBranch(id);
+ALTER TABLE Booking ADD exported_to_revenue BIT DEFAULT 0;
+ALTER TABLE BenefitRank ADD CONSTRAINT FK_BenefitRank_TierRule FOREIGN KEY (level) REFERENCES MemberTierRule(level);
+
+
 GO
 
 -- INSERT SAMPLE DATA
@@ -397,7 +461,7 @@ INSERT INTO UserAccount (
 -- Active users with recent login times
 ('U001', 'john_doe', 'hashed_password1', N'John Doe', 'john.doe@email.com', 'Local', 
  'https://example.com/avatar1.jpg', 'Customer', 'Active', DATEADD(HOUR, -2, GETDATE()), '1234567890', NULL, 0, GETDATE()), -- Logged in 2 hours ago
-('U002', 'jane_smith', 'hashed_password2', N'Jane Smith', 'jane.smith@email.com', 'Google', 
+('U002', 'jane_smith', 'hashed_password2', N'Jane Smith', 'jane.smith@email.com', 'Local', 
  'https://example.com/avatar2.jpg', 'Staff', 'Active', DATEADD(DAY, -1, GETDATE()), '0987654321', NULL, 0, GETDATE()), -- Logged in 1 day ago
 ('U003', 'mike_manager', 'hashed_password3', N'Mike Johnson', 'mike.johnson@email.com', 'Local', 
  'https://example.com/avatar3.jpg', 'Manager', 'Active', DATEADD(HOUR, -5, GETDATE()), '5551234567', NULL, 0, GETDATE()), -- Logged in 5 hours ago
@@ -429,31 +493,31 @@ UPDATE UserAccount SET branch_id = 1 WHERE id IN ('U002', 'U004');
 INSERT INTO RoomType (name, description, base_price, capacity_adult, capacity_child, branch_id, image_url)
 VALUES 
 ('Standard', 'Cozy room with basic amenities', 50.00, 2, 1, 1, 'standard.jpg'),
-('Deluxe', 'Spacious room with sea view', 100.00, 3, 2, 1, 'deluxe.jpg'),
-('Suite', 'Luxury suite with balcony', 200.00, 4, 2, 2, 'suite.jpg'),
-('Family', 'Large room for families', 150.00, 4, 3, 3, 'family.jpg'),
-('Single', 'Compact room for solo travelers', 40.00, 1, 0, 4, 'single.jpg');
+('Deluxe', 'Spacious room with sea view', 100.00, 3, 2, 2, 'deluxe.jpg'),
+('Suite', 'Luxury suite with balcony', 200.00, 4, 2, 3, 'suite.jpg'),
+('Family', 'Large room for families', 150.00, 4, 3, 4, 'family.jpg'),
+('Single', 'Compact room for solo travelers', 40.00, 1, 0, 5, 'single.jpg');
 
 -- Room (5 rows)
 INSERT INTO Room (room_number, branch_id, room_type_id, status, image_url)
 VALUES 
 ('101', 1, 1, 'Available', 'room101.jpg'),
-('102', 1, 2, 'Booked', 'room102.jpg'),
-('201', 2, 3, 'Occupied', 'room201.jpg'),
-('301', 3, 4, 'Available', 'room301.jpg'),
-('401', 4, 5, 'Maintenance', 'room401.jpg');
+('102', 2, 2, 'Booked', 'room102.jpg'),
+('201', 3, 3, 'Occupied', 'room201.jpg'),
+('301', 4, 4, 'Available', 'room301.jpg'),
+('401', 5, 5, 'Maintenance', 'room401.jpg');
 
 -- Amenity (5 rows)
-INSERT INTO Amenity (name, description)
+INSERT INTO Amenity (name, description, branch_id)
 VALUES 
-('WiFi', 'High-speed internet access'),
-('Air Conditioning', 'Climate control unit'),
-('Mini Bar', 'Refrigerated mini bar'),
-('TV', 'Flat-screen television'),
-('Safe', 'In-room safety deposit box');
+('WiFi', 'High-speed internet access', 1),
+('Air Conditioning', 'Climate control unit', 1),
+('Mini Bar', 'Refrigerated mini bar', 1),
+('TV', 'Flat-screen television', 1),
+('Safe', 'In-room safety deposit box', 1);
 
 -- RoomAmenity (5 rows)
-INSERT INTO RoomAmenity (room_id, amenity_id)
+INSERT INTO RoomAmenity (room_type_id, amenity_id)
 VALUES 
 (1, 1), (1, 2), (2, 3), (3, 4), (4, 5);
 
@@ -571,11 +635,11 @@ VALUES
 -- Expense (5 rows)
 INSERT INTO Expense (branch_id, expense_type, amount, description, created_by)
 VALUES 
-(1, 'Utilities', 500.00, 'Electricity bill', 'U003'),
-(2, 'Maintenance', 200.00, 'Room repairs', 'U003'),
-(3, 'Supplies', 300.00, 'Cleaning supplies', 'U003'),
-(4, 'Staff Training', '150.00', 'Training session', 'U003'),
-(5, 'Marketing', '400.00', 'Advertising campaign', 'U003');
+(1, 'Utilities', 5000000.00, 'Electricity bill', 'U003'),
+(2, 'Maintenance', 2000000.00, 'Room repairs', 'U003'),
+(3, 'Supplies', 3000000.00, 'Cleaning supplies', 'U003'),
+(4, 'Staff Training', 15000000.00, 'Training session', 'U003'),
+(5, 'Marketing', 4000000.00, 'Advertising campaign', 'U003');
 
 -- LoyaltyPoint (5 rows)
 INSERT INTO LoyaltyPoint (user_id, points, level, last_updated, expired_at)
@@ -658,14 +722,27 @@ VALUES
 ('U001', 4, 2, '2025-06-04 10:00:00'),
 ('U004', 5, 1, '2025-06-05 10:00:00');
 
--- BenefitRank (5 rows)
-INSERT INTO BenefitRank (level, point_rate, discount_percent, benefit)
-VALUES 
-('Member', 1.00, 5, 'Basic discounts'),
-('Silver', 2, 10.00, 'Priority booking'),
-('Gold', 5, 15.00, 'Free upgrades'),
-('VIP', 10.00, 20, 'Exclusive perks');
-GO
+-- 15. INDEXES FOR PERFORMANCE
+CREATE INDEX IX_LoyaltyPoint_TotalSpending ON LoyaltyPoint(total_spending);
+CREATE INDEX IX_MemberTierRule_MinSpending ON MemberTierRule(min_spending);
+CREATE INDEX IX_PointTransaction_UserDate ON PointTransaction(user_id, created_at);
+CREATE INDEX IX_Booking_StatusUser ON Booking(status, user_id);
+CREATE INDEX IX_Booking_TotalPrice ON Booking(total_price);
+
+-- 16. INSERT INITIAL & SAMPLE DATA
+-- Setup the rank thresholds in the new table
+INSERT INTO MemberTierRule (level, min_spending, description) VALUES
+('Member', 0, N'Hạng thành viên, chi tiêu từ 0 VND'),
+('Silver', 5000001, N'Hạng Bạc, chi tiêu từ 5,000,001 VND'),
+('Gold', 10000001, N'Hạng Vàng, chi tiêu từ 10,000,001 VND'),
+('VIP', 20000001, N'Hạng VIP, chi tiêu trên 20,000,001 VND');
+
+-- BenefitRank Data (FIXED: Removed point_rate)
+INSERT INTO BenefitRank (level, discount_percent, benefit) VALUES
+('Member', 0, N'Tích điểm cơ bản, không giảm giá'),
+('Silver', 5, N'Giảm giá 5%, ưu tiên check-in'),
+('Gold', 10, N'Giảm giá 10%, phòng upgrade miễn phí'),
+('VIP', 15, N'Giảm giá 15%, dịch vụ VIP, late checkout');
 
 INSERT INTO VoucherRedemptionRule (voucher_id, required_points, required_tier, is_active)
 VALUES 
@@ -676,3 +753,98 @@ VALUES
 (5, 150, NULL, 1),
 (6, 1750, 'VIP', 1);
 GO
+
+INSERT INTO BranchMonthlyReport
+(BranchId, ReportMonth, Revenue, Expenses, Profit, ProfitRate, FilePath)
+VALUES 
+(1, '2025-05-01', 100000000, 60000000, 40000000, 8.00, N'/reports/branch1_2025_05.xlsx'),
+(1, '2025-06-01', 120000000, 70000000, 50000000, 10.00, N'/reports/branch1_2025_06.xlsx'),
+(2, '2025-05-01', 80000000, 90000000, -10000000, -1.67, N'/reports/branch2_2025_05.xlsx'),
+(2, '2025-06-01', 95000000, 70000000, 25000000, 4.17, N'/reports/branch2_2025_06.xlsx'),
+(3, '2025-05-01', 75000000, 75000000, 0, 0.00, N'/reports/branch3_2025_05.xlsx'),
+(3, '2025-06-01', 90000000, 85000000, 5000000, 0.91, N'/reports/branch3_2025_06.xlsx');
+GO
+
+INSERT INTO InitialInvestment (BranchId, Capital, InvestedDate)
+VALUES 
+(1, 500000000, '2025-05-01'),
+(2, 600000000, '2025-05-01'),
+(3, 550000000, '2025-05-01');
+GO
+
+-- === Feedback ID 1 ===
+-- Manager phản hồi
+INSERT INTO FeedbackComment (feedback_id, parent_comment_id, user_id, content)
+VALUES 
+(1, NULL, 'U003', N'Cảm ơn bạn đã tin tưởng và lựa chọn khách sạn! Rất mong được đón tiếp bạn lần sau.'),
+
+-- Giả sử ID dòng trên là 1
+-- Khách hàng phản hồi lại
+(1, 1, 'U001', N'Chắc chắn rồi, tôi sẽ quay lại!'),
+
+-- === Feedback ID 2 ===
+-- Manager phản hồi
+(2, NULL, 'U003', N'Cảnh đẹp và dịch vụ tốt là nhờ bạn đấy! Cảm ơn phản hồi tích cực.'),
+
+-- Giả sử ID dòng trên là 2
+-- Khách hàng phản hồi lại
+(2, 3, 'U001', N'Mình đã giới thiệu cho bạn bè rồi đó!'),
+
+-- === Feedback ID 3 ===
+-- Manager phản hồi
+(3, NULL, 'U003', N'Cảm ơn góp ý của bạn! Chúng tôi sẽ cân nhắc nâng cấp phòng trong tương lai.'),
+
+-- Giả sử ID dòng trên là 3
+-- Khách hàng phản hồi lại
+(3, 5, 'U001', N'Mong lần sau có phòng rộng hơn nhé!'),
+
+-- === Feedback ID 4 ===
+-- Manager phản hồi
+(4, NULL, 'U003', N'Cảm ơn bạn! Chúng tôi sẽ tiếp tục cải thiện để mang lại trải nghiệm tốt hơn.'),
+
+-- Giả sử ID dòng trên là 4
+-- Khách hàng phản hồi lại
+(4, 7, 'U001', N'Dịch vụ đã tốt rồi, cố gắng duy trì nhé!'),
+
+-- === Feedback ID 5 ===
+-- Manager phản hồi
+(5, NULL, 'U003', N'Rất vui khi gia đình bạn có kỳ nghỉ tuyệt vời! Hẹn gặp lại trong tương lai gần.'),
+
+-- Giả sử ID dòng trên là 5
+-- Khách hàng phản hồi lại
+(5, 9, 'U001', N'Bọn trẻ nhà tôi rất thích, cảm ơn khách sạn!');
+ GO
+
+  INSERT INTO Revenue (branch_id, revenue_type, amount, revenue_date, source, description, created_by)
+VALUES 
+(1, 'Online Booking', 2500000, '2025-07-01', 'SYSTEM', null, 'SYSTEM'),
+(2, 'Online Booking', 3200000, '2025-07-02', 'SYSTEM', null, 'SYSTEM'),
+(1, N'Tiền mặt', 800000, '2025-07-01', 'MANUAL', N'Khách vãng lai không đặt trên hệ thống', 'U003'),
+(1, N'Thu dịch vụ spa', 500000, '2025-07-01', 'MANUAL', N'Khách sử dụng dịch vụ tại quầy', 'U003'),
+(2, N'Tiền thuê hội trường', 1500000, '2025-07-02', 'MANUAL', N'Tổ chức sự kiện ngoài hệ thống', 'U003'),
+(1, N'Online Booking', 50000000, '2025-05-10', 'SYSTEM', N'Monthly summary May', 'SYSTEM'),
+(1, N'Tiền mặt',        50000000, '2025-05-20', 'MANUAL', N'Tiền mặt cuối tháng', 'U003'),
+(1, N'Online Booking', 70000000, '2025-06-05', 'SYSTEM', N'Monthly summary June', 'SYSTEM'),
+(1, N'Tiền mặt',        50000000, '2025-06-18', 'MANUAL', N'Khách thanh toán tại quầy', 'U003'),
+(2, 'Online Booking', 50000000, '2025-05-07', 'SYSTEM', N'Monthly summary May', 'SYSTEM'),
+(2, N'Thu dịch vụ spa', 30000000, '2025-05-21', 'MANUAL', N'Khách sử dụng dịch vụ spa', 'U003'),
+(2, 'Online Booking',      60000000, '2025-06-03', 'SYSTEM', N'Monthly summary June', 'SYSTEM'),
+(2, N'Tiền thuê hội trường', 35000000, '2025-06-20', 'MANUAL', N'Hội nghị doanh nghiệp', 'U003'),
+(3, N'Tiền mặt', 75000000, '2025-05-25', 'MANUAL', N'Khách vãng lai không đặt trước', 'U003'),
+(3, 'Online Booking', 60000000, '2025-06-06', 'SYSTEM', N'Monthly summary June', 'SYSTEM'),
+(3, N'Tiền mặt',        30000000, '2025-06-22', 'MANUAL', N'Thanh toán tại quầy', 'U003');
+
+INSERT INTO Expense (branch_id, expense_type, amount, description, expense_date, created_by) VALUES
+(1, 'Utilities', 30000000, 'Electricity, water, and internet', '2025-05-10', 'U003'),
+(1, 'Maintenance', 30000000, 'AC repair and room maintenance', '2025-05-20', 'U003'),
+(1, 'Staff Salary', 40000000, 'Monthly staff salaries', '2025-06-05', 'U003'),
+(1, 'Supplies', 30000000, 'Cleaning and room supplies', '2025-06-15', 'U003'),
+(2, 'Marketing', 50000000, 'TV and online advertising', '2025-05-12', 'U003'),
+(2, 'Utilities', 40000000, 'Power and internet', '2025-05-25', 'U003'),
+(2, 'Maintenance', 30000000, 'Plumbing and furniture repair', '2025-06-04', 'U003'),
+(2, 'Staff Bonus', 40000000, 'Mid-year performance bonus', '2025-06-18', 'U003'),
+(3, 'Supplies', 35000000, 'Bathroom and bedding supplies', '2025-05-08', 'U003'),
+(3, 'Staff Salary', 40000000, 'May salaries', '2025-05-28', 'U003'),
+(3, 'Marketing', 45000000, 'Social media and event promotion', '2025-06-02', 'U003'),
+(3, 'Utilities', 40000000, 'Electricity and water', '2025-06-19', 'U003');
+

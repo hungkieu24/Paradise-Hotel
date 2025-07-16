@@ -223,6 +223,43 @@ public class BackupHistoryDAO extends DBcontext.DBContext {
         }
     }
 
+    public File backupDatabaseDifferential(String backupFolderPath, String dbName, String fullPath) {
+        // Backup Differential
+        String backupSql = "BACKUP DATABASE " + dbName + " TO DISK = ? WITH DIFFERENTIAL";
+
+        try (PreparedStatement ps = connection.prepareStatement(backupSql)) {
+            ps.setString(1, fullPath);
+            ps.executeUpdate();
+
+            // Kiểm tra file có tồn tại không
+            File backupFile = new File(fullPath);
+            if (backupFile.exists()) {
+                return backupFile;
+            } else {
+                System.err.println("❌ File differential backup không được tạo.");
+                return null;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public boolean hasFullBackup() {
+        String sql = "SELECT COUNT(*) FROM BackupHistory WHERE backup_type = 'FULL' AND is_deleted = 0";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                return count > 0; // Trả về true nếu đã có FULL backup
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false; // Nếu có lỗi hoặc không có FULL backup
+    }
+
     public File exportTablesToInsertSQLFile(List<String> tableNames, String outputFilePath) throws IOException {
         File file = new File(outputFilePath);
 
@@ -373,7 +410,7 @@ public class BackupHistoryDAO extends DBcontext.DBContext {
             return false;
         }
     }
-    
+
     public boolean markRowAsRestore(String tableName, int id) {
         String sql = "UPDATE " + tableName + " SET is_deleted = 0 WHERE id = ?";
 

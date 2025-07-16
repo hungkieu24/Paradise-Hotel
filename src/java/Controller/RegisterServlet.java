@@ -48,6 +48,7 @@ public class RegisterServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession();
         String code = request.getParameter("code");
         String accessToken = getToken(code);
 
@@ -58,14 +59,38 @@ public class RegisterServlet extends HttpServlet {
         String avatar_url = userInfo.get("picture") != null ? userInfo.get("picture").getAsString() : null;
 
         UserAccountDAO userDAO = new UserAccountDAO();
-        boolean registered = userDAO.register(nameGG, "1234", emailGG, avatar_url, null);
-        if (registered) {
-            HttpSession session = request.getSession();
+
+        if (userDAO.isGoogleAccountExists(emailGG)) {
+            // Login Google thành công => lấy user và cho login thẳng
             UserAccount user = userDAO.getUserByEmail(emailGG);
+
+            // Cập nhật last_login_at
+            userDAO.updateLastLogin(user.getId());
             session.setAttribute("user", user);
             response.sendRedirect("homepage");
+            return;
+        }
+
+        if (userDAO.isEmailRegisteredWithLocal(emailGG)) {
+            // Người này đã đăng ký Local rồi => Không cho login bằng Google với email này
+            request.setAttribute("error", "This email has already been registered with a password. Please login using your password.");
+            request.getRequestDispatcher("login.jsp").forward(request, response);
+            return; // Dừng lại
+        }
+
+        UserAccount account = new UserAccount();
+        account.setUsername(nameGG);
+        account.setEmail(emailGG);
+        account.setAvatar_url(avatar_url);
+        account.setLogin_type("Google");
+
+        boolean registered = userDAO.register(account);
+        if (registered) {
+            UserAccount user = userDAO.getUserByEmail(emailGG);
+            session.setAttribute("user", user);
+            response.sendRedirect("./homepage");
         } else {
-            request.setAttribute("error", "Google login failed. Please try again.");
+            setSessionMessage(session, "Google login failed. Please try again!", "error");
             request.getRequestDispatcher("register.jsp").forward(request, response);
         }
     }
@@ -94,7 +119,7 @@ public class RegisterServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-           // Get staff from session to get branchId
+        // Get staff from session to get branchId
         UserAccount staff = (UserAccount) request.getSession().getAttribute("user");
         Integer branchId = (staff != null) ? staff.getBranchId() : null;
 
@@ -128,7 +153,7 @@ public class RegisterServlet extends HttpServlet {
         }
 
         // Lưu thông tin tạm vào session
-        session.setAttribute("duration", duration);   
+        session.setAttribute("duration", duration);
         session.setAttribute("expiryTime", expiryTime);
         session.setAttribute("authCode", verificationCode);
         session.setAttribute("username", username);
@@ -152,6 +177,11 @@ public class RegisterServlet extends HttpServlet {
 
         // Kiểm tra email và username đã tồn tại chưa
         UserAccountDAO accountDAO = new UserAccountDAO();
+        if (accountDAO.isEmailRegisteredWithGoogle(email)) {
+            setSessionMessage(session, "This email is already registered with Google login. Please login using Google!", "error");
+            return false;
+        }
+
         if (accountDAO.isEmailExist(email)) {
             setSessionMessage(session, "Email already exists!", "error");
             return false;
