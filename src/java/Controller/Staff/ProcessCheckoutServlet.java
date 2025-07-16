@@ -100,7 +100,7 @@ public class ProcessCheckoutServlet extends HttpServlet {
                     // Set assigned rooms back to Available status
                     roomDAO.updateRoomStatusAfterCheckout(bookingId, "Available");
 
-                    // Award loyalty points (1 point per 10,000 VND)
+                    // Award loyalty points (1 point per 100,000 VND)
                     awardLoyaltyPoints(booking.getUserId(), amountToPay);
 
                     // Generate invoice
@@ -155,7 +155,7 @@ public class ProcessCheckoutServlet extends HttpServlet {
 
     private void awardLoyaltyPoints(String userId, double amount) {
         try {
-            int pointsToAward = (int) (amount / 10000);
+            int pointsToAward = (int) (amount / 100000);
             if (pointsToAward > 0) {
                 loyaltyPointDAO.addPoints(userId, pointsToAward, "Booking completion reward - Checkout payment");
             }

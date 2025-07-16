@@ -110,6 +110,7 @@ public class LoyaltyPointDAO extends DBContext {
             return false;
         }
     }
+
     /**
      * Lấy rank của user
      */
@@ -131,6 +132,7 @@ public class LoyaltyPointDAO extends DBContext {
         }
         return "Member";
     }
+
     //hoang
     public boolean subtractPoints(String userId, int amount) {
         String sql = "UPDATE LoyaltyPoint SET points = points - ?, last_updated = CURRENT_TIMESTAMP "
@@ -143,6 +145,77 @@ public class LoyaltyPointDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return false;
+    }
+
+    //hieu 
+    public boolean updateTotalSpending(String userId, double additionalSpending) {
+        // Get current data first
+        String selectSql = "SELECT total_spending, level FROM LoyaltyPoint WHERE user_id = ?";
+
+        // Update query with tier logic
+        String updateSql = "UPDATE LoyaltyPoint SET "
+                + "total_spending = total_spending + ?, "
+                + "level = ?, "
+                + "next_tier_spending_needed = ?, "
+                + "last_updated = GETDATE(), "
+                + "last_tier_check = GETDATE() "
+                + "WHERE user_id = ?";
+
+        try (PreparedStatement selectPs = connection.prepareStatement(selectSql)) {
+            selectPs.setString(1, userId);
+
+            try (ResultSet rs = selectPs.executeQuery()) {
+                if (rs.next()) {
+                    double currentSpending = rs.getDouble("total_spending");
+                    String currentLevel = rs.getString("level");
+
+                    // Calculate new total spending
+                    double newTotalSpending = currentSpending + additionalSpending;
+
+                    // TIER LOGIC for hieu1235 at 2025-07-15 17:34:19 UTC
+                    String newLevel;
+                    double nextTierNeeded;
+
+                    if (newTotalSpending >= 20000001.00) {
+                        // VIP tier (max tier)
+                        newLevel = "VIP";
+                        nextTierNeeded = 0.0;
+                    } else if (newTotalSpending >= 10000001.00) {
+                        // Gold tier
+                        newLevel = "Gold";
+                        nextTierNeeded = 20000001.00 - newTotalSpending; // Need for VIP
+                    } else if (newTotalSpending >= 5000001.00) {
+                        // Silver tier
+                        newLevel = "Silver";
+                        nextTierNeeded = 10000001.00 - newTotalSpending; // Need for Gold
+                    } else {
+                        // Member tier
+                        newLevel = "Member";
+                        nextTierNeeded = 5000001.00 - newTotalSpending; // Need for Silver
+                    }
+
+                    // Ensure non-negative value
+                    nextTierNeeded = Math.max(0.0, nextTierNeeded);
+
+                    // Execute update
+                    try (PreparedStatement updatePs = connection.prepareStatement(updateSql)) {
+                        updatePs.setDouble(1, additionalSpending);
+                        updatePs.setString(2, newLevel);
+                        updatePs.setDouble(3, nextTierNeeded);
+                        updatePs.setString(4, userId);
+
+                        int updated = updatePs.executeUpdate();
+                        return updated > 0;
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
         return false;
     }
 }
