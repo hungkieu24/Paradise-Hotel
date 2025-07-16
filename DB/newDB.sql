@@ -448,7 +448,7 @@ ALTER TABLE InitialInvestment ADD CONSTRAINT FK_InitialInvestment_Branch FOREIGN
 ALTER TABLE Revenue ADD CONSTRAINT FK_Revenue_Branch FOREIGN KEY (branch_id) REFERENCES HotelBranch(id);
 ALTER TABLE Booking ADD exported_to_revenue BIT DEFAULT 0;
 ALTER TABLE BenefitRank ADD CONSTRAINT FK_BenefitRank_TierRule FOREIGN KEY (level) REFERENCES MemberTierRule(level);
-
+ALTER TABLE VNPayTransaction ADD vnp_PayDate VARCHAR(20);
 
 GO
 
@@ -715,15 +715,6 @@ VALUES
 ('U003', 'Silver', 'Gold', '2025-06-25', 'Frequent bookings'),
 ('U004', 'Gold', 'VIP', '2025-06-25', 'High spending'),
 ('U005', 'Member', 'Silver', '2025-06-25', 'Referral program');
-
--- BackupHistory (5 rows)
-INSERT INTO BackupHistory (backup_time, backup_type, backup_path, file_size_mb)
-VALUES 
-('2025-06-25 01:00:00', 'FULL', '/backups/db_full_20250625.bak', 500.0),
-('2025-06-25 02:00:00', 'PARTIAL', '/backups/db_partial_20250625.bak', 100.0),
-('2025-06-25 03:00:00', 'FULL', '/backups/db_full_20250625_2.bak', 510.0),
-('2025-06-25 04:00:00', 'PARTIAL', '/backups/db_partial_20250625_2.bak', 120.0),
-('2025-06-25 05:00:00', 'FULL', '/backups/db_full_20250625_3.bak', 520.0);
 
 -- Permission (5 rows)
 INSERT INTO Permission (role, resource, action, allowed)
