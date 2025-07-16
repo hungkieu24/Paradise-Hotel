@@ -8,6 +8,7 @@ import DBcontext.DBContext;
 import Model.Booking;
 import Model.RoomType;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -18,53 +19,58 @@ import java.util.Map;
  */
 public class RoomDAO extends DBContext {
 
-   /**
- * Lấy thông tin phòng theo ID
- * @param roomId ID của phòng
- * @return Room object hoặc null nếu không tìm thấy
- */
-public Room getRoomById(int roomId) {
-    String sql = "SELECT r.id, r.room_number, r.status, r.branch_id, " +
-                "rt.name as room_type_name, rt.id as room_type_id " +
-                "FROM Room r " +
-                "INNER JOIN RoomType rt ON r.room_type_id = rt.id " +
-                "WHERE r.id = ?";
-    
-    PreparedStatement ps = null;
-    ResultSet rs = null;
-    
-    try {
-        ps = connection.prepareStatement(sql);
-        ps.setInt(1, roomId);
-        
-        rs = ps.executeQuery();
-        
-        if (rs.next()) {
-            Room room = new Room();
-            room.setId(rs.getInt("id"));
-            room.setRoomNumber(rs.getString("room_number"));
-            room.setStatus(rs.getString("status"));
-            room.setBranchId(rs.getInt("branch_id"));
-            room.setRoomTypeName(rs.getString("room_type_name"));
-            room.setRoomTypeId(rs.getInt("room_type_id"));
-            
-            return room;
-        }
-        
-    } catch (SQLException e) {
-        System.err.println("Error getting room by ID " + roomId + ": " + e.getMessage());
-        e.printStackTrace();
-    } finally {
+    /**
+     * Lấy thông tin phòng theo ID
+     *
+     * @param roomId ID của phòng
+     * @return Room object hoặc null nếu không tìm thấy
+     */
+    public Room getRoomById(int roomId) {
+        String sql = "SELECT r.id, r.room_number, r.status, r.branch_id, "
+                + "rt.name as room_type_name, rt.id as room_type_id "
+                + "FROM Room r "
+                + "INNER JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE r.id = ?";
+
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
         try {
-            if (rs != null) rs.close();
-            if (ps != null) ps.close();
+            ps = connection.prepareStatement(sql);
+            ps.setInt(1, roomId);
+
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                Room room = new Room();
+                room.setId(rs.getInt("id"));
+                room.setRoomNumber(rs.getString("room_number"));
+                room.setStatus(rs.getString("status"));
+                room.setBranchId(rs.getInt("branch_id"));
+                room.setRoomTypeName(rs.getString("room_type_name"));
+                room.setRoomTypeId(rs.getInt("room_type_id"));
+
+                return room;
+            }
+
         } catch (SQLException e) {
-            System.err.println("Error closing resources in getRoomById: " + e.getMessage());
+            System.err.println("Error getting room by ID " + roomId + ": " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+            } catch (SQLException e) {
+                System.err.println("Error closing resources in getRoomById: " + e.getMessage());
+            }
         }
+
+        return null;
     }
-    
-    return null;
-}
 
     public List<Room> getAllRooms() {
         List<Room> rooms = new ArrayList<>();
@@ -211,7 +217,7 @@ public Room getRoomById(int roomId) {
             return false;
         }
     }
-  
+
     //author: Thien
     // Fix theo database moi
     public List<Room> getRooms(String status, String roomTypeId, String search) {
@@ -516,20 +522,47 @@ public List<Room> pagingRoomByBranch(int branchId, String status, int page, int 
     // author : thien
     // Content: get all room by branch id
     // Fix theo database moi
-    public List<Room> getAllRoomByBranchId(int branchId, int page, int pageSize) {
+    public List<Room> getAllRoomByBranchId(int branchId, int page, int pageSize, LocalDateTime checkIn, LocalDateTime checkOut) {
         List<Room> rooms = new ArrayList<>();
         int offset = (page - 1) * pageSize;
         String sql = "SELECT r.id AS room_id, r.room_number, r.status, r.branch_id, r.room_type_id, r.image_url AS room_image_url, "
-                + "rt.id AS roomtype_id, rt.name, rt.description, rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS roomtype_image_url "
+                + "rt.id AS roomtype_id, rt.name, rt.description, rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS roomtype_image_url, b.check_in, b.check_out, "
+                + "CASE "
+                + "     When r.status = 'Maintenance' THEN 'Maintenance' "
+                + "     WHEN EXISTS ("
+                + "         SELECT 1 FROM RoomAssignment ra "
+                + "         JOIN Booking b ON ra.booking_id = b.id "
+                + "         WHERE ra.room_id = r.id "
+                + "         AND b.status = 'CheckIn' "
+                + "         AND b.check_in <= ? AND b.check_out >= ? "
+                + "     ) THEN 'Occupied' "
+                + "     WHEN EXISTS ("
+                + "         SELECT 1 FROM RoomAssignment ra "
+                + "         JOIN Booking b ON ra.booking_id = b.id "
+                + "         WHERE ra.room_id = r.id "
+                + "         AND b.status IN ('Pending', 'Paid') "
+                + "         AND b.check_in <= ? AND b.check_out >= ? "
+                + "     ) THEN 'Booked' "
+                + "     ELSE 'Available' "
+                + "END AS caculated_status "
                 + "FROM Room r "
                 + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "LEFT JOIN RoomAssignment ra ON ra.room_id = r.id "
+                + "LEFT JOIN Booking b ON ra.booking_id = b.id "
+                + "    AND b.check_in <= ? AND b.check_out >= ? "
                 + "WHERE r.is_deleted = 0 and r.branch_id = ? "
                 + "ORDER BY r.id " // Added ORDER BY for deterministic results
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, branchId);
-            ps.setInt(3, pageSize);
-            ps.setInt(2, offset);
+            ps.setTimestamp(1, Timestamp.valueOf(checkOut));
+            ps.setTimestamp(2, Timestamp.valueOf(checkIn));
+            ps.setTimestamp(3, Timestamp.valueOf(checkOut));
+            ps.setTimestamp(4, Timestamp.valueOf(checkIn));
+            ps.setTimestamp(5, Timestamp.valueOf(checkOut));
+            ps.setTimestamp(6, Timestamp.valueOf(checkIn));
+            ps.setInt(7, branchId);
+            ps.setInt(8, offset);
+            ps.setInt(9, pageSize);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 RoomType rt = new RoomType(
@@ -546,9 +579,17 @@ public List<Room> pagingRoomByBranch(int branchId, String status, int page, int 
                         rs.getString("room_number"),
                         rs.getInt("branch_id"),
                         rs.getInt("room_type_id"),
-                        rs.getString("status"),
+                        rs.getString("caculated_status"),
                         rs.getString("room_image_url") // Sửa từ "image" thành "room_image_url"
                 );
+                Timestamp checkInTs = rs.getTimestamp("check_in");
+                Timestamp checkOutTs = rs.getTimestamp("check_out");
+                if (checkInTs != null) {
+                    room.setCheckIn(checkInTs.toLocalDateTime());
+                }
+                if (checkOutTs != null) {
+                    room.setCheckOut(checkOutTs.toLocalDateTime());
+                }
                 room.setRoomType(rt); // Đảm bảo quan hệ được thiết lập
                 rooms.add(room);
             }
@@ -574,15 +615,38 @@ public List<Room> pagingRoomByBranch(int branchId, String status, int page, int 
         return false;
     }
 
-    public List<Room> getRoomsByBranch(int branchId, String status, String roomTypeId, String search, int page, int pageSize) {
+    public List<Room> getRoomsByBranch(int branchId, String status, String roomTypeId, String search, int page, int pageSize, LocalDateTime checkIn, LocalDateTime checkOut) {
         List<Room> rooms = new ArrayList<>();
         String sql = "SELECT r.id, r.room_number, r.branch_id, r.room_type_id, r.status, r.image_url, "
                 + "rt.id AS rt_id, rt.name AS rt_name, rt.description AS rt_description, "
-                + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
-                + "FROM Room r JOIN RoomType rt ON r.room_type_id = rt.id WHERE r.is_deleted = 0 and r.branch_id = ?";
+                + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url, b.check_in, b.check_out, "
+                + "CASE "
+                + "     When r.status = 'Maintenance' THEN 'Maintenance' "
+                + "     WHEN EXISTS ("
+                + "         SELECT 1 FROM RoomAssignment ra "
+                + "         JOIN Booking b ON ra.booking_id = b.id "
+                + "         WHERE ra.room_id = r.id "
+                + "         AND b.status = 'CheckIn' "
+                + "         AND b.check_in <= ? AND b.check_out >= ? "
+                + "     ) THEN 'Occupied' "
+                + "     WHEN EXISTS ("
+                + "         SELECT 1 FROM RoomAssignment ra "
+                + "         JOIN Booking b ON ra.booking_id = b.id "
+                + "         WHERE ra.room_id = r.id "
+                + "         AND b.status IN ('Pending', 'Paid') "
+                + "         AND b.check_in <= ? AND b.check_out >= ? "
+                + "     ) THEN 'Booked' "
+                + "     ELSE 'Available' "
+                + "END AS caculated_status "
+                + "FROM Room r "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "LEFT JOIN RoomAssignment ra ON ra.room_id = r.id "
+                + "LEFT JOIN Booking b ON ra.booking_id = b.id "
+                + "    AND b.check_in <= ? AND b.check_out >= ? "
+                + "WHERE r.is_deleted = 0 and r.branch_id = ? ";
         List<String> conditions = new ArrayList<>();
         if (status != null && !status.isEmpty()) {
-            conditions.add("r.status = ?");
+            conditions.add("caculated_status = ?");
         }
         if (roomTypeId != null && !roomTypeId.isEmpty()) {
             conditions.add("r.room_type_id = ?");
@@ -599,6 +663,13 @@ public List<Room> pagingRoomByBranch(int branchId, String status, int page, int 
         int offset = (page - 1) * pageSize;
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             int index = 1;
+            stmt.setTimestamp(index++, Timestamp.valueOf(checkOut));
+            stmt.setTimestamp(index++, Timestamp.valueOf(checkIn));
+            stmt.setTimestamp(index++, Timestamp.valueOf(checkOut));
+            stmt.setTimestamp(index++, Timestamp.valueOf(checkIn));
+            stmt.setTimestamp(index++, Timestamp.valueOf(checkOut));
+            stmt.setTimestamp(index++, Timestamp.valueOf(checkIn));
+
             stmt.setInt(index++, branchId);
 
             if (status != null && !status.isEmpty()) {
@@ -633,9 +704,18 @@ public List<Room> pagingRoomByBranch(int branchId, String status, int page, int 
                         rs.getString("room_number"),
                         rs.getInt("branch_id"),
                         rs.getInt("room_type_id"),
-                        rs.getString("status"),
+                        rs.getString("caculated_status"),
                         rs.getString("image_url")
                 );
+                Timestamp checkInTs = rs.getTimestamp("check_in");
+                Timestamp checkOutTs = rs.getTimestamp("check_out");
+                if (checkInTs != null) {
+                    room.setCheckIn(checkInTs.toLocalDateTime());
+                }
+                if (checkOutTs != null) {
+                    room.setCheckOut(checkOutTs.toLocalDateTime());
+                }
+                room.setRoomType(rt); // Đảm bảo quan hệ được thiết lập
                 room.setRoomType(rt);
 
                 rooms.add(room);
@@ -753,6 +833,7 @@ public List<Room> pagingRoomByBranch(int branchId, String status, int page, int 
 
     /**
      * Cập nhật trạng thái phòng
+     *
      * @param roomId ID của phòng
      * @param status Trạng thái mới ("Available", "Reserved", "Occupied",
      * "Maintenance")
@@ -920,6 +1001,7 @@ public List<Room> pagingRoomByBranch(int branchId, String status, int page, int 
 
     /**
      * Lấy danh sách phòng đã được gán cho một booking
+     *
      * @return List<Room> danh sách phòng đã gán
      */
     public List<Room> getAssignedRoomsByBookingId(int bookingId) {
@@ -1025,163 +1107,164 @@ public List<Room> pagingRoomByBranch(int branchId, String status, int page, int 
     }
 
     public List<Room> getAvailableRoomsForAssignment(int roomTypeId, int branchId, int bookingId) {
-    List<Room> rooms = new ArrayList<>();
-    
-    // Đầu tiên lấy thông tin thời gian của booking hiện tại
-    String getBookingTimeSql = "SELECT check_in, check_out FROM Booking WHERE id = ?";
-    java.sql.Timestamp bookingCheckIn = null;
-    java.sql.Timestamp bookingCheckOut = null;
-    
-    try (PreparedStatement psTime = connection.prepareStatement(getBookingTimeSql)) {
-        psTime.setInt(1, bookingId);
-        try (ResultSet rsTime = psTime.executeQuery()) {
-            if (rsTime.next()) {
-                bookingCheckIn = rsTime.getTimestamp("check_in");
-                bookingCheckOut = rsTime.getTimestamp("check_out");
-                System.out.println("Booking #" + bookingId + " check-in: " + bookingCheckIn + ", check-out: " + bookingCheckOut);
-            } else {
-                // Không tìm thấy booking
-                System.out.println("Booking #" + bookingId + " not found");
-                return rooms; // Return empty list
-            }
-        }
-    } catch (SQLException e) {
-        System.out.println("Error getting booking time: " + e.getMessage());
-        e.printStackTrace();
-        return rooms;
-    }
-    
-    // Truy vấn chính lấy phòng khả dụng
-    String sql = "SELECT r.*, rt.id AS rt_id, rt.name AS roomTypeName, rt.description, "
-            + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
-            + "FROM Room r "
-            + "JOIN RoomType rt ON r.room_type_id = rt.id "
-            + "WHERE r.room_type_id = ? "
-            + "AND r.branch_id = ? "
-            + "AND r.status = 'Available' "
-            + "AND r.is_deleted = 0 "
-            + "AND r.id NOT IN ( "
-            + "    SELECT ra.room_id FROM RoomAssignment ra "
-            + "    JOIN Booking b ON ra.booking_id = b.id "
-            + "    WHERE b.id != ? " // Không phải booking hiện tại
-            + "    AND b.status NOT IN ('Cancelled', 'Completed', 'NoShow') " // Không phải booking đã hủy/hoàn thành
-            + "    AND (( " // Kiểm tra xem thời gian có trùng không
-            + "        b.check_in < ? AND b.check_out > ? " // Booking khác check-in trước và check-out sau khi booking hiện tại check-in
-            + "    ) OR ( "
-            + "        b.check_in < ? AND b.check_out > ? " // Booking khác check-in trước và check-out sau khi booking hiện tại check-out
-            + "    ) OR ( "
-            + "        b.check_in >= ? AND b.check_out <= ? " // Booking khác nằm hoàn toàn trong khoảng thời gian của booking hiện tại
-            + "    )) "
-            + ") "
-            + "ORDER BY r.room_number";
+        List<Room> rooms = new ArrayList<>();
 
-    try (PreparedStatement ps = connection.prepareStatement(sql)) {
-        ps.setInt(1, roomTypeId);
-        ps.setInt(2, branchId);
-        ps.setInt(3, bookingId);
-        ps.setTimestamp(4, bookingCheckIn);
-        ps.setTimestamp(5, bookingCheckIn);
-        ps.setTimestamp(6, bookingCheckOut);
-        ps.setTimestamp(7, bookingCheckOut);
-        ps.setTimestamp(8, bookingCheckIn);
-        ps.setTimestamp(9, bookingCheckOut);
+        // Đầu tiên lấy thông tin thời gian của booking hiện tại
+        String getBookingTimeSql = "SELECT check_in, check_out FROM Booking WHERE id = ?";
+        java.sql.Timestamp bookingCheckIn = null;
+        java.sql.Timestamp bookingCheckOut = null;
 
-        // Debug SQL
-        System.out.println("SQL for available rooms for assignment: " + sql);
-        System.out.println("Parameters: roomTypeId=" + roomTypeId + ", branchId=" + branchId + 
-                          ", bookingId=" + bookingId);
-
-        try (ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                Room room = new Room();
-                room.setId(rs.getInt("id"));
-                room.setRoomNumber(rs.getString("room_number"));
-                room.setRoomTypeId(rs.getInt("room_type_id"));
-                room.setBranchId(rs.getInt("branch_id"));
-                room.setStatus(rs.getString("status"));
-                room.setImageUrl(rs.getString("image_url"));
-                room.setRoomTypeName(rs.getString("roomTypeName"));
-
-                // Create RoomType object according to your model
-                RoomType rt = new RoomType(
-                        rs.getInt("rt_id"),
-                        rs.getString("roomTypeName"),
-                        rs.getString("description"),
-                        rs.getDouble("base_price"),
-                        rs.getInt("capacity_adult"),
-                        rs.getInt("capacity_child"),
-                        rs.getString("rt_image_url")
-                );
-                room.setRoomType(rt);
-
-                rooms.add(room);
-            }
-            System.out.println("Found " + rooms.size() + " available rooms for roomTypeId=" + roomTypeId);
-        }
-    } catch (SQLException e) {
-        System.out.println("SQL Error getting available rooms for assignment: " + e.getMessage());
-        e.printStackTrace();
-    }
-    
-    // Kiểm tra thêm các phòng đã được gán cho booking này
-    String alreadyAssignedSql = "SELECT r.*, rt.id AS rt_id, rt.name AS roomTypeName, rt.description, "
-            + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
-            + "FROM RoomAssignment ra "
-            + "JOIN Room r ON ra.room_id = r.id "
-            + "JOIN RoomType rt ON r.room_type_id = rt.id "
-            + "WHERE ra.booking_id = ? AND r.room_type_id = ?";
-            
-    try (PreparedStatement ps = connection.prepareStatement(alreadyAssignedSql)) {
-        ps.setInt(1, bookingId);
-        ps.setInt(2, roomTypeId);
-        
-        try (ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                // Nếu phòng đã được gán cho booking này, kiểm tra xem nó có trong danh sách kết quả chưa
-                int roomId = rs.getInt("id");
-                boolean alreadyInList = false;
-                
-                for (Room existingRoom : rooms) {
-                    if (existingRoom.getId() == roomId) {
-                        alreadyInList = true;
-                        break;
-                    }
+        try (PreparedStatement psTime = connection.prepareStatement(getBookingTimeSql)) {
+            psTime.setInt(1, bookingId);
+            try (ResultSet rsTime = psTime.executeQuery()) {
+                if (rsTime.next()) {
+                    bookingCheckIn = rsTime.getTimestamp("check_in");
+                    bookingCheckOut = rsTime.getTimestamp("check_out");
+                    System.out.println("Booking #" + bookingId + " check-in: " + bookingCheckIn + ", check-out: " + bookingCheckOut);
+                } else {
+                    // Không tìm thấy booking
+                    System.out.println("Booking #" + bookingId + " not found");
+                    return rooms; // Return empty list
                 }
-                
-                // Nếu chưa có trong danh sách, thêm vào
-                if (!alreadyInList) {
+            }
+        } catch (SQLException e) {
+            System.out.println("Error getting booking time: " + e.getMessage());
+            e.printStackTrace();
+            return rooms;
+        }
+
+        // Truy vấn chính lấy phòng khả dụng
+        String sql = "SELECT r.*, rt.id AS rt_id, rt.name AS roomTypeName, rt.description, "
+                + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
+                + "FROM Room r "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE r.room_type_id = ? "
+                + "AND r.branch_id = ? "
+                + "AND r.status = 'Available' "
+                + "AND r.is_deleted = 0 "
+                + "AND r.id NOT IN ( "
+                + "    SELECT ra.room_id FROM RoomAssignment ra "
+                + "    JOIN Booking b ON ra.booking_id = b.id "
+                + "    WHERE b.id != ? " // Không phải booking hiện tại
+                + "    AND b.status NOT IN ('Cancelled', 'Completed', 'NoShow') " // Không phải booking đã hủy/hoàn thành
+                + "    AND (( " // Kiểm tra xem thời gian có trùng không
+                + "        b.check_in < ? AND b.check_out > ? " // Booking khác check-in trước và check-out sau khi booking hiện tại check-in
+                + "    ) OR ( "
+                + "        b.check_in < ? AND b.check_out > ? " // Booking khác check-in trước và check-out sau khi booking hiện tại check-out
+                + "    ) OR ( "
+                + "        b.check_in >= ? AND b.check_out <= ? " // Booking khác nằm hoàn toàn trong khoảng thời gian của booking hiện tại
+                + "    )) "
+                + ") "
+                + "ORDER BY r.room_number";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, roomTypeId);
+            ps.setInt(2, branchId);
+            ps.setInt(3, bookingId);
+            ps.setTimestamp(4, bookingCheckIn);
+            ps.setTimestamp(5, bookingCheckIn);
+            ps.setTimestamp(6, bookingCheckOut);
+            ps.setTimestamp(7, bookingCheckOut);
+            ps.setTimestamp(8, bookingCheckIn);
+            ps.setTimestamp(9, bookingCheckOut);
+
+            // Debug SQL
+            System.out.println("SQL for available rooms for assignment: " + sql);
+            System.out.println("Parameters: roomTypeId=" + roomTypeId + ", branchId=" + branchId
+                    + ", bookingId=" + bookingId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
                     Room room = new Room();
-                    room.setId(roomId);
+                    room.setId(rs.getInt("id"));
                     room.setRoomNumber(rs.getString("room_number"));
                     room.setRoomTypeId(rs.getInt("room_type_id"));
                     room.setBranchId(rs.getInt("branch_id"));
-                    room.setStatus("Assigned"); // Đánh dấu là đã được gán
+                    room.setStatus(rs.getString("status"));
                     room.setImageUrl(rs.getString("image_url"));
                     room.setRoomTypeName(rs.getString("roomTypeName"));
-                    
+
+                    // Create RoomType object according to your model
                     RoomType rt = new RoomType(
-                        rs.getInt("rt_id"),
-                        rs.getString("roomTypeName"),
-                        rs.getString("description"),
-                        rs.getDouble("base_price"),
-                        rs.getInt("capacity_adult"),
-                        rs.getInt("capacity_child"),
-                        rs.getString("rt_image_url")
+                            rs.getInt("rt_id"),
+                            rs.getString("roomTypeName"),
+                            rs.getString("description"),
+                            rs.getDouble("base_price"),
+                            rs.getInt("capacity_adult"),
+                            rs.getInt("capacity_child"),
+                            rs.getString("rt_image_url")
                     );
                     room.setRoomType(rt);
-                    
+
                     rooms.add(room);
-                    System.out.println("Added already assigned room: " + room.getRoomNumber());
+                }
+                System.out.println("Found " + rooms.size() + " available rooms for roomTypeId=" + roomTypeId);
+            }
+        } catch (SQLException e) {
+            System.out.println("SQL Error getting available rooms for assignment: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // Kiểm tra thêm các phòng đã được gán cho booking này
+        String alreadyAssignedSql = "SELECT r.*, rt.id AS rt_id, rt.name AS roomTypeName, rt.description, "
+                + "rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS rt_image_url "
+                + "FROM RoomAssignment ra "
+                + "JOIN Room r ON ra.room_id = r.id "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE ra.booking_id = ? AND r.room_type_id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(alreadyAssignedSql)) {
+            ps.setInt(1, bookingId);
+            ps.setInt(2, roomTypeId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    // Nếu phòng đã được gán cho booking này, kiểm tra xem nó có trong danh sách kết quả chưa
+                    int roomId = rs.getInt("id");
+                    boolean alreadyInList = false;
+
+                    for (Room existingRoom : rooms) {
+                        if (existingRoom.getId() == roomId) {
+                            alreadyInList = true;
+                            break;
+                        }
+                    }
+
+                    // Nếu chưa có trong danh sách, thêm vào
+                    if (!alreadyInList) {
+                        Room room = new Room();
+                        room.setId(roomId);
+                        room.setRoomNumber(rs.getString("room_number"));
+                        room.setRoomTypeId(rs.getInt("room_type_id"));
+                        room.setBranchId(rs.getInt("branch_id"));
+                        room.setStatus("Assigned"); // Đánh dấu là đã được gán
+                        room.setImageUrl(rs.getString("image_url"));
+                        room.setRoomTypeName(rs.getString("roomTypeName"));
+
+                        RoomType rt = new RoomType(
+                                rs.getInt("rt_id"),
+                                rs.getString("roomTypeName"),
+                                rs.getString("description"),
+                                rs.getDouble("base_price"),
+                                rs.getInt("capacity_adult"),
+                                rs.getInt("capacity_child"),
+                                rs.getString("rt_image_url")
+                        );
+                        room.setRoomType(rt);
+
+                        rooms.add(room);
+                        System.out.println("Added already assigned room: " + room.getRoomNumber());
+                    }
                 }
             }
+        } catch (SQLException e) {
+            System.out.println("SQL Error getting already assigned rooms: " + e.getMessage());
+            e.printStackTrace();
         }
-    } catch (SQLException e) {
-        System.out.println("SQL Error getting already assigned rooms: " + e.getMessage());
-        e.printStackTrace();
+
+        return rooms;
     }
-    
-    return rooms;
-}
+
     public List<Room> getAvailableRoomsByRoomTypeName(List<String> roomTypeNames, int branchId) {
         List<Room> rooms = new ArrayList<>();
 
@@ -1827,180 +1910,181 @@ public List<Room> pagingRoomByBranch(int branchId, String status, int page, int 
             return new ArrayList<>();
         }
     }
-public boolean removeRoomAssignment(int bookingId, int roomId) {
-    String sql = "DELETE FROM RoomAssignment WHERE booking_id = ? AND room_id = ?";
-    
-    try {
-        // Start transaction
-        connection.setAutoCommit(false);
-        
-        // Check if the assignment exists
-        String checkSql = "SELECT COUNT(*) FROM RoomAssignment WHERE booking_id = ? AND room_id = ?";
-        PreparedStatement checkStmt = connection.prepareStatement(checkSql);
-        checkStmt.setInt(1, bookingId);
-        checkStmt.setInt(2, roomId);
-        ResultSet rs = checkStmt.executeQuery();
-        
-        if (rs.next() && rs.getInt(1) == 0) {
-            connection.rollback();
-            return false; // Assignment doesn't exist
+
+    public boolean removeRoomAssignment(int bookingId, int roomId) {
+        String sql = "DELETE FROM RoomAssignment WHERE booking_id = ? AND room_id = ?";
+
+        try {
+            // Start transaction
+            connection.setAutoCommit(false);
+
+            // Check if the assignment exists
+            String checkSql = "SELECT COUNT(*) FROM RoomAssignment WHERE booking_id = ? AND room_id = ?";
+            PreparedStatement checkStmt = connection.prepareStatement(checkSql);
+            checkStmt.setInt(1, bookingId);
+            checkStmt.setInt(2, roomId);
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (rs.next() && rs.getInt(1) == 0) {
+                connection.rollback();
+                return false; // Assignment doesn't exist
+            }
+
+            // Delete assignment from RoomAssignment table
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, bookingId);
+            ps.setInt(2, roomId);
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected == 0) {
+                connection.rollback();
+                return false;
+            }
+
+            // Update room status back to Available
+            String updateRoomSql = "UPDATE Room SET status = 'Available' WHERE id = ?";
+            PreparedStatement updatePs = connection.prepareStatement(updateRoomSql);
+            updatePs.setInt(1, roomId);
+            updatePs.executeUpdate();
+
+            connection.commit();
+            System.out.println("Successfully removed room " + roomId + " assignment from booking " + bookingId);
+            return true;
+        } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                System.err.println("Error during rollback: " + ex.getMessage());
+            }
+            System.err.println("Error removing room assignment: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("Error resetting auto-commit: " + e.getMessage());
+            }
         }
-        
-        // Delete assignment from RoomAssignment table
-        PreparedStatement ps = connection.prepareStatement(sql);
-        ps.setInt(1, bookingId);
-        ps.setInt(2, roomId);
-        int rowsAffected = ps.executeUpdate();
-        
-        if (rowsAffected == 0) {
-            connection.rollback();
+    }
+
+    /**
+     * Cập nhật trạng thái phòng sau checkout
+     */
+    public boolean updateRoomStatusAfterCheckout(int bookingId, String newStatus) {
+        try {
+            String sql = "UPDATE Room SET status = ? WHERE id IN "
+                    + "(SELECT room_id FROM RoomAssignment WHERE booking_id = ?)";
+
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, newStatus); // "Available"
+                ps.setInt(2, bookingId);
+
+                int rowsAffected = ps.executeUpdate();
+                return rowsAffected > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
-        
-        // Update room status back to Available
-        String updateRoomSql = "UPDATE Room SET status = 'Available' WHERE id = ?";
-        PreparedStatement updatePs = connection.prepareStatement(updateRoomSql);
-        updatePs.setInt(1, roomId);
-        updatePs.executeUpdate();
-        
-        connection.commit();
-        System.out.println("Successfully removed room " + roomId + " assignment from booking " + bookingId);
-        return true;
-    } catch (SQLException e) {
+    }
+
+    public double getOccupancyRate(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        double occupancyRate = 0;
+
+        String sqlRoomCount = "SELECT COUNT(*) AS room_count FROM Room "
+                + "WHERE branch_id = ? AND status != 'Maintenance' AND is_deleted = 0";
+
+        String sqlBookingRoomType = "SELECT brt.quantity, b.check_in, b.check_out "
+                + "FROM BookingRoomType brt "
+                + "JOIN Booking b ON brt.booking_id = b.id "
+                + "WHERE b.branch_id = ? "
+                + "AND b.is_deleted = 0 "
+                + "AND b.status IN ('Paid', 'CheckedIn', 'CheckedOut', 'Completed') "
+                + "AND (b.check_out >= ? AND b.check_in <= ?)";
+
+        String sqlRoomAssignment = "SELECT ra.room_id, b.check_in, b.check_out "
+                + "FROM RoomAssignment ra "
+                + "JOIN Booking b ON ra.booking_id = b.id "
+                + "WHERE b.branch_id = ? "
+                + "AND b.is_deleted = 0 "
+                + "AND b.status IN ('Paid', 'CheckedIn', 'CheckedOut', 'Completed') "
+                + "AND (b.check_out >= ? AND b.check_in <= ?)";
+
         try {
-            connection.rollback();
-        } catch (SQLException ex) {
-            System.err.println("Error during rollback: " + ex.getMessage());
-        }
-        System.err.println("Error removing room assignment: " + e.getMessage());
-        e.printStackTrace();
-        return false;
-    } finally {
-        try {
-            connection.setAutoCommit(true);
+            LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
+            LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
+
+            // 1. Lấy số phòng khả dụng
+            int roomCount = 0;
+            try (PreparedStatement st = connection.prepareStatement(sqlRoomCount)) {
+                st.setInt(1, branchId);
+                ResultSet rs = st.executeQuery();
+                if (rs.next()) {
+                    roomCount = rs.getInt("room_count");
+                }
+            }
+
+            if (roomCount == 0) {
+                return 0; // Không có phòng, Occupancy là 0%
+            }
+
+            long daysInPeriod = ChronoUnit.DAYS.between(fromDate, toDate) + 1;
+            long totalNightsAvailable = roomCount * daysInPeriod;
+
+            long totalNightsSold = 0;
+
+            // 2. Tính số đêm từ BookingRoomType (khách đặt trước)
+            try (PreparedStatement st = connection.prepareStatement(sqlBookingRoomType)) {
+                st.setInt(1, branchId);
+                st.setDate(2, java.sql.Date.valueOf(fromDate));
+                st.setDate(3, java.sql.Date.valueOf(toDate));
+
+                ResultSet rs = st.executeQuery();
+                while (rs.next()) {
+                    int quantity = rs.getInt("quantity");
+                    LocalDate checkIn = rs.getTimestamp("check_in").toLocalDateTime().toLocalDate();
+                    LocalDate checkOut = rs.getTimestamp("check_out").toLocalDateTime().toLocalDate();
+
+                    LocalDate actualStart = checkIn.isBefore(fromDate) ? fromDate : checkIn;
+                    LocalDate actualEnd = checkOut.isAfter(toDate) ? toDate : checkOut;
+
+                    if (!actualStart.isAfter(actualEnd)) {
+                        long nights = ChronoUnit.DAYS.between(actualStart, actualEnd);
+                        totalNightsSold += nights * quantity;
+                    }
+                }
+            }
+
+            // 3. Tính số đêm từ RoomAssignment (khách walk-in)
+            try (PreparedStatement st = connection.prepareStatement(sqlRoomAssignment)) {
+                st.setInt(1, branchId);
+                st.setDate(2, java.sql.Date.valueOf(fromDate));
+                st.setDate(3, java.sql.Date.valueOf(toDate));
+
+                ResultSet rs = st.executeQuery();
+                while (rs.next()) {
+                    LocalDate checkIn = rs.getTimestamp("check_in").toLocalDateTime().toLocalDate();
+                    LocalDate checkOut = rs.getTimestamp("check_out").toLocalDateTime().toLocalDate();
+
+                    LocalDate actualStart = checkIn.isBefore(fromDate) ? fromDate : checkIn;
+                    LocalDate actualEnd = checkOut.isAfter(toDate) ? toDate : checkOut;
+
+                    if (!actualStart.isAfter(actualEnd)) {
+                        long nights = ChronoUnit.DAYS.between(actualStart, actualEnd);
+                        totalNightsSold += nights; // walk-in thì tính từng phòng, không cần nhân quantity
+                    }
+                }
+            }
+
+            // 4. Tính occupancy rate
+            occupancyRate = (double) totalNightsSold / totalNightsAvailable * 100;
+
         } catch (SQLException e) {
-            System.err.println("Error resetting auto-commit: " + e.getMessage());
+            e.printStackTrace();
         }
+        return occupancyRate;
     }
-}
-/**
- * Cập nhật trạng thái phòng sau checkout
- */
-public boolean updateRoomStatusAfterCheckout(int bookingId, String newStatus) {
-    try {
-        String sql = "UPDATE Room SET status = ? WHERE id IN " +
-                     "(SELECT room_id FROM RoomAssignment WHERE booking_id = ?)";
-        
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, newStatus); // "Available"
-            ps.setInt(2, bookingId);
-            
-            int rowsAffected = ps.executeUpdate();
-            return rowsAffected > 0;
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-        return false;
-    }
-}
-
-public double getOccupancyRate(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
-    double occupancyRate = 0;
-
-    String sqlRoomCount = "SELECT COUNT(*) AS room_count FROM Room "
-            + "WHERE branch_id = ? AND status != 'Maintenance' AND is_deleted = 0";
-
-    String sqlBookingRoomType = "SELECT brt.quantity, b.check_in, b.check_out "
-            + "FROM BookingRoomType brt "
-            + "JOIN Booking b ON brt.booking_id = b.id "
-            + "WHERE b.branch_id = ? "
-            + "AND b.is_deleted = 0 "
-            + "AND b.status IN ('Paid', 'CheckedIn', 'CheckedOut', 'Completed') "
-            + "AND (b.check_out >= ? AND b.check_in <= ?)";
-
-    String sqlRoomAssignment = "SELECT ra.room_id, b.check_in, b.check_out "
-            + "FROM RoomAssignment ra "
-            + "JOIN Booking b ON ra.booking_id = b.id "
-            + "WHERE b.branch_id = ? "
-            + "AND b.is_deleted = 0 "
-            + "AND b.status IN ('Paid', 'CheckedIn', 'CheckedOut', 'Completed') "
-            + "AND (b.check_out >= ? AND b.check_in <= ?)";
-
-    try {
-        LocalDate fromDate = LocalDate.of(yearFrom, monthFrom, 1);
-        LocalDate toDate = LocalDate.of(yearTo, monthTo, YearMonth.of(yearTo, monthTo).lengthOfMonth());
-
-        // 1. Lấy số phòng khả dụng
-        int roomCount = 0;
-        try (PreparedStatement st = connection.prepareStatement(sqlRoomCount)) {
-            st.setInt(1, branchId);
-            ResultSet rs = st.executeQuery();
-            if (rs.next()) {
-                roomCount = rs.getInt("room_count");
-            }
-        }
-
-        if (roomCount == 0) {
-            return 0; // Không có phòng, Occupancy là 0%
-        }
-
-        long daysInPeriod = ChronoUnit.DAYS.between(fromDate, toDate) + 1;
-        long totalNightsAvailable = roomCount * daysInPeriod;
-
-        long totalNightsSold = 0;
-
-        // 2. Tính số đêm từ BookingRoomType (khách đặt trước)
-        try (PreparedStatement st = connection.prepareStatement(sqlBookingRoomType)) {
-            st.setInt(1, branchId);
-            st.setDate(2, java.sql.Date.valueOf(fromDate));
-            st.setDate(3, java.sql.Date.valueOf(toDate));
-
-            ResultSet rs = st.executeQuery();
-            while (rs.next()) {
-                int quantity = rs.getInt("quantity");
-                LocalDate checkIn = rs.getTimestamp("check_in").toLocalDateTime().toLocalDate();
-                LocalDate checkOut = rs.getTimestamp("check_out").toLocalDateTime().toLocalDate();
-
-                LocalDate actualStart = checkIn.isBefore(fromDate) ? fromDate : checkIn;
-                LocalDate actualEnd = checkOut.isAfter(toDate) ? toDate : checkOut;
-
-                if (!actualStart.isAfter(actualEnd)) {
-                    long nights = ChronoUnit.DAYS.between(actualStart, actualEnd);
-                    totalNightsSold += nights * quantity;
-                }
-            }
-        }
-
-        // 3. Tính số đêm từ RoomAssignment (khách walk-in)
-        try (PreparedStatement st = connection.prepareStatement(sqlRoomAssignment)) {
-            st.setInt(1, branchId);
-            st.setDate(2, java.sql.Date.valueOf(fromDate));
-            st.setDate(3, java.sql.Date.valueOf(toDate));
-
-            ResultSet rs = st.executeQuery();
-            while (rs.next()) {
-                LocalDate checkIn = rs.getTimestamp("check_in").toLocalDateTime().toLocalDate();
-                LocalDate checkOut = rs.getTimestamp("check_out").toLocalDateTime().toLocalDate();
-
-                LocalDate actualStart = checkIn.isBefore(fromDate) ? fromDate : checkIn;
-                LocalDate actualEnd = checkOut.isAfter(toDate) ? toDate : checkOut;
-
-                if (!actualStart.isAfter(actualEnd)) {
-                    long nights = ChronoUnit.DAYS.between(actualStart, actualEnd);
-                    totalNightsSold += nights; // walk-in thì tính từng phòng, không cần nhân quantity
-                }
-            }
-        }
-
-        // 4. Tính occupancy rate
-        occupancyRate = (double) totalNightsSold / totalNightsAvailable * 100;
-
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
-
-    return occupancyRate;
-}
 // Thêm các phương thức sau vào class RoomDAO
 
 /**
