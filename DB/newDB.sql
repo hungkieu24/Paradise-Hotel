@@ -869,3 +869,49 @@ INSERT INTO Expense (branch_id, expense_type, amount, description, expense_date,
 (3, 'Marketing', 45000000, 'Social media and event promotion', '2025-06-02', 'U003'),
 (3, 'Utilities', 40000000, 'Electricity and water', '2025-06-19', 'U003');
 
+-- Ngày 19/07/2025 (5 booking)
+INSERT INTO Booking (user_id, created_by, check_in, check_out, status, total_price, payment_status, branch_id, note)
+VALUES 
+('U003', NULL, '2025-07-18 14:00:00', '2025-07-20 12:00:00', 'CheckedIn', 300.00, 'Paid', 1, 'Already checked in'), -- ID 11
+('U004', NULL, '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'Paid', 400.00, 'Paid', 1, 'Paid but not assigned room yet'), -- ID 12
+('U005', NULL, '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'Pending', 250.00, 'Unpaid', 1, 'Waiting for payment'), -- ID 13
+('U006', NULL, '2025-07-19 14:00:00', '2025-07-20 12:00:00', 'Paid', 600.00, 'Paid', 1, 'Booked multiple rooms'), -- ID 14
+('U007', NULL, '2025-07-19 12:00:00', '2025-07-21 12:00:00', 'CheckedIn', 350.00, 'Paid', 1, 'Checked in early'); -- ID 15
+
+-- Ngày 20/07/2025 (5 booking)
+INSERT INTO Booking (user_id, created_by, check_in, check_out, status, total_price, payment_status, branch_id, note)
+VALUES 
+('U008', NULL, '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'CheckedIn', 500.00, 'Paid', 1, 'Staying from yesterday'), -- ID 16
+('U007', NULL, '2025-07-20 14:00:00', '2025-07-22 12:00:00', 'Paid', 700.00, 'Paid', 1, 'Booking paid today'), -- ID 17
+('U006', NULL, '2025-07-20 14:00:00', '2025-07-21 12:00:00', 'Paid', 900.00, 'Paid', 1, 'Booked multiple room types'), -- ID 18
+('U005', NULL, '2025-07-20 10:00:00', '2025-07-21 12:00:00', 'CheckedIn', 600.00, 'Paid', 1, 'Checked in this morning'), -- ID 19
+('U004', NULL, '2025-07-20 14:00:00', '2025-07-21 12:00:00', 'Pending', 300.00, 'Unpaid', 1, 'Waiting for payment'); -- ID 20
+
+INSERT INTO BookingRoomType (booking_id, room_type_id, quantity, price_per_room)
+VALUES
+-- Ngày 19/07/2025
+(11, 1, 1, 300000.00), -- CheckedIn
+(12, 2, 1, 400000.00), -- Paid
+(13, 3, 1, 250000.00), -- Pending (không ảnh hưởng dashboard)
+(14, 1, 2, 200000.00), -- Paid (multi roomtype)
+(14, 3, 1, 200000.00),
+(15, 2, 1, 350000.00), -- CheckedIn
+
+-- Ngày 20/07/2025
+(16, 1, 1, 500000.00), -- CheckedIn
+(17, 2, 1, 700000.00), -- Paid
+(18, 1, 2, 300000.00), -- Paid (multi roomtype)
+(18, 3, 1, 300000.00),
+(19, 2, 1, 600000.00), -- CheckedIn
+(20, 3, 1, 300000.00); -- Pending
+
+INSERT INTO RoomAssignment (booking_id, room_id)
+VALUES
+-- Ngày 19/07/2025
+(11, 3),  -- room_id = 3 (103)
+(15, 10), -- room_id = 10 (202)
+
+-- Ngày 20/07/2025
+(16, 4),  -- room_id = 4 (104)
+(19, 11); -- room_id = 11 (203)
+

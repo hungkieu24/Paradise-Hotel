@@ -12,7 +12,9 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * RoomDAO for handling Room database operations.
@@ -412,37 +414,39 @@ public class RoomDAO extends DBContext {
         return 0;
     }
     // Lấy danh sách phòng theo branch, status, phân trang
-public List<Room> pagingRoomByBranch(int branchId, String status, int page, int pageSize) {
-    List<Room> list = new ArrayList<>();
-    String sql = "SELECT * FROM Room WHERE branch_id = ?"
+
+    public List<Room> pagingRoomByBranch(int branchId, String status, int page, int pageSize) {
+        List<Room> list = new ArrayList<>();
+        String sql = "SELECT * FROM Room WHERE branch_id = ?"
                 + (status != null && !status.isEmpty() ? " AND status = ?" : "")
                 + " ORDER BY id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY;";
-    try {
-        PreparedStatement ps = connection.prepareStatement(sql);
-        ps.setInt(1, branchId);
-        int idx = 2;
-        if (status != null && !status.isEmpty()) {
-            ps.setString(idx++, status);
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, branchId);
+            int idx = 2;
+            if (status != null && !status.isEmpty()) {
+                ps.setString(idx++, status);
+            }
+            ps.setInt(idx++, (page - 1) * pageSize);
+            ps.setInt(idx++, pageSize);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Room r = new Room(
+                        rs.getInt("id"),
+                        rs.getString("room_number"),
+                        rs.getInt("branch_id"),
+                        rs.getInt("room_type_id"),
+                        rs.getString("status"),
+                        rs.getString("image_url")
+                );
+                list.add(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        ps.setInt(idx++, (page - 1) * pageSize);
-        ps.setInt(idx++, pageSize);
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-            Room r = new Room(
-                    rs.getInt("id"),
-                    rs.getString("room_number"),
-                    rs.getInt("branch_id"),
-                    rs.getInt("room_type_id"),
-                    rs.getString("status"),
-                    rs.getString("image_url")
-            );
-            list.add(r);
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
+        return list;
     }
-    return list;
-}
+
     // Đếm tổng số phòng theo branch
     public int countRoomsByBranch(int branchId) {
         String sql = "SELECT COUNT(*) FROM Room WHERE branch_id = ?";
@@ -2087,182 +2091,334 @@ public List<Room> pagingRoomByBranch(int branchId, String status, int page, int 
     }
 // Thêm các phương thức sau vào class RoomDAO
 
-/**
- * Phân trang phòng theo branch với filter status
- */
-public List<Room> pagingRoomByBranchWithStatus(int branchId, String status, int page, int pageSize) {
-    List<Room> list = new ArrayList<>();
-    String sql = "SELECT * FROM Room WHERE branch_id = ?";
-    
-    if (status != null && !status.trim().isEmpty()) {
-        sql += " AND status = ?";
-    }
-    
-    sql += " ORDER BY id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-    
-    try {
-        PreparedStatement ps = connection.prepareStatement(sql);
-        int paramIndex = 1;
-        ps.setInt(paramIndex++, branchId);
-        
-        if (status != null && !status.trim().isEmpty()) {
-            ps.setString(paramIndex++, status);
-        }
-        
-        ps.setInt(paramIndex++, (page - 1) * pageSize);
-        ps.setInt(paramIndex++, pageSize);
-        
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-            Room r = new Room(
-                    rs.getInt("id"),
-                    rs.getString("room_number"),
-                    rs.getInt("branch_id"),
-                    rs.getInt("room_type_id"),
-                    rs.getString("status"),
-                    rs.getString("image_url")
-            );
-            list.add(r);
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    return list;
-}
+    /**
+     * Phân trang phòng theo branch với filter status
+     */
+    public List<Room> pagingRoomByBranchWithStatus(int branchId, String status, int page, int pageSize) {
+        List<Room> list = new ArrayList<>();
+        String sql = "SELECT * FROM Room WHERE branch_id = ?";
 
-/**
- * Đếm tổng số phòng theo branch với filter status
- */
-public int countRoomsByBranchWithStatus(int branchId, String status) {
-    String sql = "SELECT COUNT(*) FROM Room WHERE branch_id = ?";
-    
-    if (status != null && !status.trim().isEmpty()) {
-        sql += " AND status = ?";
-    }
-    
-    try {
-        PreparedStatement ps = connection.prepareStatement(sql);
-        int paramIndex = 1;
-        ps.setInt(paramIndex++, branchId);
-        
         if (status != null && !status.trim().isEmpty()) {
-            ps.setString(paramIndex++, status);
+            sql += " AND status = ?";
         }
-        
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            return rs.getInt(1);
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    return 0;
-}
 
-/**
- * Tìm kiếm phòng theo roomtype name, branch với filter status và phân trang
- */
-public List<Room> searchRoomsByRoomTypeNameAndBranchWithStatus(String roomTypeNameKeyword, int branchId, String status, int page, int pageSize) {
-    List<Room> list = new ArrayList<>();
-    String sql = "SELECT r.* FROM Room r JOIN RoomType rt ON r.room_type_id = rt.id "
-               + "WHERE rt.name LIKE ? AND r.branch_id = ?";
-    
-    if (status != null && !status.trim().isEmpty()) {
-        sql += " AND r.status = ?";
-    }
-    
-    sql += " ORDER BY r.id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-    
-    try {
-        PreparedStatement ps = connection.prepareStatement(sql);
-        int paramIndex = 1;
-        ps.setString(paramIndex++, "%" + roomTypeNameKeyword + "%");
-        ps.setInt(paramIndex++, branchId);
-        
-        if (status != null && !status.trim().isEmpty()) {
-            ps.setString(paramIndex++, status);
-        }
-        
-        ps.setInt(paramIndex++, (page - 1) * pageSize);
-        ps.setInt(paramIndex++, pageSize);
-        
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-            Room r = new Room(
-                    rs.getInt("id"),
-                    rs.getString("room_number"),
-                    rs.getInt("branch_id"),
-                    rs.getInt("room_type_id"),
-                    rs.getString("status"),
-                    rs.getString("image_url")
-            );
-            list.add(r);
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    return list;
-}
+        sql += " ORDER BY id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
-/**
- * Đếm tổng phòng theo roomtype name, branch với filter status
- */
-public int countRoomsByRoomTypeNameAndBranchWithStatus(String roomTypeNameKeyword, int branchId, String status) {
-    String sql = "SELECT COUNT(*) FROM Room r JOIN RoomType rt ON r.room_type_id = rt.id "
-               + "WHERE rt.name LIKE ? AND r.branch_id = ?";
-    
-    if (status != null && !status.trim().isEmpty()) {
-        sql += " AND r.status = ?";
-    }
-    
-    try {
-        PreparedStatement ps = connection.prepareStatement(sql);
-        int paramIndex = 1;
-        ps.setString(paramIndex++, "%" + roomTypeNameKeyword + "%");
-        ps.setInt(paramIndex++, branchId);
-        
-        if (status != null && !status.trim().isEmpty()) {
-            ps.setString(paramIndex++, status);
-        }
-        
-        ResultSet rs = ps.executeQuery();
-        if (rs.next()) {
-            return rs.getInt(1);
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    return 0;
-}
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            int paramIndex = 1;
+            ps.setInt(paramIndex++, branchId);
 
-/**
- * Đếm số lượng phòng theo từng room type và status
- */
-public Map<Integer, Integer> getRoomTypeCountByBranchAndStatus(int branchId, String status) {
-    Map<Integer, Integer> map = new HashMap<>();
-    String sql = "SELECT room_type_id, COUNT(*) as cnt FROM Room WHERE branch_id = ?";
-    
-    if (status != null && !status.trim().isEmpty()) {
-        sql += " AND status = ?";
+            if (status != null && !status.trim().isEmpty()) {
+                ps.setString(paramIndex++, status);
+            }
+
+            ps.setInt(paramIndex++, (page - 1) * pageSize);
+            ps.setInt(paramIndex++, pageSize);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Room r = new Room(
+                        rs.getInt("id"),
+                        rs.getString("room_number"),
+                        rs.getInt("branch_id"),
+                        rs.getInt("room_type_id"),
+                        rs.getString("status"),
+                        rs.getString("image_url")
+                );
+                list.add(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
-    
-    sql += " GROUP BY room_type_id";
-    
-    try (PreparedStatement ps = connection.prepareStatement(sql)) {
-        int paramIndex = 1;
-        ps.setInt(paramIndex++, branchId);
-        
+
+    /**
+     * Đếm tổng số phòng theo branch với filter status
+     */
+    public int countRoomsByBranchWithStatus(int branchId, String status) {
+        String sql = "SELECT COUNT(*) FROM Room WHERE branch_id = ?";
+
         if (status != null && !status.trim().isEmpty()) {
-            ps.setString(paramIndex++, status);
+            sql += " AND status = ?";
         }
-        
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-            map.put(rs.getInt("room_type_id"), rs.getInt("cnt"));
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            int paramIndex = 1;
+            ps.setInt(paramIndex++, branchId);
+
+            if (status != null && !status.trim().isEmpty()) {
+                ps.setString(paramIndex++, status);
+            }
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    } catch (Exception e) {
-        e.printStackTrace();
+        return 0;
     }
-    return map;
-}
+
+    /**
+     * Tìm kiếm phòng theo roomtype name, branch với filter status và phân trang
+     */
+    public List<Room> searchRoomsByRoomTypeNameAndBranchWithStatus(String roomTypeNameKeyword, int branchId, String status, int page, int pageSize) {
+        List<Room> list = new ArrayList<>();
+        String sql = "SELECT r.* FROM Room r JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE rt.name LIKE ? AND r.branch_id = ?";
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql += " AND r.status = ?";
+        }
+
+        sql += " ORDER BY r.id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            int paramIndex = 1;
+            ps.setString(paramIndex++, "%" + roomTypeNameKeyword + "%");
+            ps.setInt(paramIndex++, branchId);
+
+            if (status != null && !status.trim().isEmpty()) {
+                ps.setString(paramIndex++, status);
+            }
+
+            ps.setInt(paramIndex++, (page - 1) * pageSize);
+            ps.setInt(paramIndex++, pageSize);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Room r = new Room(
+                        rs.getInt("id"),
+                        rs.getString("room_number"),
+                        rs.getInt("branch_id"),
+                        rs.getInt("room_type_id"),
+                        rs.getString("status"),
+                        rs.getString("image_url")
+                );
+                list.add(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Đếm tổng phòng theo roomtype name, branch với filter status
+     */
+    public int countRoomsByRoomTypeNameAndBranchWithStatus(String roomTypeNameKeyword, int branchId, String status) {
+        String sql = "SELECT COUNT(*) FROM Room r JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE rt.name LIKE ? AND r.branch_id = ?";
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql += " AND r.status = ?";
+        }
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            int paramIndex = 1;
+            ps.setString(paramIndex++, "%" + roomTypeNameKeyword + "%");
+            ps.setInt(paramIndex++, branchId);
+
+            if (status != null && !status.trim().isEmpty()) {
+                ps.setString(paramIndex++, status);
+            }
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    /**
+     * Đếm số lượng phòng theo từng room type và status
+     */
+    public Map<Integer, Integer> getRoomTypeCountByBranchAndStatus(int branchId, String status) {
+        Map<Integer, Integer> map = new HashMap<>();
+        String sql = "SELECT room_type_id, COUNT(*) as cnt FROM Room WHERE branch_id = ?";
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql += " AND status = ?";
+        }
+
+        sql += " GROUP BY room_type_id";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            int paramIndex = 1;
+            ps.setInt(paramIndex++, branchId);
+
+            if (status != null && !status.trim().isEmpty()) {
+                ps.setString(paramIndex++, status);
+            }
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                map.put(rs.getInt("room_type_id"), rs.getInt("cnt"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
+    public List<Room> getAllRoomStatusForManager(int branchId, int page, int pageSize, LocalDate date) {
+        List<Room> rooms = new ArrayList<>();
+        int offset = (page - 1) * pageSize;
+
+        Map<Integer, List<Room>> roomsByRoomType = new HashMap<>();
+
+        String sql = "SELECT r.id AS room_id, r.room_number, r.status, r.branch_id, r.room_type_id, r.image_url AS room_image_url, "
+                + "rt.id AS roomtype_id, rt.name, rt.description, rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url AS roomtype_image_url "
+                + "FROM Room r "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE r.is_deleted = 0 AND rt.is_deleted = 0 AND r.branch_id = ? "
+                + "ORDER BY r.id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            ps.setInt(2, offset);
+            ps.setInt(3, pageSize);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                RoomType rt = new RoomType(
+                        rs.getInt("roomtype_id"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getDouble("base_price"),
+                        rs.getInt("capacity_adult"),
+                        rs.getInt("capacity_child"),
+                        rs.getString("roomtype_image_url")
+                );
+                Room room = new Room(
+                        rs.getInt("room_id"),
+                        rs.getString("room_number"),
+                        rs.getInt("branch_id"),
+                        rs.getInt("room_type_id"),
+                        rs.getString("status"), // tạm thời giữ nguyên, tí nữa sẽ update lại
+                        rs.getString("room_image_url")
+                );
+                room.setRoomType(rt);
+
+                rooms.add(room);
+
+                // Phân loại theo roomtype
+                roomsByRoomType.computeIfAbsent(rt.getRoomTypeID(), k -> new ArrayList<>()).add(room);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error in getAllRoomStatusForManager: " + e.getMessage());
+            return rooms; // return empty nếu lỗi
+        }
+
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(23, 59, 59);
+
+        // Map phòng đang Occupied theo RoomAssignment
+        try {
+            String assignmentSql = "SELECT ra.room_id "
+                    + "FROM RoomAssignment ra "
+                    + "JOIN Booking b ON ra.booking_id = b.id "
+                    + "WHERE b.status = 'CheckedIn' "
+                    + "AND b.check_in <= ? AND b.check_out >= ?";
+
+            try (PreparedStatement ps = connection.prepareStatement(assignmentSql)) {
+                ps.setTimestamp(1, Timestamp.valueOf(endOfDay));
+                ps.setTimestamp(2, Timestamp.valueOf(startOfDay));
+                ResultSet rs = ps.executeQuery();
+                Set<Integer> occupiedRoomIds = new HashSet<>();
+                while (rs.next()) {
+                    occupiedRoomIds.add(rs.getInt("room_id"));
+                }
+
+                // Cập nhật trạng thái Occupied trước
+                for (Room room : rooms) {
+                    if (occupiedRoomIds.contains(room.getId()) && !room.getStatus().equals("Maintenance")) {
+                        room.setStatus("Occupied");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // Map các phòng cần set "Booked" tạm thời
+        try {
+            String bookingSql = "SELECT brt.room_type_id, SUM(brt.quantity) AS total_booked "
+                    + "FROM Booking b "
+                    + "JOIN BookingRoomType brt ON b.id = brt.booking_id "
+                    + "WHERE b.status = 'Paid' AND b.is_deleted = 0 "
+                    + "AND b.branch_id = ? "
+                    + "AND b.check_in <= ? AND b.check_out >= ? "
+                    + "GROUP BY brt.room_type_id";
+
+            try (PreparedStatement ps = connection.prepareStatement(bookingSql)) {
+                ps.setInt(1, branchId);
+                ps.setTimestamp(2, Timestamp.valueOf(endOfDay));
+                ps.setTimestamp(3, Timestamp.valueOf(startOfDay));
+                ResultSet rs = ps.executeQuery();
+
+                while (rs.next()) {
+                    int roomTypeId = rs.getInt("room_type_id");
+                    int totalBooked = rs.getInt("total_booked");
+
+                    List<Room> roomList = roomsByRoomType.getOrDefault(roomTypeId, new ArrayList<>());
+
+                    int count = 0;
+                    for (Room room : roomList) {
+                        if (count >= totalBooked) {
+                            break;
+                        }
+
+                        if (room.getStatus().equals("Available")) { // chỉ gán nếu đang available
+                            room.setStatus("Booked");
+                            count++;
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return rooms;
+    }
+
+    public int getTotalRoomForManager(int branchId) {
+        String sql = "SELECT COUNT(*) AS total FROM Room r "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE r.is_deleted = 0 AND rt.is_deleted = 0 AND r.branch_id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, branchId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("total");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error in getTotalRoomForManager: " + e.getMessage());
+        }
+
+        return 0; // Trả về 0 nếu có lỗi
+    }
+
+    public static void main(String[] args) {
+        RoomDAO roomDAO = new RoomDAO();
+        List<Room> rooms = roomDAO.getAllRoomStatusForManager(1, 1, 1000, LocalDate.now());
+        for (Room room : rooms) {
+            System.out.println(room);
+        }
+    }
+
 }
