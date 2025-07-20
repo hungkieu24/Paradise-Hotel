@@ -141,6 +141,21 @@
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 margin-bottom: 20px;
             }
+            .booking-availability {
+                background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+                border: 1px solid #e1bee7;
+                border-radius: 6px;
+                padding: 8px 12px;
+                margin-top: 4px;
+                font-weight: 600;
+                color: #4a148c;
+            }
+            .booking-availability .booked-count {
+                color: #d32f2f;
+            }
+            .booking-availability .available-count {
+                color: #388e3c;
+            }
         </style>
     </head>
     <body class="bg-light">
@@ -210,8 +225,11 @@
                                                     <small class="text-muted">
                                                         👥 ${roomType.capacity_adult} Adults, 👶 ${roomType.capacity_child} Children, 
                                                         💰 <fmt:formatNumber value="${roomType.base_price}" type="currency" currencySymbol="" maxFractionDigits="0"/> VND
-                                                        | <strong>Booked: ${bookedQuantity} rooms | Available: ${availableQuantity} rooms</strong>
                                                     </small>
+                                                    <div class="booking-availability">
+                                                        <span class="booked-count">Booked: ${bookedQuantity} rooms</span> | 
+                                                        <span class="available-count">Available: ${availableQuantity} rooms</span>
+                                                    </div>
                                                 </div>
                                                 <c:if test="${required > 0}">
                                                     <span class="badge ${needed > 0 ? 'bg-warning text-dark' : 'bg-success'}">

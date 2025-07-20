@@ -184,7 +184,7 @@ public class RoomAssignmentServlet extends HttpServlet {
             Timestamp checkOut = new Timestamp(booking.getCheckOut().getTime());
             
             // Get booked quantities for this date range (excluding current booking)
-            Map<Integer, Integer> bookedQuantitiesByType = brtDAO.getBookedQuantitiesByDateRange(checkIn, checkOut, branchId);
+            Map<Integer, Integer> bookedQuantitiesByType = brtDAO.getBookedQuantitiesByDateRange(checkIn, checkOut, branchId, bookingId);
             
             // Get total rooms by type for this branch
             Map<Integer, Integer> totalRoomsByType = roomDAO.getTotalRoomsByTypeAndBranch(branchId);

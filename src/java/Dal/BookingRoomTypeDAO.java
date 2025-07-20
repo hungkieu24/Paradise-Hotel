@@ -395,13 +395,14 @@ public class BookingRoomTypeDAO extends DBContext {
     }
     
     /**
-     * Get booked quantities by room type for a specific date range and branch
+     * Get booked quantities by room type for a specific date range and branch, excluding a specific booking
      * @param checkIn Check-in date
      * @param checkOut Check-out date  
      * @param branchId Branch ID
+     * @param excludeBookingId Booking ID to exclude from the count (current booking being assigned)
      * @return Map of room type ID to total booked quantity
      */
-    public Map<Integer, Integer> getBookedQuantitiesByDateRange(Timestamp checkIn, Timestamp checkOut, int branchId) {
+    public Map<Integer, Integer> getBookedQuantitiesByDateRange(Timestamp checkIn, Timestamp checkOut, int branchId, int excludeBookingId) {
         Map<Integer, Integer> bookedQuantities = new HashMap<>();
         String sql = """
             SELECT brt.room_type_id, SUM(brt.quantity) as total_booked
@@ -410,6 +411,7 @@ public class BookingRoomTypeDAO extends DBContext {
             INNER JOIN RoomType rt ON brt.room_type_id = rt.id
             WHERE b.branch_id = ? 
             AND b.status IN ('Paid', 'CheckedIn', 'Assigned')
+            AND b.id != ?
             AND NOT (b.check_out <= ? OR b.check_in >= ?)
             GROUP BY brt.room_type_id
         """;
@@ -418,8 +420,9 @@ public class BookingRoomTypeDAO extends DBContext {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setInt(1, branchId);
-            ps.setTimestamp(2, checkIn);
-            ps.setTimestamp(3, checkOut);
+            ps.setInt(2, excludeBookingId);
+            ps.setTimestamp(3, checkIn);
+            ps.setTimestamp(4, checkOut);
             ResultSet rs = ps.executeQuery();
             
             while (rs.next()) {
@@ -432,5 +435,16 @@ public class BookingRoomTypeDAO extends DBContext {
         }
         
         return bookedQuantities;
+    }
+    
+    /**
+     * Get booked quantities by room type for a specific date range and branch
+     * @param checkIn Check-in date
+     * @param checkOut Check-out date  
+     * @param branchId Branch ID
+     * @return Map of room type ID to total booked quantity
+     */
+    public Map<Integer, Integer> getBookedQuantitiesByDateRange(Timestamp checkIn, Timestamp checkOut, int branchId) {
+        return getBookedQuantitiesByDateRange(checkIn, checkOut, branchId, -1); // -1 means don't exclude any booking
     }
 }
