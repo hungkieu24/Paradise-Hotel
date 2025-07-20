@@ -941,6 +941,28 @@ public class RoomDAO extends DBContext {
         }
         return 0;
     }
+    
+    /**
+     * Get total rooms count by room type and branch
+     * @param branchId Branch ID
+     * @return Map of room type ID to total room count
+     */
+    public Map<Integer, Integer> getTotalRoomsByTypeAndBranch(int branchId) {
+        Map<Integer, Integer> totalRooms = new HashMap<>();
+        String sql = "SELECT room_type_id, COUNT(*) as total_rooms FROM Room WHERE branch_id = ? AND is_deleted = 0 GROUP BY room_type_id";
+        
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, branchId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                totalRooms.put(rs.getInt("room_type_id"), rs.getInt("total_rooms"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting total rooms by type and branch: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return totalRooms;
+    }
 
     public int getTotalRoomsByBranch(int branchId, String status, String roomTypeId, String search) {
         String sql = "SELECT COUNT(*) as total FROM Room r JOIN RoomType rt ON r.room_type_id = rt.id WHERE r.branch_id = ? AND r.is_deleted = 0";

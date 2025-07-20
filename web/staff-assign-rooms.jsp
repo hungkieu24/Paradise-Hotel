@@ -198,11 +198,21 @@
                                         <c:set var="required" value="${requiredQuantities.get(roomType.roomTypeID) != null ? requiredQuantities.get(roomType.roomTypeID) : 0}" />
                                         <c:set var="assigned" value="${assignmentCounts.get(roomType.roomTypeID) != null ? assignmentCounts.get(roomType.roomTypeID) : 0}" />
                                         <c:set var="needed" value="${required - assigned}" />
+                                        <c:set var="bookedQuantity" value="${bookedQuantitiesByType.get(roomType.roomTypeID) != null ? bookedQuantitiesByType.get(roomType.roomTypeID) : 0}" />
+                                        <c:set var="totalRooms" value="${totalRoomsByType.get(roomType.roomTypeID) != null ? totalRoomsByType.get(roomType.roomTypeID) : 0}" />
+                                        <c:set var="availableQuantity" value="${availableQuantitiesByType.get(roomType.roomTypeID) != null ? availableQuantitiesByType.get(roomType.roomTypeID) : 0}" />
 
                                         <div class="room-type-section ${needed > 0 ? 'needs-assignment' : ''}">
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                               
-                                                <h6 class="mb-0">${roomType.name}</h6>
+                                                <div>
+                                                    <h6 class="mb-1">${roomType.name}</h6>
+                                                    <small class="text-muted">
+                                                        👥 ${roomType.capacity_adult} Adults, 👶 ${roomType.capacity_child} Children, 
+                                                        💰 <fmt:formatNumber value="${roomType.base_price}" type="currency" currencySymbol="" maxFractionDigits="0"/> VND
+                                                        | <strong>Booked: ${bookedQuantity} rooms | Available: ${availableQuantity} rooms</strong>
+                                                    </small>
+                                                </div>
                                                 <c:if test="${required > 0}">
                                                     <span class="badge ${needed > 0 ? 'bg-warning text-dark' : 'bg-success'}">
                                                         Required: ${required} | Assigned: ${assigned}

@@ -393,4 +393,44 @@ public class BookingRoomTypeDAO extends DBContext {
         }
         return roomTypeId;
     }
+    
+    /**
+     * Get booked quantities by room type for a specific date range and branch
+     * @param checkIn Check-in date
+     * @param checkOut Check-out date  
+     * @param branchId Branch ID
+     * @return Map of room type ID to total booked quantity
+     */
+    public Map<Integer, Integer> getBookedQuantitiesByDateRange(Timestamp checkIn, Timestamp checkOut, int branchId) {
+        Map<Integer, Integer> bookedQuantities = new HashMap<>();
+        String sql = """
+            SELECT brt.room_type_id, SUM(brt.quantity) as total_booked
+            FROM BookingRoomType brt
+            INNER JOIN Booking b ON brt.booking_id = b.id  
+            INNER JOIN RoomType rt ON brt.room_type_id = rt.id
+            WHERE b.branch_id = ? 
+            AND b.status IN ('Paid', 'CheckedIn', 'Assigned')
+            AND NOT (b.check_out <= ? OR b.check_in >= ?)
+            GROUP BY brt.room_type_id
+        """;
+        
+        try (Connection conn = connection;
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, branchId);
+            ps.setTimestamp(2, checkIn);
+            ps.setTimestamp(3, checkOut);
+            ResultSet rs = ps.executeQuery();
+            
+            while (rs.next()) {
+                bookedQuantities.put(rs.getInt("room_type_id"), rs.getInt("total_booked"));
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting booked quantities by date range: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return bookedQuantities;
+    }
 }

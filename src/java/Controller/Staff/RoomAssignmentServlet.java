@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,6 +179,25 @@ public class RoomAssignmentServlet extends HttpServlet {
 
             boolean isFullyAssigned = bookingDAO.areAllRoomsAssigned(bookingId);
 
+            // Calculate booking availability information
+            Timestamp checkIn = new Timestamp(booking.getCheckIn().getTime());
+            Timestamp checkOut = new Timestamp(booking.getCheckOut().getTime());
+            
+            // Get booked quantities for this date range (excluding current booking)
+            Map<Integer, Integer> bookedQuantitiesByType = brtDAO.getBookedQuantitiesByDateRange(checkIn, checkOut, branchId);
+            
+            // Get total rooms by type for this branch
+            Map<Integer, Integer> totalRoomsByType = roomDAO.getTotalRoomsByTypeAndBranch(branchId);
+            
+            // Calculate available quantities
+            Map<Integer, Integer> availableQuantitiesByType = new HashMap<>();
+            for (RoomType rt : allSystemRoomTypes) {
+                int totalRooms = totalRoomsByType.getOrDefault(rt.getRoomTypeID(), 0);
+                int bookedRooms = bookedQuantitiesByType.getOrDefault(rt.getRoomTypeID(), 0);
+                int availableRooms = Math.max(0, totalRooms - bookedRooms);
+                availableQuantitiesByType.put(rt.getRoomTypeID(), availableRooms);
+            }
+
             // Phần dịch vụ giữ nguyên
             BookingServiceDAO bookingServiceDAO = new BookingServiceDAO();
             List<BookingService> bookingServices = bookingServiceDAO.getBookingServicesByBookingId(bookingId);
@@ -194,6 +214,11 @@ public class RoomAssignmentServlet extends HttpServlet {
             request.setAttribute("isFullyAssigned", isFullyAssigned);
             request.setAttribute("bookingServices", bookingServices);
             request.setAttribute("availableServices", availableServices);
+            
+            // Add booking availability data
+            request.setAttribute("bookedQuantitiesByType", bookedQuantitiesByType);
+            request.setAttribute("totalRoomsByType", totalRoomsByType);
+            request.setAttribute("availableQuantitiesByType", availableQuantitiesByType);
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("/staff-assign-rooms.jsp");
             dispatcher.forward(request, response);
