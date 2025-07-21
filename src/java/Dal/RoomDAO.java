@@ -2046,7 +2046,6 @@ public class RoomDAO extends DBContext {
             }
         }
 
-        return occupancyRate;
     }
 
     /**

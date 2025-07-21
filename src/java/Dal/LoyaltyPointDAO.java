@@ -377,8 +377,9 @@ public class LoyaltyPointDAO extends DBContext {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-           return false;
+        return false;
     }
+
     //hieu 
     public boolean updateTotalSpending(String userId, double additionalSpending) {
         // Get current data first
@@ -444,8 +445,8 @@ public class LoyaltyPointDAO extends DBContext {
 
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
-        }
 
+        }
+        return false;
     }
 }
