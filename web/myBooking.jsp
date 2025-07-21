@@ -242,7 +242,7 @@
                                 <input type="hidden" name="bookingId" id="refundBookingId">
                                 <input type="hidden" name="amount" id="refundAmount">
 
-                                <p><strong>Booking ID:</strong> #<span id="refundBookingIdDisplay"></span></p>
+                                <p><strong>Booking ID:</strong> <span id="refundBookingIdDisplay"></span></p>
                                 <p><strong>Số tiền hoàn:</strong> <span id="refundAmountDisplay"></span> VND</p>
 
                                 <label for="refundReason">Lý do hoàn tiền: <span style="color: red;">*</span></label>
@@ -257,9 +257,50 @@
                             </form>
                         </div>
                     </div>
-                    <% 
+                    <%
   String refundMsg = (String) session.getAttribute("refundMsg");
-  if (refundMsg != null) { 
+  if (refundMsg != null) {
+    if ("LATE_CANCEL_CONFIRM".equals(refundMsg)) {
+        // Special case for late cancellation confirmation
+        Integer lateCancelBookingId = (Integer) session.getAttribute("lateCancelBookingId");
+        Double lateCancelAmount = (Double) session.getAttribute("lateCancelAmount");
+        String lateCancelReason = (String) session.getAttribute("lateCancelReason");
+                    %>
+                    <div id="lateCancelModal" class="modal" style="display: block;">
+                        <div class="modal-content" style="max-width: 600px;">
+                            <span class="close" onclick="closeLateCancel()">×</span>
+                            <div style="text-align: center;">
+                                <h2 style="color: #ff6b35; margin-bottom: 20px;">
+                                    <i class="fa fa-exclamation-triangle"></i> Xác nhận hủy booking
+                                </h2>
+                                <div style="text-align: left; line-height: 1.6; margin-bottom: 20px;">
+                                    <p><strong>⚠️ Thông báo quan trọng:</strong></p>
+                                    <p>Đã quá 1 ngày từ khi thanh toán, bạn sẽ <strong style="color: red;">KHÔNG được hoàn tiền</strong>.</p>
+                                    <p>Bạn có chắc chắn muốn hủy booking này không?</p>
+                                    <p><strong>Booking ID:</strong> <%= lateCancelBookingId %></p>
+                                    <p><strong>Số tiền:</strong> <%= String.format("%,.0f", lateCancelAmount) %> VND</p>
+                                </div>
+                                <div style="display: flex; gap: 10px; justify-content: center;">
+                                    <form method="post" action="vnpay-refund" style="display: inline;">
+                                        <input type="hidden" name="bookingId" value="<%= lateCancelBookingId %>">
+                                        <input type="hidden" name="amount" value="<%= lateCancelAmount %>">
+                                        <input type="hidden" name="refundReason" value="<%= lateCancelReason != null ? lateCancelReason : "Late cancellation" %>">
+                                        <input type="hidden" name="confirmLateCancel" value="true">
+                                        <button type="submit" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                                            Xác nhận hủy (Không hoàn tiền)
+                                        </button>
+                                    </form>
+                                    <button onclick="closeLateCancel()"
+                                            style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                                        Không hủy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <%
+    } else {
+        // Normal refund message
                     %>
                     <div id="refundSuccessModal" class="modal" style="display: block;">
                         <div class="modal-content" style="max-width: 500px;">
@@ -271,16 +312,20 @@
                                 <div style="text-align: left; line-height: 1.6;">
                                     <%= refundMsg %>
                                 </div>
-                                <button onclick="closeRefundSuccessModal()" 
+                                <button onclick="closeRefundSuccessModal()"
                                         style="margin-top: 20px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
                                     Đã hiểu
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <% 
-                    session.removeAttribute("refundMsg"); 
-                    } 
+                    <%
+    }
+    session.removeAttribute("refundMsg");
+    session.removeAttribute("lateCancelBookingId");
+    session.removeAttribute("lateCancelAmount");
+    session.removeAttribute("lateCancelReason");
+    }
                     %>
                     <!-- Pagination -->
                     <div class="pagination d-flex justify-content-center mt-4"> 
@@ -429,56 +474,7 @@
                 document.getElementById("editModal").style.display = "none";
             }
         </script>
-        <!--        <script>
-                    function showRefundForm(bookingId, totalPrice) {
-                        const confirmMsg = "Bạn có chắc chắn muốn hoàn tiền cho booking #" + bookingId + "?\n" +
-                                "Số tiền: " + totalPrice + " VND\n" +
-                                "Lưu ý: Quá trình hoàn tiền có thể mất 3-5 ngày làm việc.";
-        
-                        if (confirm(confirmMsg)) {
-                            const button = event.target;
-                            const originalText = button.innerHTML;
-                            button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý...';
-                            button.disabled = true;
-        
-                            const form = document.createElement('form');
-                            form.method = 'POST';
-                            form.action = 'vnpay-refund';
-        
-                            const bookingIdInput = document.createElement('input');
-                            bookingIdInput.type = 'hidden';
-                            bookingIdInput.name = 'bookingId';
-                            bookingIdInput.value = bookingId;
-        
-                            const amountInput = document.createElement('input');
-                            amountInput.type = 'hidden';
-                            amountInput.name = 'amount';
-                            amountInput.value = totalPrice;
-        
-                            const reasonInput = document.createElement('input');
-                            reasonInput.type = 'hidden';
-                            reasonInput.name = 'refundReason';
-                            reasonInput.value = 'Customer requested refund';
-        
-                            form.appendChild(bookingIdInput);
-                            form.appendChild(amountInput);
-                            form.appendChild(reasonInput);
-        
-                            document.body.appendChild(form);
-                            form.submit();
-                        }
-                    }
-        
-        // Show refund button only for eligible bookings
-                    function canShowRefundButton(booking) {
-                        return booking.status === 'Paid' &&
-                                booking.payment_status === 'Paid' &&
-                                booking.status !== 'CheckedIn' &&
-                                booking.status !== 'Completed' &&
-                                booking.status !== 'Cancelled' &&
-                                new Date(booking.check_in) > new Date(); // Before check-in date
-                    }
-                </script>-->
+
         <script>
             function showRefundForm(bookingId, totalPrice) {
                 // Set values cho modal
@@ -488,6 +484,7 @@
 
                 // Hiển thị modal
                 document.getElementById('refundModal').style.display = 'block';
+                document.getElementById('refundBookingIdDisplay').textContent = bookingId;
             }
 
             function closeRefundForm() {
@@ -529,13 +526,17 @@
                 document.getElementById('refundSuccessModal').style.display = 'none';
             }
 
+            function closeLateCancel() {
+                document.getElementById('lateCancelModal').style.display = 'none';
+            }
+
 // Tự động đóng modal sau 10 giây
             document.addEventListener('DOMContentLoaded', function () {
                 const modal = document.getElementById('refundSuccessModal');
                 if (modal) {
                     setTimeout(function () {
                         modal.style.display = 'none';
-                    }, 10000); // 10 giây
+                    }, 60000); // 60 giây
                 }
             });
 

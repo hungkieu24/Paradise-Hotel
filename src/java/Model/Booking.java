@@ -12,6 +12,7 @@ public class Booking {
     private Timestamp checkOut;
     private String status;
     private double totalPrice;
+    private Double refundAmount;
     private String paymentStatus;
     private String cancelReason;
     private Timestamp cancelTime;
@@ -131,6 +132,14 @@ public class Booking {
 
     public void setTotalPrice(double totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    public Double getRefundAmount() {
+        return refundAmount;
+    }
+
+    public void setRefundAmount(Double refundAmount) {
+        this.refundAmount = refundAmount;
     }
 
     public String getPaymentStatus() {

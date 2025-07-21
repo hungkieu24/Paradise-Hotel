@@ -46,7 +46,7 @@
         <c:forEach var="r" items="${roomList}">
             <li>${r.roomTypeName} - ${r.quantity} x 
                 <fmt:formatNumber value="${r.base_price}" type="currency" currencySymbol="₫"/> = 
-                <fmt:formatNumber value="${r.pricePerRoom}" type="currency" currencySymbol="₫"/>
+                <fmt:formatNumber value="${r.base_price * r.quantity}" type="currency" currencySymbol="₫"/>
             </li>
             </c:forEach>
     </ul>

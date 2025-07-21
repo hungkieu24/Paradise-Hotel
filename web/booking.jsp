@@ -141,6 +141,10 @@
                 <form action="booking" method="post" id="booking-form">
                     <input type="hidden" name="roomTypeId" value="${empty param.roomTypeId ? '' : param.roomTypeId}">
                     <input type="hidden" name="action" value="${param.action}">
+                    <c:if test="${param.rebook == '1'}">
+                        <input type="hidden" name="rebook" value="1">
+                        <input type="hidden" name="action" value="book">
+                    </c:if>
                     <div class="left-column">
 
                         <!-- Customer info -->
@@ -204,6 +208,7 @@
                     <input type="hidden" name="discountPercent" id="discountPercent" value="${loyaltyPoint.discountPercent}" />
                     <input type="hidden" name="totalRoom" id="totalRoom" value="${totalRoom}" />
                     <input type="hidden" name="finalTotalPrice" id="finalTotalPrice" />
+                    <input type="hidden" name="selectedVoucherId" id="selectedVoucherId" />
 
                     <div class="right-column">
                         <!-- Room Summary -->
@@ -236,7 +241,7 @@
                             <strong>
                                 <ul>
                                     <li>
-                                        <span style="color: black">Total room cost:  </span> 
+                                        <span style="color: black">Total room cost:  </span>
                                         <span style="color: black"><fmt:formatNumber value="${totalRoom}" type="number" groupingUsed="true" maxFractionDigits="0" /> VND</span>
                                     </li>
                                 </ul>
@@ -252,20 +257,73 @@
                             <div class="service-total" style="margin-top: 10px;">
                                 <strong>Total service cost: <span id="service-total">0 VND</span></strong>
                             </div>
+                            
+                            <hr>
+                            <div class="nights-info" style="margin-top: 10px;">
+                                <strong>Number of nights: <span id="nights-count">1</span></strong>
+                            </div>
 
-                            <br>
+                       
                             <hr>
 
                             <div class="rank">
                                 <p>
-                                    <strong>Your Rank: ${loyaltyPoint.level}</strong> 
+                                    <strong>Your Rank: ${loyaltyPoint.level}</strong>
                                     (${loyaltyPoint.discountPercent}% discount)
                                 </p>
-                                <p>Discount applied: <span id="discount-applied">0 VND</span></p>
+                                <p>Rank discount applied: <span id="discount-applied">0 VND</span></p>
                             </div>
 
+                            <!-- Voucher Section -->
+                            <div class="voucher-section" style="margin-top: 10px;">
+                                <h4>Available Vouchers:</h4>
+                                <c:choose>
+                                    <c:when test="${not empty availableVouchers}">
+                                        <c:forEach var="voucher" items="${availableVouchers}">
+                                            <div class="voucher-item" style="margin: 5px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                                    <input type="radio" name="selectedVoucher" value="${voucher.id}"
+                                                           data-discount-percent="${voucher.discount_percent}"
+                                                           data-discount-amount="${voucher.discount_amount}"
+                                                           data-min-price="${voucher.min_price}"
+                                                           style="margin-right: 8px;">
+                                                    <div>
+                                                        <strong>${voucher.code}</strong><br>
+                                                        <small>${voucher.description}</small><br>
+                                                        <small style="color: #666;">
+                                                            <c:choose>
+                                                                <c:when test="${voucher.discount_percent > 0}">
+                                                                    ${voucher.discount_percent}% off
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <fmt:formatNumber value="${voucher.discount_amount}" type="number" groupingUsed="true" maxFractionDigits="0" /> VND off
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                            (Min: <fmt:formatNumber value="${voucher.min_price}" type="number" groupingUsed="true" maxFractionDigits="0" /> VND)
+                                                        </small>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </c:forEach>
+                                        <div class="voucher-item" style="margin: 5px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                                <input type="radio" name="selectedVoucher" value="" checked style="margin-right: 8px;">
+                                                <div><strong>No voucher</strong></div>
+                                            </label>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <p style="color: #666; font-style: italic;">No vouchers available</p>
+                                    </c:otherwise>
+                                </c:choose>
+                                         <hr>
+                                <p>Voucher discount: <span id="voucher-discount">0 VND</span></p>
+                            </div>
+
+                            
+
                             <div class="total">
-                                <strong>Total after discount: 
+                                <strong>Total after all discounts:
                                     <span id="final-total">0 VND</span>
                                 </strong>
                             </div>
@@ -407,21 +465,78 @@
                     selectedServiceIdsInput.value = selectedServices.join(",");
                     totalServiceCostInput.value = total;
 
-                    // Discount and Final total
+                    // Calculate number of nights
+                    const checkInInput = document.getElementById("checkIn");
+                    const checkOutInput = document.getElementById("checkOut");
+                    let numberOfNights = 1; // Default to 1 night
+
+                    if (checkInInput.value && checkOutInput.value) {
+                        const checkInDate = new Date(checkInInput.value);
+                        const checkOutDate = new Date(checkOutInput.value);
+                        const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+                        numberOfNights = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24))); // At least 1 night
+                    }
+
+                    // Discount and Final total (per night)
                     const totalRoomCost = parseFloat(document.getElementById("totalRoom").value || "0");
                     const discountPercent = parseFloat(document.getElementById("discountPercent").value || "0");
 
-                    const totalAll = totalRoomCost + total;
-                    const discountAmount = Math.round(totalAll * discountPercent / 100);
-                    const totalAfterDiscount = totalAll - discountAmount;
+                    const totalPerNight = totalRoomCost + total;
+                    const discountAmountPerNight = Math.round(totalPerNight * discountPercent / 100);
+                    const totalAfterDiscountPerNight = totalPerNight - discountAmountPerNight;
 
-                    document.getElementById("discount-applied").textContent = discountAmount.toLocaleString("vi-VN") + " VND";
-                    document.getElementById("final-total").textContent = totalAfterDiscount.toLocaleString("vi-VN") + " VND";
-                    document.getElementById("finalTotalPrice").value = totalAfterDiscount;
+                    // Calculate total before voucher = (Total after rank discount per night) * number of nights
+                    let totalBeforeVoucher = totalAfterDiscountPerNight * numberOfNights;
+
+                    // Apply voucher discount
+                    let voucherDiscount = 0;
+                    const selectedVoucher = document.querySelector('input[name="selectedVoucher"]:checked');
+                    if (selectedVoucher && selectedVoucher.value) {
+                        const discountPercent = parseFloat(selectedVoucher.dataset.discountPercent || "0");
+                        const discountAmount = parseFloat(selectedVoucher.dataset.discountAmount || "0");
+                        const minPrice = parseFloat(selectedVoucher.dataset.minPrice || "0");
+
+                        // Check if total meets minimum price requirement
+                        if (totalBeforeVoucher >= minPrice) {
+                            if (discountPercent > 0) {
+                                // Percentage discount
+                                voucherDiscount = Math.round(totalBeforeVoucher * discountPercent / 100);
+                            } else if (discountAmount > 0) {
+                                // Fixed amount discount
+                                voucherDiscount = Math.min(discountAmount, totalBeforeVoucher);
+                            }
+                        }
+                    }
+
+                    // Final total after all discounts
+                    const finalTotal = totalBeforeVoucher - voucherDiscount;
+
+                    // Update display
+                    document.getElementById("nights-count").textContent = numberOfNights;
+                    document.getElementById("discount-applied").textContent = (discountAmountPerNight * numberOfNights).toLocaleString("vi-VN") + " VND";
+                    document.getElementById("voucher-discount").textContent = voucherDiscount.toLocaleString("vi-VN") + " VND";
+                    document.getElementById("final-total").textContent = finalTotal.toLocaleString("vi-VN") + " VND";
+                    document.getElementById("finalTotalPrice").value = finalTotal;
+                    document.getElementById("selectedVoucherId").value = selectedVoucher ? selectedVoucher.value : "";
                 }
 
                 // Attach input event
                 inputs.forEach(input => input.addEventListener("input", updateSelectedServices));
+
+                // Attach event listeners to check-in and check-out inputs
+                const checkInInput = document.getElementById("checkIn");
+                const checkOutInput = document.getElementById("checkOut");
+                if (checkInInput)
+                    checkInInput.addEventListener("change", updateSelectedServices);
+                if (checkOutInput)
+                    checkOutInput.addEventListener("change", updateSelectedServices);
+
+                // Attach event listeners to voucher radio buttons
+                const voucherRadios = document.querySelectorAll('input[name="selectedVoucher"]');
+                voucherRadios.forEach(radio => {
+                    radio.addEventListener("change", updateSelectedServices);
+                });
+
                 updateSelectedServices();
 
                 // Validate on form submit
@@ -507,6 +622,42 @@
                                 showToast("❌ Error occurred", "#e53935");
                             });
                 });
+            });
+        </script>
+        <script>
+            document.getElementById('booking-form').addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                var formData = new FormData(this);
+
+                // ✅ THÊM: Kiểm tra nếu là rebook thì thêm parameter
+                var urlParams = new URLSearchParams(window.location.search);
+                var isRebook = urlParams.get('rebook');
+                if (isRebook === '1') {
+                    formData.append('rebook', '1');
+                    formData.append('action', 'book'); // ✅ Đảm bảo có action
+                    console.log('Rebook mode - added action=book');
+                } else {
+                    // ✅ THÊM: Logic cho booking bình thường
+                    formData.append('action', 'manyRoom'); // hoặc 'oneRoom' tùy case
+                }
+
+                // Debug: In ra formData
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
+
+                fetch('booking', {
+                    method: 'POST',
+                    body: formData
+                })
+                        .then(res => res.json())
+                        .then(data => {
+                            console.log('Response:', data);
+                            if (data.status === "success") {
+                                // VNPay redirect logic
+                            }
+                        });
             });
         </script>
     </body>

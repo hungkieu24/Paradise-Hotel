@@ -601,7 +601,6 @@ public class RoomDAO extends DBContext {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("Error in getAllRoomByBranchId: " + e.getMessage());
         }
         return rooms;
     }
@@ -892,15 +891,12 @@ public class RoomDAO extends DBContext {
             int rowsAffected = ps.executeUpdate();
 
             if (rowsAffected > 0) {
-                System.out.println("Room " + roomId + " status updated to: " + status);
                 return true;
             } else {
-                System.err.println("No room found with ID: " + roomId);
                 return false;
             }
 
         } catch (SQLException e) {
-            System.err.println("Error updating room status for room " + roomId + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         } finally {
@@ -1172,7 +1168,6 @@ public class RoomDAO extends DBContext {
                 rooms.add(room);
             }
 
-            System.out.println("Retrieved " + rooms.size() + " assigned rooms for booking " + bookingId);
 
         } catch (SQLException e) {
             System.err.println("Error getting assigned rooms for booking " + bookingId + ": " + e.getMessage());
@@ -1204,8 +1199,6 @@ public class RoomDAO extends DBContext {
                 + "AND r.is_deleted = 0";
 
         // Debug - In ra truy vấn SQL và tham số
-        System.out.println("SQL: " + sql);
-        System.out.println("roomTypeId: " + roomTypeId + ", branchId: " + branchId);
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, roomTypeId);
@@ -1213,7 +1206,6 @@ public class RoomDAO extends DBContext {
 
             try (ResultSet rs = ps.executeQuery()) {
                 // Debug - In ra kết quả truy vấn
-                System.out.println("Executing query...");
                 int count = 0;
 
                 while (rs.next()) {
@@ -1226,18 +1218,11 @@ public class RoomDAO extends DBContext {
                     room.setStatus(rs.getString("status"));
                     room.setRoomTypeName(rs.getString("roomTypeName"));
 
-                    // Debug - In thông tin phòng
-                    System.out.println("Found room: ID=" + room.getId()
-                            + ", Number=" + room.getRoomNumber()
-                            + ", Status='" + room.getStatus() + "'"
-                            + ", Type=" + room.getRoomTypeName());
 
                     rooms.add(room);
                 }
-                System.out.println("Found " + count + " rooms");
             }
         } catch (SQLException e) {
-            System.out.println("Error in getSimpleAvailableRoomsByType: " + e.getMessage());
             e.printStackTrace();
         }
         return rooms;
@@ -1257,15 +1242,11 @@ public class RoomDAO extends DBContext {
                 if (rsTime.next()) {
                     bookingCheckIn = rsTime.getTimestamp("check_in");
                     bookingCheckOut = rsTime.getTimestamp("check_out");
-                    System.out.println("Booking #" + bookingId + " check-in: " + bookingCheckIn + ", check-out: " + bookingCheckOut);
                 } else {
-                    // Không tìm thấy booking
-                    System.out.println("Booking #" + bookingId + " not found");
                     return rooms; // Return empty list
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Error getting booking time: " + e.getMessage());
             e.printStackTrace();
             return rooms;
         }
@@ -1305,10 +1286,7 @@ public class RoomDAO extends DBContext {
             ps.setTimestamp(8, bookingCheckIn);
             ps.setTimestamp(9, bookingCheckOut);
 
-            // Debug SQL
-            System.out.println("SQL for available rooms for assignment: " + sql);
-            System.out.println("Parameters: roomTypeId=" + roomTypeId + ", branchId=" + branchId
-                    + ", bookingId=" + bookingId);
+
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1335,10 +1313,8 @@ public class RoomDAO extends DBContext {
 
                     rooms.add(room);
                 }
-                System.out.println("Found " + rooms.size() + " available rooms for roomTypeId=" + roomTypeId);
             }
         } catch (SQLException e) {
-            System.out.println("SQL Error getting available rooms for assignment: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -1390,12 +1366,10 @@ public class RoomDAO extends DBContext {
                         room.setRoomType(rt);
 
                         rooms.add(room);
-                        System.out.println("Added already assigned room: " + room.getRoomNumber());
                     }
                 }
             }
         } catch (SQLException e) {
-            System.out.println("SQL Error getting already assigned rooms: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -1437,7 +1411,6 @@ public class RoomDAO extends DBContext {
             }
 
             // Debug log
-            System.out.println("Executing query for room types: " + String.join(", ", roomTypeNames));
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1466,9 +1439,7 @@ public class RoomDAO extends DBContext {
                 }
             }
 
-            System.out.println("Found " + rooms.size() + " available rooms for room types: " + String.join(", ", roomTypeNames));
         } catch (SQLException e) {
-            System.out.println("Error getting available rooms by room type name: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -1492,9 +1463,7 @@ public class RoomDAO extends DBContext {
                 }
             }
 
-            System.out.println("Room type names for booking " + bookingId + ": " + String.join(", ", roomTypeNames));
         } catch (SQLException e) {
-            System.out.println("Error getting room type names by booking id: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -1546,7 +1515,6 @@ public class RoomDAO extends DBContext {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("SQL Error getting all rooms by type: " + e.getMessage());
             e.printStackTrace();
         }
         return rooms;
@@ -1591,7 +1559,6 @@ public class RoomDAO extends DBContext {
                 ps.setString(i + 3, statuses.get(i));
             }
 
-            System.out.println("Executing query with statuses: " + statuses);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1620,7 +1587,6 @@ public class RoomDAO extends DBContext {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("SQL Error getting rooms by statuses: " + e.getMessage());
             e.printStackTrace();
         }
         return rooms;
@@ -1644,7 +1610,6 @@ public class RoomDAO extends DBContext {
             ps.setString(1, roomTypeName);
             ps.setInt(2, branchId);
 
-            System.out.println("Searching rooms by type name: " + roomTypeName);
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1673,7 +1638,6 @@ public class RoomDAO extends DBContext {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("SQL Error getting rooms by type name: " + e.getMessage());
             e.printStackTrace();
         }
         return rooms;
@@ -1689,7 +1653,6 @@ public class RoomDAO extends DBContext {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Error getting roomTypeId by name: " + e.getMessage());
         }
         return -1;
     }
@@ -1720,8 +1683,6 @@ public class RoomDAO extends DBContext {
                 + "AND (LOWER(r.status) = 'available' OR LOWER(r.status) = 'vacant') "
                 + "AND r.is_deleted = 0";
 
-        System.out.println("SQL for multiple room types: " + sql);
-        System.out.println("Room types: " + typeNamesClause + ", Branch ID: " + branchId);
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, branchId);
@@ -1739,16 +1700,11 @@ public class RoomDAO extends DBContext {
                     room.setImageUrl(rs.getString("image_url"));
                     room.setRoomTypeName(rs.getString("roomTypeName"));
 
-                    System.out.println("Found room: ID=" + room.getId()
-                            + ", Number=" + room.getRoomNumber()
-                            + ", Type=" + room.getRoomTypeName());
 
                     rooms.add(room);
                 }
-                System.out.println("Found " + count + " available rooms for types: " + typeNamesClause);
             }
         } catch (SQLException e) {
-            System.out.println("Error in getAvailableRoomsByTypeNames: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -1781,8 +1737,6 @@ public class RoomDAO extends DBContext {
                 + "AND r.branch_id = ? "
                 + "AND r.is_deleted = 0";
 
-        System.out.println("SQL for all rooms by types: " + sql);
-        System.out.println("Room types: " + typeNamesClause + ", Branch ID: " + branchId);
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, branchId);
@@ -1801,16 +1755,10 @@ public class RoomDAO extends DBContext {
                     room.setImageUrl(rs.getString("image_url"));
                     room.setRoomTypeName(rs.getString("roomTypeName"));
 
-                    System.out.println("Force adding room: ID=" + room.getId()
-                            + ", Number=" + room.getRoomNumber()
-                            + ", Type=" + room.getRoomTypeName());
-
                     rooms.add(room);
                 }
-                System.out.println("Force found " + count + " rooms for types: " + typeNamesClause);
             }
         } catch (SQLException e) {
-            System.out.println("Error in getAllRoomsByTypeNames: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -1900,8 +1848,6 @@ public class RoomDAO extends DBContext {
             return rooms;
         }
 
-        System.out.println("EMERGENCY: Getting ALL rooms for booking " + booking.getId()
-                + " with room types: " + booking.getRoomTypeName());
 
         try {
             // Truy vấn cực kỳ rộng để lấy TẤT CẢ phòng có trong hệ thống
@@ -1931,7 +1877,6 @@ public class RoomDAO extends DBContext {
                 }
             }
 
-            System.out.println("EMERGENCY: Found " + rooms.size() + " total rooms");
 
             // Sắp xếp phòng theo ưu tiên:
             // 1. Phòng có roomTypeName khớp với booking
@@ -1951,7 +1896,6 @@ public class RoomDAO extends DBContext {
                 });
             }
         } catch (SQLException e) {
-            System.out.println("Error in getAllRoomsForBookingEmergency: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -2006,10 +1950,8 @@ public class RoomDAO extends DBContext {
                 rooms.add(room);
             }
 
-            System.out.println("Successfully retrieved " + rooms.size() + " rooms from " + roomIds.size() + " requested IDs");
 
         } catch (SQLException e) {
-            System.err.println("Error getting rooms by IDs: " + e.getMessage());
             e.printStackTrace();
         } finally {
             try {
@@ -2103,8 +2045,30 @@ public class RoomDAO extends DBContext {
                 System.err.println("Error resetting auto-commit: " + e.getMessage());
             }
         }
+
+        return occupancyRate;
     }
 
+    /**
+     * Đếm số lượng phòng available theo room type
+     */
+    public int getAvailableRoomCountByRoomType(int roomTypeId) {
+        String sql = "SELECT COUNT(*) FROM Room WHERE room_type_id = ? AND status = 'Available' AND is_deleted = 0";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, roomTypeId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting available rooms: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
     /**
      * Cập nhật trạng thái phòng sau checkout
      */
