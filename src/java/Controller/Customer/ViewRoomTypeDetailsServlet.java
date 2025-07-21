@@ -62,11 +62,13 @@ public class ViewRoomTypeDetailsServlet extends HttpServlet {
 
         for (Feedback feedback : listFeedback) {
             String imgFolder = feedback.getImage_url();
+           
+
             if (imgFolder != null && !imgFolder.trim().isEmpty()) {
                 List<String> imageList = getImagesFromFolder(imgFolder, getServletContext());
                 feedback.setImageList(imageList);
-            }
-
+                
+            } 
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -90,25 +92,52 @@ public class ViewRoomTypeDetailsServlet extends HttpServlet {
         request.getRequestDispatcher("./viewRoomTypeDetail.jsp").forward(request, response);
     }
 
-    public List<String> getImagesFromFolder(String folderPath, ServletContext context) {
+    private List<String> getImagesFromFolder(String folderPath, ServletContext context) {
         List<String> imageList = new ArrayList<>();
 
-        String realPath = context.getRealPath(folderPath); // <-- Sửa ở đây cho chuẩn
 
-        File folder = new File(realPath);
-        if (folder.exists() && folder.isDirectory()) {
-            for (File file : folder.listFiles()) {
-                if (file.isFile() && isImageFile(file.getName())) {
-                    imageList.add(folderPath + "/" + file.getName()); // Giữ nguyên web path để show lên giao diện
+        // ✅ Kiểm tra cả 2 đường dẫn: web và build/web
+        String realPath1 = context.getRealPath(folderPath);
+        String realPath2 = context.getRealPath("").replace("build\\web\\", "web\\") + folderPath;
+
+
+        File folder1 = new File(realPath1);
+        File folder2 = new File(realPath2);
+
+
+        // ✅ Thử cả 2 folder
+        File targetFolder = null;
+        if (folder1.exists() && folder1.isDirectory()) {
+            targetFolder = folder1;
+        } else if (folder2.exists() && folder2.isDirectory()) {
+            targetFolder = folder2;
+        }
+
+        if (targetFolder != null) {
+            File[] files = targetFolder.listFiles();
+
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isFile() && isImageFile(file.getName())) {
+                        String imagePath = folderPath + "/" + file.getName();
+                        imageList.add(imagePath);
+                    }
                 }
             }
-        }
+        } 
+
         return imageList;
     }
 
-    private boolean isImageFile(String filename) {
-        String lower = filename.toLowerCase();
-        return lower.endsWith(".jpg") || lower.endsWith(".png") || lower.endsWith(".jpeg") || lower.endsWith(".gif");
+    private boolean isImageFile(String fileName) {
+        String[] imageExtensions = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"};
+        String lowerFileName = fileName.toLowerCase();
+        for (String ext : imageExtensions) {
+            if (lowerFileName.endsWith(ext)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

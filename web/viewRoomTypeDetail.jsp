@@ -8,6 +8,7 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <fmt:setLocale value="en" />
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -40,7 +41,23 @@
     </head>
 
     <body> 
+        <c:if test="${not empty sessionScope.message}">
+            <div id="toastMessage" class="toast-message ${sessionScope.messageType}">
+                <c:choose>
+                    <c:when test="${sessionScope.messageType == 'success'}">
+                        <i class="fa fa-check-circle"></i>
+                    </c:when>
+                    <c:when test="${sessionScope.messageType == 'error'}">
+                        <i class="fa fa-times-circle"></i>
+                    </c:when>
+                </c:choose>
+                ${sessionScope.message}
+            </div>
 
+            <!-- Xóa message sau khi hiển thị -->
+            <c:remove var="message" scope="session" />
+            <c:remove var="messageType" scope="session" />
+        </c:if>
         <div id="preloader">
             <div data-loader="circle-side"></div>
         </div><!-- /Page Preload -->
@@ -231,7 +248,7 @@
                             <div class="modal-content" style="width: 500px; padding: 20px; border-radius: 10px; background: #fff; position: relative;">
                                 <span class="close" onclick="closeEditModal()" style="position: absolute; top: 10px; right: 20px; font-size: 24px; cursor: pointer;">&times;</span>
                                 <h2 style="margin-bottom: 20px;">Edit Feedback</h2>
-                                <form id="editFeedbackForm" action="EditFeedbackServlet" method="post">
+                                <form id="editFeedbackForm" action="EditFeedbackServlet" method="post" enctype="multipart/form-data">
                                     <input type="hidden" name="feedbackId" id="editFeedbackId" />
                                     <input type="hidden" name="roomTypeId" value="${roomTypeId}" />
 
@@ -266,6 +283,12 @@
 
                                         <label>Detailed Comments</label>
                                         <textarea class="form-control" placeholder="Message" id="editComment" name="comment" required></textarea>
+
+                                        <div class="form-group" style="margin-bottom: 15px;">
+                                            <label>Upload New Images (Optional):</label>
+                                            <input type="file" name="images" multiple accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                            <small style="color: #666; font-size: 12px;">Leave empty to keep current images</small>
+                                        </div>
 
                                         <div style="margin-top: 20px; text-align: right;">
                                             <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Close</button>
@@ -513,6 +536,7 @@
         <script src="js/common_functions.js"></script>
         <script src="js/datepicker_inline.js"></script>
         <script src="phpmailer/validate.js"></script>
+        <script src="./js/toastMessage.js"></script>
         <script>
             // Progress bars animation
             $(function () {
@@ -553,14 +577,24 @@
             });
         </script>
         <script>
+            // ✅ Đảm bảo form submit với enctype đúng
             function openEditModal(feedbackId, rating, comment, imageUrl) {
                 document.getElementById('editFeedbackId').value = feedbackId;
                 document.getElementById('editRating').value = rating;
                 document.getElementById('editComment').value = comment;
                 document.getElementById('editFeedbackModal').style.display = 'flex';
                 updateStars(rating);
-            }
 
+                // Reset file input
+                const fileInput = document.querySelector('input[name="images"]');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+
+                // ✅ Đảm bảo form có enctype đúng
+                const form = document.getElementById('editFeedbackForm');
+                form.enctype = 'multipart/form-data';
+            }
             function closeEditModal() {
                 document.getElementById('editFeedbackModal').style.display = 'none';
             }
@@ -587,5 +621,21 @@
                 $("#star_display").html(stars);
             }
         </script>
+        <script>
+            function showToast(message, color = "#FF0000") {
+                const toast = document.getElementById("toast-message");
+                toast.innerText = message;
+                toast.style.backgroundColor = color;
+                toast.classList.remove("hidden");
+                toast.classList.add("show");
+
+                // Tự ẩn sau 3 giây
+                setTimeout(() => {
+                    toast.classList.remove("show");
+                    toast.classList.add("hidden");
+                }, 3000);
+            }
+        </script>
+        <div id="toast-message" class="toast hidden">Thông báo mẫu</div>
     </body>
 </html>

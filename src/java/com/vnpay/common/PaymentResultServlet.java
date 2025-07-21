@@ -26,6 +26,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
+import Dal.LoyaltyPointDAO;
+
 
 @WebServlet("/payment-result")
 public class PaymentResultServlet extends HttpServlet {
@@ -43,7 +45,6 @@ public class PaymentResultServlet extends HttpServlet {
 
         if ("Customer".equalsIgnoreCase(user.getRole())) {
             // THÊM LOGGING CHI TIẾT
-            System.out.println("=== PAYMENT RESULT PROCESSING ===");
 
             try {
                 // Capture payment response
@@ -54,22 +55,17 @@ public class PaymentResultServlet extends HttpServlet {
                     if (fieldValue != null && !fieldValue.isEmpty()) {
                         fields.put(fieldName, fieldValue);
                         // THÊM LOGGING CHO TỪNG PARAMETER
-                        System.out.println("Param: " + fieldName + " = " + fieldValue);
                     }
                 }
 
                 String vnp_SecureHash = request.getParameter("vnp_SecureHash");
-                // THÊM LOGGING CHO HASH
-                System.out.println("Received vnp_SecureHash: " + vnp_SecureHash);
 
                 fields.remove("vnp_SecureHashType");
                 fields.remove("vnp_SecureHash");
 
                 // Verify signature
                 String signValue = Config.hashAllFieldsDebug(fields); // THAY ĐỔI TỪ hashAllFields SANG hashAllFieldsDebug
-                // THÊM LOGGING CHO HASH CALCULATION
-                System.out.println("Calculated hash: " + signValue);
-                System.out.println("Hash comparison result: " + signValue.equals(vnp_SecureHash));
+
 
                 boolean isValidSignature = signValue.equals(vnp_SecureHash);
 
@@ -98,18 +94,10 @@ public class PaymentResultServlet extends HttpServlet {
                 double amount = vnpAmountLong / 100.0; // Cho hiển thị
                 double vnpAmountOriginal = vnpAmountLong; // Cho lưu DB
 
-                System.out.println("=== PAYMENT AMOUNT DEBUG ===");
-                System.out.println("vnp_Amount raw: " + vnp_Amount);
-                System.out.println("vnp_Amount parsed: " + vnpAmountLong);
-                System.out.println("Final amount (VND): " + amount);
-                System.out.println("Booking ID: " + bookingId);
-
                 // Add signature validation check
                 // Add signature validation check
                 if (!isValidSignature) {
-                    System.out.println("⚠️ SIGNATURE VALIDATION FAILED - PROCEEDING FOR TESTING");
-                    System.out.println("Expected: " + signValue);
-                    System.out.println("Received: " + vnp_SecureHash);
+
 
                     request.setAttribute("vnp_TxnRef", vnp_TxnRef);
                     request.setAttribute("vnp_TransactionNo", vnp_TransactionNo);
@@ -125,7 +113,6 @@ public class PaymentResultServlet extends HttpServlet {
 
                 // Add response code validation
                 if (!"00".equals(vnp_ResponseCode)) {
-                    System.out.println("Payment failed with response code: " + vnp_ResponseCode + " for booking: " + bookingId);
                     request.setAttribute("vnp_TxnRef", vnp_TxnRef);
                     request.setAttribute("vnp_TransactionNo", vnp_TransactionNo);
                     request.setAttribute("vnp_BankCode", vnp_BankCode);
@@ -141,7 +128,6 @@ public class PaymentResultServlet extends HttpServlet {
                 // Add duplicate payment check
                 VNPayPaymentDAO daoCheck = new VNPayPaymentDAO();
                 if (daoCheck.hasExistingPayment(bookingId)) {
-                    System.out.println("Payment already exists for booking: " + bookingId);
                     request.setAttribute("vnp_TxnRef", vnp_TxnRef);
                     request.setAttribute("vnp_TransactionNo", vnp_TransactionNo);
                     request.setAttribute("vnp_BankCode", vnp_BankCode);
@@ -165,31 +151,22 @@ public class PaymentResultServlet extends HttpServlet {
                 // Add transaction info saving
                 if (paymentId > 0) {
                     dao.createTransaction(paymentId, vnp_TxnRef, vnp_TransactionNo, vnp_BankCode, vnp_PayDate);
-                    System.out.println("Payment and transaction saved successfully for Customer booking: " + bookingId);
-                    // THÊM LOGGING CHI TIẾT VÀ TẠO TRANSACTION
-                    System.out.println("=== PAYMENT SUCCESS DETAILS ===");
-                    System.out.println("Booking ID: " + bookingId);
-                    System.out.println("Payment ID: " + paymentId);
-                    System.out.println("Amount: " + amount);
-                    System.out.println("Transaction No: " + vnp_TransactionNo);
-                    System.out.println("Bank Code: " + vnp_BankCode);
+
 
                     // TẠO VNPAY TRANSACTION RECORD
                     if (paymentId > 0) {
                         // CHỈ GỌI createTransactionComplete với đầy đủ thông tin
                         dao.createTransactionComplete(paymentId, vnp_TxnRef, vnp_TransactionNo,
                                 vnp_ResponseCode, Double.parseDouble(vnp_Amount), vnp_BankCode, vnp_SecureHash, vnp_PayDate);
-                        System.out.println("VNPayTransaction created successfully with amount: " + vnp_Amount);
                     }
-                    System.out.println("VNPayTransaction created successfully");
                 }
 
                 BookingDAO bookingDAO = new BookingDAO();
                 bookingDAO.updateBookingStatus(bookingId, "Paid");
                 bookingDAO.updateBookingPaymentStatus(bookingId, "Paid");
-
+                bookingDAO.updateBookingServicePaidStatus(bookingId, "Paid");
+                awardLoyaltyPointsForPayment(user.getId(), amount);
                 // THÊM LOGGING CHO DATABASE UPDATE
-                System.out.println("Booking status updated to Paid for booking: " + bookingId);
 
                 bookingDAO.updateBookingStatus(bookingId, "Paid");
                 bookingDAO.updateBookingPaymentStatus(bookingId, "Paid");
@@ -216,7 +193,9 @@ public class PaymentResultServlet extends HttpServlet {
                 request.setAttribute("errorMessage", "Internal server error");
                 request.getRequestDispatcher("vnpay_return.jsp").forward(request, response);
             }
-        } else {
+        } 
+
+        else {
             // Capture payment response
             Map<String, String> fields = new HashMap<>();
             for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
@@ -333,5 +312,27 @@ public class PaymentResultServlet extends HttpServlet {
         request.setAttribute("vnp_PayDate", vnp_PayDate);
         request.setAttribute("vnp_Amount", vnp_Amount);
         request.setAttribute("vnp_OrderInfo", vnp_OrderInfo);
+    }
+    private void awardLoyaltyPointsForPayment(String userId, double amount) {
+        try {
+            LoyaltyPointDAO loyaltyPointDAO = new LoyaltyPointDAO();
+            int pointsToAward = (int) (amount / 100000); // 100,000 VND = 1 point
+
+            if (pointsToAward > 0) {
+                // Sử dụng method mới để cập nhật cả points và total_spending
+                boolean success = loyaltyPointDAO.addPointsWithSpending(userId, pointsToAward,
+                        "Online booking payment reward", amount);
+
+                if (success) {
+
+                    // THÊM DÒNG NÀY: Kiểm tra và cập nhật tier
+                    loyaltyPointDAO.checkAndUpdateTier(userId);
+                } else {
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Failed to award loyalty points for user: " + userId);
+        }
     }
 }

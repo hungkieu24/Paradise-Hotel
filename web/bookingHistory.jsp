@@ -174,8 +174,6 @@
 
                                             <a href="rebook?id=${b.id}" class="btn_1 small outline">Đặt lại</a>
 
-
-
                                         </div>
                                         <div class="d-flex justify-content-between mt-3">
                                             <c:if test="${b.status eq 'Completed'}">

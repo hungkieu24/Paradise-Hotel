@@ -5,6 +5,7 @@
 package Controller.Customer;
 
 import Dal.BranchDAO;
+import Dal.RoomDAO;
 import Dal.RoomTypeDAO;
 import Model.Branch;
 import Model.RoomType;
@@ -85,7 +86,15 @@ public class ViewRoomTypeListServlet extends HttpServlet {
                 listRoomType = roomTypeDAO.getAllRoomType();
             }
         }
-
+        
+        RoomDAO roomDAO = new RoomDAO(); // thêm dòng này
+        Map<Integer, Integer> availableRoomMap = new HashMap<>();
+        for (RoomType rt : listRoomType) {
+            int roomTypeId = rt.getRoomTypeID();
+            int availableCount = roomDAO.getAvailableRoomCountByRoomType(roomTypeId);
+            availableRoomMap.put(roomTypeId, availableCount);
+        }
+        request.setAttribute("availableRoomMap", availableRoomMap);
         request.setAttribute("listRoomType", listRoomType);
         request.getRequestDispatcher("./viewRoomTypeList.jsp").forward(request, response);
     }

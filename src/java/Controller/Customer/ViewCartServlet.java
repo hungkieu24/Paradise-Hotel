@@ -6,6 +6,7 @@
 package Controller.Customer;
 
 import Dal.CartRoomTypeDAO;
+import Dal.RoomDAO;
 import Model.CartItem;
 import Model.UserAccount;
 import java.io.IOException;
@@ -16,7 +17,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -34,8 +37,15 @@ public class ViewCartServlet extends HttpServlet {
         if (user != null) {
             CartRoomTypeDAO cartDAO = new CartRoomTypeDAO();
             List<CartItem> listCart = cartDAO.getCartByUserId(user.getId());
-
+              Map<Integer, Integer> maxQuantityMap = new HashMap<>();
+              RoomDAO roomDAO = new RoomDAO();
+            for (CartItem item : listCart) {
+                int roomTypeId = item.getRoomType().getRoomTypeID();
+                int maxQuantity = roomDAO.getAvailableRoomCountByRoomType(roomTypeId);
+                maxQuantityMap.put(roomTypeId, maxQuantity);
+            }
             session.setAttribute("cart", listCart); // Gán lại vào session
+            session.setAttribute("maxQuantityMap", maxQuantityMap);
         }
 
         request.getRequestDispatcher("./viewCart.jsp").forward(request, response);
