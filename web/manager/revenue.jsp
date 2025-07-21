@@ -155,10 +155,10 @@
                                     </div>
                                 </div>
                             </form>
-                            <button id="add-branch-btn" class="btn btn-primary js-toggle" toggle-target="#add-modal">
+<!--                            <button id="add-branch-btn" class="btn btn-primary js-toggle" toggle-target="#add-modal">
                                 <i class="fas fa-plus"></i>
                                 Add revenue
-                            </button>
+                            </button>-->
                         </div>
 
                         <div class="rooms-table" id="roomsTable">
@@ -173,9 +173,7 @@
                                         <th>Revenue date</th>
                                         <th>Source</th>
                                         <th>Description</th>
-                                        <th>Created by</th>
                                         <th>Created at</th>
-                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -186,7 +184,6 @@
                                             <td>${r.getRevenue_date()}</td>
                                             <td>${r.getSource()}</td>
                                             <td>${r.getDescription()}</td>
-                                            <td>${r.getCreated_by() == user.id ? "Me": ""}</td>
                                             <td>${r.getCreated_at()}</td>
                                             <td>
                                                 <c:if test="${r.getCreated_by() != 'SYSTEM'}">
