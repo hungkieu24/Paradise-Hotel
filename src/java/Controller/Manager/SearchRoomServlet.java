@@ -77,26 +77,28 @@ public class SearchRoomServlet extends HttpServlet {
         String status = request.getParameter("status");
         String roomType = request.getParameter("roomType");
         String search = request.getParameter("search");
-        String startParam = request.getParameter("startDate");
-        String endParam = request.getParameter("endDate");
+         String startParam = request.getParameter("startDate");
         LocalDateTime checkIn;
-        LocalDateTime checkOut;
+        
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        if (startParam == null || startParam.isEmpty() || endParam == null || endParam.isEmpty()) {
+        if (startParam == null || startParam.isEmpty()) {
             checkIn = LocalDate.now().atStartOfDay();
-            checkOut = checkIn.plusDays(5);
+            
         } else {
             checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
-            checkOut = LocalDate.parse(endParam, formatter).atStartOfDay();
+           
         }
         // Get total matching rooms for pagination
-        int totalRooms = rDao.getTotalRoomsByBranch(branchId, status, roomType, search);
+        int totalRooms = rDao.getTotalRoomsByBranch(branchId, status, roomType, search, checkIn);
         int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
 
-        List<Room> rooms = rDao.getRoomsByBranch(branchId, status, roomType, search, page, pageSize, checkIn, checkOut);
+        List<Room> rooms = rDao.getRoomsByBranch(branchId, status, roomType, search, page, pageSize, checkIn);
         if (rooms.isEmpty()) {
-            request.setAttribute("warning", "No rooms found matching filter criteria.");
+            session.setAttribute("warning", "No rooms found matching filter criteria.");
+            session.setAttribute("returnPage", "searchRooms");
+            response.sendRedirect("searchRooms");
+            return;
         }
         // Build roomImageMap
         Map<String, List<String>> roomImageMap = new HashMap<>();
@@ -121,7 +123,7 @@ public class SearchRoomServlet extends HttpServlet {
         request.setAttribute("pageSize", pageSize);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
-        request.setAttribute("endDate", java.util.Date.from(checkOut.atZone(ZoneId.systemDefault()).toInstant()));
+       
         request.getRequestDispatcher("roomManage.jsp").forward(request, response);
     }
 

@@ -14,6 +14,8 @@
         <link rel="stylesheet" href="./css/chatUi.css"/>
     </head>
     <body>
+        
+        <input type="hidden" id="userId" value="${user.id}">
         <!--Chat icon-->
         <div id="chat-icon" onclick="toggleChatWindow()">
             <img class="chat-icon__img" src="./img/robo.gif">

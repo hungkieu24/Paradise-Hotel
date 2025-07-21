@@ -368,7 +368,7 @@
                     </div>
 
                     <div class="form-card__bottom">
-                        <a href="../hotelOwner/branch" class="btn btn--text" style="text-decoration: none">
+                        <a href="../hotelOwner/manageBranch" class="btn btn--text" style="text-decoration: none">
                             <div class=" btn--rounded btn-normal">Cancel</div>
                         </a>
                         <button type="submit" class="btn btn-primary btn--rounded">Change</button>
@@ -552,7 +552,7 @@
                     </div>
 
                     <div class="form-card__bottom">
-                        <a href="../hotelOwner/branch" class="btn btn--text" style="text-decoration: none">
+                        <a href="../hotelOwner/manageBranch" class="btn btn--text" style="text-decoration: none">
                             <div class=" btn--rounded btn-normal">Cancel</div>
                         </a>
                         <button type="submit" id="btn-Addform-submit" class="btn btn-primary btn--rounded">Add</button>

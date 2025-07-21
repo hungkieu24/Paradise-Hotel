@@ -53,85 +53,85 @@ public class RoomManageServlet extends HttpServlet {
         HttpSession session = request.getSession();
         UserAccount user = (UserAccount) session.getAttribute("user");
 
-        if (user != null) {
-            // Lấy tên chi nhánh và tên manager
-            String username = user.getUsername();
-            String userId = user.getId();
+        if (user == null) {
+            request.setAttribute("error", "don't see user");
+            response.sendRedirect("login.jsp");
+            return;
+        }
 
-            String branchname = r.getBranchNameById(userId);
-            int branchId = r.getBranchId(userId);
-            String startParam = request.getParameter("startDate");
-            String endParam = request.getParameter("endDate");
-            LocalDateTime checkIn;
-            LocalDateTime checkOut;
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        // Lấy tên chi nhánh và tên manager
+        String username = user.getUsername();
+        String userId = user.getId();
 
-            if (startParam == null || startParam.isEmpty() || endParam == null || endParam.isEmpty()) {
-                checkIn = LocalDate.now().atStartOfDay();
-                checkOut = checkIn.plusDays(5);
-            } else {
-                checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
-                checkOut = LocalDate.parse(endParam, formatter).atStartOfDay();
-            }
-            // phan trang
-            int page = 1;
-            int pageSize = 5;
-            String pageParam = request.getParameter("page");
-            String sizeParam = request.getParameter("size");
-            if (pageParam != null && !pageParam.isEmpty()) {
-                page = Integer.parseInt(pageParam);
-            }
-            if (sizeParam != null && !sizeParam.isEmpty()) {
-                pageSize = Integer.parseInt(sizeParam);
-            }
-            if (page < 1) {
-                page = 1;
-            }
-            if (pageSize < 1) {
-                pageSize = 5;
-            }
-            // total room
-            int totalRooms = r.getTotalRoomsByBranchId(branchId);
-            int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
-            //lấy list room và roomtype
-            List<Room> rooms = r.getAllRoomByBranchId(branchId, page, pageSize, checkIn, checkOut);
-            List<RoomType> roomtypes = rt.getAllRoomType();
-            // Dùng map để lấy list ảnh của từng phòng
-            Map<String, List<String>> roomImageMap = new HashMap<>();
-            for (Room room : rooms) {
-                String room_number = room.getRoomNumber();
-                String imgFolder = request.getServletContext().getRealPath("/img/rooms").replace("build\\", "") + File.separator + room_number;// chu ys real paths
-                List<String> imageUrls = new ArrayList();
-                File folder = new File(imgFolder);
-                if (folder.exists() && folder.isDirectory()) {
-                    for (File file : folder.listFiles()) {
-                        if (file.isFile()) {
-                            imageUrls.add(request.getContextPath() + room.getImageUrl() + "/" + room_number + "/" + file.getName());
+        String branchname = r.getBranchNameById(userId);
+        int branchId = r.getBranchId(userId);
+        String startParam = request.getParameter("startDate");
+        LocalDateTime checkIn;
 
-                        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        if (startParam == null || startParam.isEmpty()) {
+            checkIn = LocalDate.now().atStartOfDay();
+
+        } else {
+            checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
+
+        }
+        // phan trang
+        int page = 1;
+        int pageSize = 5;
+        String pageParam = request.getParameter("page");
+        String sizeParam = request.getParameter("size");
+        if (pageParam != null && !pageParam.isEmpty()) {
+            page = Integer.parseInt(pageParam);
+        }
+        if (sizeParam != null && !sizeParam.isEmpty()) {
+            pageSize = Integer.parseInt(sizeParam);
+        }
+        if (page < 1) {
+            page = 1;
+        }
+        if (pageSize < 1) {
+            pageSize = 5;
+        }
+        // total room
+        int totalRooms = r.getTotalRoomForManager(branchId);
+        int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
+        //lấy list room và roomtype
+
+        List<Room> rooms = r.getAllRoomStatusForManager(branchId, page, pageSize, checkIn);
+        List<RoomType> roomtypes = rt.getAllRoomType();
+        // Dùng map để lấy list ảnh của từng phòng
+        Map<String, List<String>> roomImageMap = new HashMap<>();
+        for (Room room : rooms) {
+            String room_number = room.getRoomNumber();
+            String imgFolder = request.getServletContext().getRealPath("/img/rooms").replace("build\\", "") + File.separator + room_number;// chu ys real paths
+            List<String> imageUrls = new ArrayList();
+            File folder = new File(imgFolder);
+            if (folder.exists() && folder.isDirectory()) {
+                for (File file : folder.listFiles()) {
+                    if (file.isFile()) {
+                        imageUrls.add(request.getContextPath() + room.getImageUrl() + "/" + room_number + "/" + file.getName());
+
                     }
                 }
-                roomImageMap.put(room_number, imageUrls);
             }
-
-            // set thuộc tính
-            request.setAttribute("roomImageMap", roomImageMap);
-            request.setAttribute("branchId", branchId);
-            request.setAttribute("username", username);
-            request.setAttribute("userId", userId);
-            request.setAttribute("branchname", branchname);
-            request.setAttribute("rooms", rooms);
-            request.setAttribute("roomtypes", roomtypes);
-            request.setAttribute("currentPage", page);
-            request.setAttribute("pageSize", pageSize);
-            request.setAttribute("totalPages", totalPages);
-            request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
-            request.setAttribute("endDate", java.util.Date.from(checkOut.atZone(ZoneId.systemDefault()).toInstant()));
-            request.getRequestDispatcher("roomManage.jsp").forward(request, response);
-        } else {
-            request.setAttribute("error", "don't see user");
-            response.sendRedirect("login");
+            roomImageMap.put(room_number, imageUrls);
         }
+
+        // set thuộc tính
+        request.setAttribute("roomImageMap", roomImageMap);
+        request.setAttribute("branchId", branchId);
+        request.setAttribute("username", username);
+        request.setAttribute("userId", userId);
+        request.setAttribute("branchname", branchname);
+        request.setAttribute("rooms", rooms);
+        request.setAttribute("roomtypes", roomtypes);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("pageSize", pageSize);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
+        request.getRequestDispatcher("roomManage.jsp").forward(request, response);
 
     }
 
@@ -222,22 +222,21 @@ public class RoomManageServlet extends HttpServlet {
                 pageSize = 5;
             }
             String startParam = request.getParameter("startDate");
-            String endParam = request.getParameter("endDate");
             LocalDateTime checkIn;
-            LocalDateTime checkOut;
+
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-            if (startParam == null || startParam.isEmpty() || endParam == null || endParam.isEmpty()) {
+            if (startParam == null || startParam.isEmpty()) {
                 checkIn = LocalDate.now().atStartOfDay();
-                checkOut = checkIn.plusDays(5);
+
             } else {
                 checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
-                checkOut = LocalDate.parse(endParam, formatter).atStartOfDay();
+
             }
 
-            int totalRooms = r.getTotalRoomsByBranchId(branchId);
+            int totalRooms = r.getTotalRoomForManager(branchId);
             int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
-            List<Room> rooms = r.getAllRoomByBranchId(branchId, page, pageSize, checkIn, checkOut);
+            List<Room> rooms = r.getAllRoomStatusForManager(branchId, page, pageSize, checkIn);
             List<RoomType> roomTypes = rt.getAllRoomType();
             Map<String, List<String>> roomImageMap = new HashMap<>();
             for (Room room : rooms) {
@@ -265,7 +264,6 @@ public class RoomManageServlet extends HttpServlet {
             request.setAttribute("pageSize", pageSize);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
-            request.setAttribute("endDate", java.util.Date.from(checkOut.atZone(ZoneId.systemDefault()).toInstant()));
             request.getRequestDispatcher("roomManage.jsp").forward(request, response);
             return;
         }
@@ -307,17 +305,16 @@ public class RoomManageServlet extends HttpServlet {
             String pageParam = request.getParameter("page");
             String sizeParam = request.getParameter("size");
             String startParam = request.getParameter("startDate");
-            String endParam = request.getParameter("endDate");
             LocalDateTime checkIn;
-            LocalDateTime checkOut;
+
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-            if (startParam == null || startParam.isEmpty() || endParam == null || endParam.isEmpty()) {
+            if (startParam == null || startParam.isEmpty()) {
                 checkIn = LocalDate.now().atStartOfDay();
-                checkOut = checkIn.plusDays(5);
+
             } else {
                 checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
-                checkOut = LocalDate.parse(endParam, formatter).atStartOfDay();
+
             }
             if (pageParam != null && !pageParam.isEmpty()) {
                 page = Integer.parseInt(pageParam);
@@ -332,9 +329,9 @@ public class RoomManageServlet extends HttpServlet {
                 pageSize = 5;
             }
 
-            int totalRooms = r.getTotalRoomsByBranchId(branchId);
+            int totalRooms = r.getTotalRoomForManager(branchId);
             int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
-            List<Room> rooms = r.getAllRoomByBranchId(branchId, page, pageSize, checkIn, checkOut);
+            List<Room> rooms = r.getAllRoomStatusForManager(branchId, page, pageSize, checkIn);
             List<RoomType> roomTypes = rt.getAllRoomType();
             Map<String, List<String>> roomImageMap = new HashMap<>();
             for (Room r : rooms) {
@@ -362,7 +359,6 @@ public class RoomManageServlet extends HttpServlet {
             request.setAttribute("pageSize", pageSize);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
-            request.setAttribute("endDate", java.util.Date.from(checkOut.atZone(ZoneId.systemDefault()).toInstant()));
             request.getRequestDispatcher("roomManage.jsp").forward(request, response);
         }
     }
