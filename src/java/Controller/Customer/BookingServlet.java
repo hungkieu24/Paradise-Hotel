@@ -7,14 +7,17 @@ package Controller.Customer;
 import Dal.BookingDAO;
 import Dal.CartRoomTypeDAO;
 import Dal.LoyaltyPointDAO;
+import Dal.PointRedeemVoucherDAO;
 import Dal.RoomTypeDAO;
 import Dal.ServiceDAO;
+import Dal.VoucherDAO;
 import Model.Booking;
 import Model.CartItem;
 import Model.LoyaltyPoint;
 import Model.RoomType;
 import Model.Service;
 import Model.UserAccount;
+import Model.Voucher;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -110,7 +113,6 @@ public class BookingServlet extends HttpServlet {
                     CartItem item = new CartItem(roomtype, quantity);
                     listCartItem.add(item);
                 } catch (NumberFormatException e) {
-                    System.out.println("❌ Lỗi chuyển đổi ID hoặc quantity tại vị trí " + i);
                     e.printStackTrace();
                 }
             }
@@ -157,12 +159,36 @@ public class BookingServlet extends HttpServlet {
         LoyaltyPoint loyaltyPoint = loyaltyPointDAO.getLoyaltyPointByUserId(user.getId());
         session.setAttribute("loyaltyPoint", loyaltyPoint);
 
+        // Load user's available vouchers
+        PointRedeemVoucherDAO pointRedeemVoucherDAO = new PointRedeemVoucherDAO();
+        List<Integer> availableVoucherIds = pointRedeemVoucherDAO.getAvailableVoucherIdsByUser(user.getId());
+
+        // Debug: Print voucher info
+        List<Integer> allRedeemedVouchers = pointRedeemVoucherDAO.getRedeemedVoucherIdsByUser(user.getId());
+
+        VoucherDAO voucherDAO = new VoucherDAO();
+        List<Voucher> availableVouchers = voucherDAO.getVouchersByIds(availableVoucherIds);
+
+        for (Voucher v : availableVouchers) {
+        }
+
+        request.setAttribute("availableVouchers", availableVouchers);
+
         request.getRequestDispatcher("booking.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        String action = request.getParameter("action");
+        String isRebook = request.getParameter("rebook");
+
+        // ✅ Xử lý case rebook - kiểm tra cả action empty
+        if ("1".equals(isRebook) && ("book".equals(action) || action == null || action.trim().isEmpty())) {
+            handleRebookSubmission(request, response);
+            return;
+        }
 
         request.setCharacterEncoding("UTF-8");
         response.setContentType("application/json");
@@ -179,7 +205,6 @@ public class BookingServlet extends HttpServlet {
         BookingDAO bookingDAO = new BookingDAO();
         RoomTypeDAO roomTypeDAO = new RoomTypeDAO();
 
-        String action = request.getParameter("action");
         if (action == null) {
             out.write("{\"status\":\"error\", \"message\":\"Action is required\"}");
             return;
@@ -192,6 +217,7 @@ public class BookingServlet extends HttpServlet {
             String totalPriceStr = request.getParameter("finalTotalPrice");
             String note = request.getParameter("note");
             String serviceIdList = request.getParameter("selectedServiceIds");
+            String selectedVoucherId = request.getParameter("selectedVoucherId");
 
             if (checkInStr == null || checkOutStr == null || checkInStr.isEmpty() || checkOutStr.isEmpty()) {
                 out.write("{\"status\":\"error\", \"message\":\"Check-in and Check-out must not be empty\"}");
@@ -205,9 +231,9 @@ public class BookingServlet extends HttpServlet {
                 out.write("{\"status\":\"error\", \"message\":\"Check-out must be after Check-in\"}");
                 return;
             }
-
+            
             double totalPrice = Double.parseDouble(totalPriceStr);
-
+                 
             Map<Integer, Integer> serviceMap = new HashMap<>();
             if (serviceIdList != null && !serviceIdList.trim().isEmpty()) {
                 String[] entries = serviceIdList.split(",");
@@ -239,6 +265,15 @@ public class BookingServlet extends HttpServlet {
                 }
 
                 allInserted = bookingDAO.insertBookingRoomType(bookingId, room.getRoomTypeID(), 1, room.getBase_price());
+                if (allInserted && !serviceMap.isEmpty()) {
+                    for (Map.Entry<Integer, Integer> entry : serviceMap.entrySet()) {
+                        boolean inserted = bookingDAO.insertBookingService(bookingId, entry.getKey(), entry.getValue(), "Unpaid");
+                        if (!inserted) {
+                            allInserted = false;
+                            break;
+                        }
+                    }
+                }
             }
 
             if (action.equals("manyRoom")) {
@@ -276,6 +311,18 @@ public class BookingServlet extends HttpServlet {
             }
 
             if (allInserted) {
+                // Apply voucher if selected
+                if (selectedVoucherId != null && !selectedVoucherId.trim().isEmpty()) {
+                    try {
+                        int voucherId = Integer.parseInt(selectedVoucherId);
+                        PointRedeemVoucherDAO pointRedeemVoucherDAO = new PointRedeemVoucherDAO();
+                        pointRedeemVoucherDAO.useVoucher(user.getId(), voucherId, bookingId);
+                    } catch (NumberFormatException e) {
+                        // Log error but don't fail the booking
+                        e.printStackTrace();
+                    }
+                }
+
                 clearBookingSession(request.getSession());
                 out.write("{\"status\":\"success\", \"bookingId\":" + bookingId + "}");
             } else {
@@ -297,4 +344,97 @@ public class BookingServlet extends HttpServlet {
         session.removeAttribute("services");
     }
 
+    private void handleRebookSubmission(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            HttpSession session = request.getSession();
+            UserAccount user = (UserAccount) session.getAttribute("user");
+            PrintWriter out = response.getWriter();
+            response.setContentType("application/json");
+
+            // Lấy data từ session (đã set bởi RebookServlet)
+            List<CartItem> listCartItem = (List<CartItem>) session.getAttribute("listCartItem");
+            Map<Integer, Integer> selectedServiceMap = (Map<Integer, Integer>) session.getAttribute("selectedServiceMap");
+            String note = (String) session.getAttribute("preNote");
+
+            // ✅ Lấy thông tin giống doPost()
+            String checkInStr = request.getParameter("checkIn");
+            String checkOutStr = request.getParameter("checkOut");
+            String totalPriceStr = request.getParameter("finalTotalPrice"); // Sử dụng finalTotalPrice như doPost()
+            String selectedVoucherId = request.getParameter("selectedVoucherId");
+
+            // ✅ Parse timestamp giống doPost()
+            Timestamp checkInTimestamp = Timestamp.valueOf(checkInStr.replace("T", " ") + ":00");
+            Timestamp checkOutTimestamp = Timestamp.valueOf(checkOutStr.replace("T", " ") + ":00");
+
+            // ✅ Validate giống doPost()
+            if (!checkOutTimestamp.after(checkInTimestamp)) {
+                out.write("{\"status\":\"error\", \"message\":\"Check-out must be after Check-in\"}");
+                return;
+            }
+
+            double totalPrice = Double.parseDouble(totalPriceStr);
+
+            BookingDAO bookingDAO = new BookingDAO();
+            Integer bookingId = null;
+            boolean allInserted = true;
+            int branchId = listCartItem.get(0).getRoomType().getBranchId();
+
+            // Tạo booking mới
+            bookingId = bookingDAO.addBookingReturnId(user.getId(),
+                    checkInTimestamp, checkOutTimestamp, "Pending", totalPrice,
+                    "Unpaid", branchId, note, false);
+
+            if (bookingId == null) {
+                out.write("{\"status\":\"error\", \"message\":\"Failed to create rebook\"}");
+                return;
+            }
+
+            // Lưu room types
+            for (CartItem item : listCartItem) {
+                boolean inserted = bookingDAO.insertBookingRoomType(bookingId,
+                        item.getRoomType().getRoomTypeID(), item.getQuantity(),
+                        item.getRoomType().getBase_price());
+                if (!inserted) {
+                    allInserted = false;
+                    break;
+                }
+            }
+
+            // Lưu services
+            if (allInserted && selectedServiceMap != null && !selectedServiceMap.isEmpty()) {
+                for (Map.Entry<Integer, Integer> entry : selectedServiceMap.entrySet()) {
+                    boolean inserted = bookingDAO.insertBookingService(bookingId,
+                            entry.getKey(), entry.getValue(), "Unpaid");
+                    if (!inserted) {
+                        allInserted = false;
+                        break;
+                    }
+                }
+            }
+
+            if (allInserted) {
+                // Apply voucher if selected
+                if (selectedVoucherId != null && !selectedVoucherId.trim().isEmpty()) {
+                    try {
+                        int voucherId = Integer.parseInt(selectedVoucherId);
+                        PointRedeemVoucherDAO pointRedeemVoucherDAO = new PointRedeemVoucherDAO();
+                        pointRedeemVoucherDAO.useVoucher(user.getId(), voucherId, bookingId);
+                    } catch (NumberFormatException e) {
+                        // Log error but don't fail the booking
+                        e.printStackTrace();
+                    }
+                }
+
+                clearBookingSession(session);
+                response.getWriter().write("{\"status\":\"success\", \"bookingId\":" + bookingId + "}");
+            } else {
+                response.getWriter().write("{\"status\":\"error\", \"message\":\"Failed to save rebook details\"}");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.getWriter().write("{\"status\":\"error\", \"message\":\"" + e.getMessage() + "\"}");
+        }
+    }
 }

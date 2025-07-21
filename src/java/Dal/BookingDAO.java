@@ -309,7 +309,6 @@ public class BookingDAO extends DBcontext.DBContext {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Error in getRoomTypeIdsByBookingId: " + e.getMessage());
             e.printStackTrace();
         }
         return roomTypeIds;
@@ -471,6 +470,7 @@ public class BookingDAO extends DBcontext.DBContext {
                     booking.setCheckOut(rs.getTimestamp("check_out"));
                     booking.setStatus(rs.getString("status"));
                     booking.setTotalPrice(rs.getDouble("total_price"));
+                    booking.setRefundAmount(rs.getObject("refund_amount") != null ? rs.getDouble("refund_amount") : null);
                     booking.setPaymentStatus(rs.getString("payment_status"));
                     booking.setCancelReason(rs.getString("cancel_reason"));
                     booking.setCancelTime(rs.getTimestamp("cancel_time"));
@@ -482,7 +482,6 @@ public class BookingDAO extends DBcontext.DBContext {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Error in getBookingById: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -547,7 +546,6 @@ public class BookingDAO extends DBcontext.DBContext {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Error in getBookingById: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -606,7 +604,6 @@ public class BookingDAO extends DBcontext.DBContext {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Error in getAssignedRoomsByBookingId: " + e.getMessage());
             e.printStackTrace();
         }
         return rooms;
@@ -1082,6 +1079,7 @@ public class BookingDAO extends DBcontext.DBContext {
         b.setCheckOut(rs.getTimestamp("check_out"));
         b.setStatus(rs.getString("status"));
         b.setTotalPrice(rs.getDouble("total_price"));
+        b.setRefundAmount(rs.getObject("refund_amount") != null ? rs.getDouble("refund_amount") : null);
         b.setPaymentStatus(rs.getString("payment_status"));
         b.setCancelReason(rs.getString("cancel_reason"));
         b.setCancelTime(rs.getTimestamp("cancel_time"));
@@ -1337,7 +1335,6 @@ public class BookingDAO extends DBcontext.DBContext {
     // Gán thêm phòng cho booking (không dùng transaction)
     public boolean assignRoomsToBooking(int bookingId, String[] roomIds) {
         if (roomIds == null || roomIds.length == 0) {
-            System.out.println("No rooms to assign for booking ID: " + bookingId);
             return false;
         }
 
@@ -1390,7 +1387,6 @@ public class BookingDAO extends DBcontext.DBContext {
 
                     if (rowsInserted > 0) {
                         successfulAssignments++;
-                        System.out.println("Successfully assigned room " + roomId + " to booking " + bookingId);
                     }
                 }
 
@@ -1401,16 +1397,6 @@ public class BookingDAO extends DBcontext.DBContext {
                 e.printStackTrace();
             }
         }
-
-        // Log errors nếu có
-        if (!errors.isEmpty()) {
-            System.out.println("Assignment errors for booking " + bookingId + ":");
-            for (String error : errors) {
-                System.out.println("- " + error);
-            }
-        }
-
-        System.out.println("Successfully assigned " + successfulAssignments + " room(s) to booking " + bookingId);
         return successfulAssignments > 0;
     }
 
@@ -1619,9 +1605,6 @@ public class BookingDAO extends DBcontext.DBContext {
                     List<Service> services = getServicesByBookingId(bookingId);
                     booking.setServices(services);
 
-                    System.out.println("Found booking " + bookingId + " for user " + userId
-                            + " with " + (services != null ? services.size() : 0) + " services");
-
                     return booking;
                 }
             }
@@ -1776,7 +1759,6 @@ public class BookingDAO extends DBcontext.DBContext {
                 return rs.getBoolean("is_fully_assigned");
             }
         } catch (SQLException e) {
-            System.out.println("Error in areAllRoomsAssigned: " + e.getMessage());
             e.printStackTrace();
         }
         return false; // Mặc định trả về false nếu có lỗi
@@ -1789,9 +1771,6 @@ public class BookingDAO extends DBcontext.DBContext {
                 + "WHERE b.branch_id = ? AND (b.status = 'Pending' OR b.status = 'Paid' OR b.status = 'CheckedIn') "
                 + "ORDER BY b.check_in ASC";
 
-        // Thêm debug
-        System.out.println("Executing SQL: " + sql.replace("?", String.valueOf(branchId)));
-
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, branchId);
             ResultSet rs = ps.executeQuery();
@@ -1803,7 +1782,6 @@ public class BookingDAO extends DBcontext.DBContext {
                 bookings.add(booking);
             }
 
-            System.out.println("Found " + bookings.size() + " bookings for branch " + branchId);
             return bookings;
         } catch (SQLException e) {
             System.err.println("Error getting pending bookings: " + e.getMessage());
@@ -1955,6 +1933,18 @@ public class BookingDAO extends DBcontext.DBContext {
             ps.setInt(2, serviceId);
             ps.setInt(3, quantity);
             ps.setString(4, paidStatus); // e.g., "Unpaid"
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean updateBookingServicePaidStatus(int bookingId, String newPaidStatus) {
+        String sql = "UPDATE BookingService SET paid_status = ? WHERE booking_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, newPaidStatus);
+            ps.setInt(2, bookingId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -2130,7 +2120,6 @@ public class BookingDAO extends DBcontext.DBContext {
             ps.setInt(4, bookingId);
 
             int rowsAffected = ps.executeUpdate();
-            System.out.println("✅ Booking refund updated: " + rowsAffected + " rows, Reason: " + cancelReason);
             return rowsAffected > 0;
 
         } catch (Exception e) {
@@ -2140,10 +2129,53 @@ public class BookingDAO extends DBcontext.DBContext {
         }
     }
 
+    /**
+     * Update booking with refund amount
+     */
+    public boolean updateBookingForRefund(int bookingId, String status, String paymentStatus, String cancelReason, double refundAmount) {
+        String sql = "UPDATE Booking SET status = ?, payment_status = ?, cancel_reason = ?, cancel_time = GETDATE(), refund_amount = ? WHERE id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setString(2, paymentStatus);
+            ps.setString(3, cancelReason);
+            ps.setDouble(4, refundAmount);
+            ps.setInt(5, bookingId);
+
+            int rowsAffected = ps.executeUpdate();
+            System.out.println("✅ Updated booking " + bookingId + " with refund amount: " + refundAmount);
+            return rowsAffected > 0;
+
+        } catch (Exception e) {
+            System.err.println("❌ Error updating booking for refund with amount: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Cancel booking without refund (for late cancellations)
+     */
+    public boolean cancelBookingWithoutRefund(int bookingId, String cancelReason) {
+        String sql = "UPDATE Booking SET status = 'Cancelled', cancel_reason = ?, cancel_time = GETDATE(), refund_amount = 0 WHERE id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, cancelReason);
+            ps.setInt(2, bookingId);
+
+            int rowsAffected = ps.executeUpdate();
+            System.out.println("✅ Cancelled booking " + bookingId + " without refund. Reason: " + cancelReason);
+            return rowsAffected > 0;
+
+        } catch (Exception e) {
+            System.err.println("❌ Error cancelling booking without refund: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean updatePaymentStatus(int bookingId, String status) {
         try {
-            System.out.println("Updating VNPayPayment status for booking " + bookingId + " to " + status);
-
             String sql = "UPDATE VNPayPayment SET status = ? WHERE booking_id = ?";
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, status);
@@ -2151,7 +2183,6 @@ public class BookingDAO extends DBcontext.DBContext {
 
                 int rowsAffected = ps.executeUpdate();
                 boolean result = rowsAffected > 0;
-                System.out.println("VNPayPayment updated: " + result + " (rows affected: " + rowsAffected + ")");
                 return result;
             }
         } catch (Exception e) {
@@ -2213,15 +2244,12 @@ public class BookingDAO extends DBcontext.DBContext {
 
     public boolean refundPaymentByBookingId(int bookingId) {
         try {
-            System.out.println("Marking payment as refunded for booking: " + bookingId);
-
             String sql = "UPDATE VNPayPayment SET status = 'Refunded' WHERE booking_id = ?";
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setInt(1, bookingId);
 
                 int rowsAffected = ps.executeUpdate();
                 boolean result = rowsAffected > 0;
-                System.out.println("Payment refund status updated: " + result + " (rows affected: " + rowsAffected + ")");
                 return result;
             }
         } catch (Exception e) {
@@ -2230,4 +2258,25 @@ public class BookingDAO extends DBcontext.DBContext {
             return false;
         }
     }
+
+    public Date getBookingCheckInDate(int bookingId) {
+        Date checkInDate = null;
+        String sql = "SELECT check_in FROM Booking WHERE id = ?";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setInt(1, bookingId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    checkInDate = rs.getDate("check_in");
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return checkInDate;
+    }
+
 }

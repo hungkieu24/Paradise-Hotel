@@ -304,5 +304,98 @@ public class VoucherDAO extends DBContext {
 
         return vouchers;
     }
-    
+
+    /**
+     * Get voucher by ID
+     */
+    public Voucher getVoucherById(int voucherId) {
+        String sql = "SELECT * FROM Voucher WHERE id = ? AND is_deleted = 0";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, voucherId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Voucher voucher = new Voucher();
+                voucher.setId(rs.getInt("id"));
+                voucher.setCode(rs.getString("code"));
+                voucher.setDescription(rs.getString("description"));
+                voucher.setDiscount_percent(rs.getDouble("discount_percent"));
+                voucher.setDiscount_amount(rs.getDouble("discount_amount"));
+                voucher.setMin_price(rs.getDouble("min_price"));
+                voucher.setTotal_quantity(rs.getInt("total_quantity"));
+                voucher.setUsed_quantity(rs.getInt("used_quantity"));
+                voucher.setBranchId(rs.getInt("branch_id"));
+
+                Timestamp validFrom = rs.getTimestamp("valid_from");
+                Timestamp validTo = rs.getTimestamp("valid_to");
+                voucher.setValid_from(validFrom != null ? new Date(validFrom.getTime()) : null);
+                voucher.setValid_to(validTo != null ? new Date(validTo.getTime()) : null);
+
+                voucher.setStatus(rs.getString("status"));
+                voucher.setIs_deleted(rs.getBoolean("is_deleted"));
+
+                return voucher;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Get vouchers by IDs
+     */
+    public List<Voucher> getVouchersByIds(List<Integer> voucherIds) {
+        List<Voucher> vouchers = new ArrayList<>();
+
+
+        if (voucherIds == null || voucherIds.isEmpty()) {
+            return vouchers;
+        }
+
+        StringBuilder sql = new StringBuilder("SELECT * FROM Voucher WHERE id IN (");
+        for (int i = 0; i < voucherIds.size(); i++) {
+            sql.append("?");
+            if (i < voucherIds.size() - 1) {
+                sql.append(",");
+            }
+        }
+        sql.append(") AND is_deleted = 0 AND status = 'Active'");
+
+
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < voucherIds.size(); i++) {
+                ps.setInt(i + 1, voucherIds.get(i));
+            }
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Voucher voucher = new Voucher();
+                voucher.setId(rs.getInt("id"));
+                voucher.setCode(rs.getString("code"));
+                voucher.setDescription(rs.getString("description"));
+                voucher.setDiscount_percent(rs.getDouble("discount_percent"));
+                voucher.setDiscount_amount(rs.getDouble("discount_amount"));
+                voucher.setMin_price(rs.getDouble("min_price"));
+                voucher.setTotal_quantity(rs.getInt("total_quantity"));
+                voucher.setUsed_quantity(rs.getInt("used_quantity"));
+                voucher.setBranchId(rs.getInt("branch_id"));
+
+                Timestamp validFrom = rs.getTimestamp("valid_from");
+                Timestamp validTo = rs.getTimestamp("valid_to");
+                voucher.setValid_from(validFrom != null ? new Date(validFrom.getTime()) : null);
+                voucher.setValid_to(validTo != null ? new Date(validTo.getTime()) : null);
+
+                voucher.setStatus(rs.getString("status"));
+                voucher.setIs_deleted(rs.getBoolean("is_deleted"));
+
+
+                vouchers.add(voucher);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return vouchers;
+    }
+
 }

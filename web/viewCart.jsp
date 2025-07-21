@@ -112,11 +112,16 @@
                                 </div>
 
                                 <div class="col quantity">
-                                    <div class="quantity-wrapper" data-roomtypeid="${roomType.roomTypeID}">
+                                    <!-- ✅ Thêm data-max-quantity vào quantity wrapper -->
+                                    <!-- ✅ Debug: Hiển thị max quantity -->
+                                    <div class="quantity-wrapper" data-roomtypeid="${item.roomType.roomTypeID}" 
+                                         data-max-quantity="${maxQuantityMap[item.roomType.roomTypeID]}">
                                         <button type="button" class="qty-btn minus">-</button>
-                                        <input id="quanlity" type="number" class="qty-input" value="${item.quantity}" min="1" max="5" readonly>
+                                        <input type="number" class="qty-input" value="${item.quantity}" 
+                                               min="0" max="${maxQuantityMap[item.roomType.roomTypeID]}" readonly>
                                         <button type="button" class="qty-btn plus">+</button>
                                     </div>
+
                                 </div>
 
                                 <div class="col total item-total">
@@ -324,29 +329,64 @@
                         const row = btn.closest(".cart-row");
                         const roomTypeId = wrapper.getAttribute("data-roomtypeid");
 
-                        const cartItem = btn.closest(".cart-item"); // ✅ Tìm đến .cart-item cha
-                        const checkbox = cartItem.querySelector(".roomtype-checkbox"); // ✅ Tìm checkbox trong cart-item
+                        const cartItem = btn.closest(".cart-item");
+                        const checkbox = cartItem.querySelector(".roomtype-checkbox");
 
                         let quantity = parseInt(input.value);
-                        const max = 5;
+                        const max = parseInt(wrapper.getAttribute("data-max-quantity")) || 5;
 
+                        // ✅ Xử lý trường hợp max = 0
+                        if (max === 0) {
+                            showToast("❌ No rooms available for this room type", "#FF0000");
+
+                            // Nếu quantity đang khác 0 → đặt lại về 0
+                            if (quantity !== 0) {
+                                quantity = 0;
+                                input.value = 0;
+
+                                // Cập nhật checkbox nếu đã được chọn
+                                if (checkbox && checkbox.checked) {
+                                    selectedQuantity.set(parseInt(roomTypeId), 0);
+                                }
+
+                                if (checkbox) {
+                                    checkbox.dataset.quantity = 0;
+                                }
+
+                                updateItemTotal(row);
+                                updateGrandTotal();
+
+                                // Gửi request cập nhật lại về 0
+                                const xhr = new XMLHttpRequest();
+                                xhr.open("POST", "/ParadiseHotel/updateCart", true);
+                                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                                xhr.send("roomTypeId=" + encodeURIComponent(roomTypeId) +
+                                        "&quantity=0");
+                            }
+
+                            return; // ❌ Dừng xử lý tiếp theo
+                        }
+
+                        // ✅ Tăng/giảm quantity nếu max > 0
                         if (btn.classList.contains("plus") && quantity < max) {
                             quantity++;
                         } else if (btn.classList.contains("minus") && quantity > 1) {
                             quantity--;
                         }
 
+                        if (btn.classList.contains("plus") && quantity >= max) {
+                            showToast(`Maximum ${max} rooms available for this room type`, "#FF0000");
+                        }
+
                         input.value = quantity;
 
-                        // Nếu checkbox đang được check, cập nhật quantity trong selectedQuantity
                         if (checkbox && checkbox.checked) {
-                            selectedQuantity.set(parseInt(roomTypeId), quantity); // ✅ cập nhật số lượng mới
+                            selectedQuantity.set(parseInt(roomTypeId), quantity);
                         }
-                        // ✅ Cập nhật data-quantity của checkbox
+
                         if (checkbox) {
                             checkbox.dataset.quantity = quantity;
                         }
-
 
                         updateItemTotal(row);
                         updateGrandTotal();
@@ -372,6 +412,7 @@
                                 "&quantity=" + encodeURIComponent(quantity));
                     });
                 });
+
 
 
                 // Khởi tạo ban đầu

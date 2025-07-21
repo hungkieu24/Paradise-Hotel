@@ -1,7 +1,9 @@
 package com.vnpay.common;
 
 import Dal.BookingDAO;
+import Dal.LoyaltyPointDAO;
 import Dal.VNPayPaymentDAO;
+import Model.Booking;
 import Model.UserAccount;
 import Utility.EmailUtility;
 import jakarta.servlet.ServletException;
@@ -34,8 +36,6 @@ public class VNPayRefundServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        System.out.println("=== REFUND REQUEST START ===");
-
         HttpSession session = request.getSession();
         UserAccount user = (UserAccount) session.getAttribute("user");
 
@@ -48,8 +48,7 @@ public class VNPayRefundServlet extends HttpServlet {
             String bookingIdStr = request.getParameter("bookingId");
             String amountStr = request.getParameter("amount");
             String refundReason = request.getParameter("refundReason");
-
-            System.out.println("Refund params - BookingId: " + bookingIdStr + ", Amount: " + amountStr);
+            String confirmLateCancel = request.getParameter("confirmLateCancel"); // New parameter for late cancellation confirmation
 
             if (bookingIdStr == null || amountStr == null) {
                 session.setAttribute("refundMsg", "Thiếu thông tin cần thiết!");
@@ -63,7 +62,6 @@ public class VNPayRefundServlet extends HttpServlet {
             // 1. Kiểm tra booking có thể refund không
             BookingDAO bookingDAO = new BookingDAO();
             if (!bookingDAO.isBookingRefundable(bookingId)) {
-                System.out.println("Booking " + bookingId + " is not refundable");
                 session.setAttribute("refundMsg", "Booking không thể hoàn tiền!");
                 response.sendRedirect("myBooking");
                 return;
@@ -72,41 +70,65 @@ public class VNPayRefundServlet extends HttpServlet {
             // 2. Kiểm tra đã refund chưa
             VNPayPaymentDAO paymentDAO = new VNPayPaymentDAO();
             if (paymentDAO.isAlreadyRefunded(bookingId)) {
-                System.out.println("Booking " + bookingId + " already refunded");
                 session.setAttribute("refundMsg", "Booking đã được hoàn tiền!");
                 response.sendRedirect("myBooking");
                 return;
             }
 
-            // 3. Lấy thông tin transaction để refund
+            // 3. Kiểm tra thời gian thanh toán (1 ngày)
+            boolean isPaymentOlderThanOneDay = paymentDAO.isPaymentOlderThanOneDay(bookingId);
+
+            if (isPaymentOlderThanOneDay && !"true".equals(confirmLateCancel)) {
+                // Nếu đã quá 1 ngày và chưa confirm, redirect về trang với thông báo xác nhận
+                session.setAttribute("lateCancelBookingId", bookingId);
+                session.setAttribute("lateCancelAmount", amount);
+                session.setAttribute("lateCancelReason", refundReason);
+                session.setAttribute("refundMsg", "LATE_CANCEL_CONFIRM");
+                response.sendRedirect("myBooking");
+                return;
+            }
+
+            if (isPaymentOlderThanOneDay && "true".equals(confirmLateCancel)) {
+                // User confirmed late cancellation - cancel without refund
+                boolean cancelled = bookingDAO.cancelBookingWithoutRefund(bookingId,
+                    "Cancelled after 1-day refund period: " + (refundReason != null ? refundReason : "No reason provided"));
+
+                if (cancelled) {
+                    session.setAttribute("refundMsg", "Booking đã được hủy thành công. Do đã quá 1 ngày từ lúc thanh toán nên không được hoàn tiền.");
+                } else {
+                    session.setAttribute("refundMsg", "Lỗi khi hủy booking!");
+                }
+                response.sendRedirect("myBooking");
+                return;
+            }
+
+            // 4. Lấy thông tin transaction để refund (normal refund within 1 day)
             VNPayPaymentDAO.VNPayTransactionInfo txnInfo = paymentDAO.getTransactionInfoByBookingId(bookingId);
             if (txnInfo == null) {
-                System.out.println("No transaction info found for booking: " + bookingId);
                 session.setAttribute("refundMsg", "Không tìm thấy thông tin giao dịch!");
                 response.sendRedirect("myBooking");
                 return;
             }
 
-            System.out.println("Transaction found - TxnRef: " + txnInfo.vnpTxnRef + ", PayDate: " + txnInfo.payDate);
-
-            // 4. Process VNPay refund
+            // 5. Process VNPay refund (normal refund within 1 day)
             RefundResult result = processVNPayRefund(txnInfo, amount);
 
             if (result.success) {
                 updateRefundStatus(bookingId, amount, refundReason);
-                sendRefundConfirmationEmail(user.getEmail(), bookingId, amount, result.transactionNo);                // Format    số tiền
+                sendRefundConfirmationEmail(user.getEmail(), bookingId, amount, result.transactionNo);
+                int pointsDeducted = (int) (amount / 100000);// Format    số tiền
                 DecimalFormat formatter = new DecimalFormat("#,###");
                 String formattedAmount = formatter.format(amount);
 
                 session.setAttribute("refundMsg",
-                        "✅ HOÀN TIỀN THÀNH CÔNG QUA VNPAY<br>"
-                        + "💰 Số tiền: " + formattedAmount + " VND<br>"
-                        + "🏦 Mã giao dịch VNPay: " + result.transactionNo + "<br>"
-                        + "📅 Thời gian: " + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + "<br>"
-                        + "⏰ Tiền sẽ về tài khoản trong 1-3 ngày làm việc" + "<br>"
+                        "✅ HOÀN TIỀN THÀNH CÔNG QUA VNPAY<br><br>"
+                        + "💰 Số tiền: " + formattedAmount + " VND<br><br>"
+                        + "🏦 Mã giao dịch VNPay: " + result.transactionNo + "<br><br>"
+                        + "📅 Thời gian: " + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + "<br><br>"
+                        + (pointsDeducted > 0 ? "🎯 Điểm loyalty bị trừ: " + pointsDeducted + " điểm<br><br>" : "")
+                        + "⏰ Tiền sẽ về tài khoản trong 1-3 ngày làm việc" + "<br><br>"
                         + "CẢM ƠN BẠN ĐÃ SỬ DỤNG DỊCH VỤ!!!");
 
-                System.out.println("=== VNPAY REFUND COMPLETED ===");
             } else {
                 session.setAttribute("refundMsg",
                         "❌ VNPAY TỪ CHỐI HOÀN TIỀN<br>"
@@ -128,8 +150,6 @@ public class VNPayRefundServlet extends HttpServlet {
         RefundResult result = new RefundResult();
 
         try {
-            System.out.println("Processing VNPay refund...");
-
             // Prepare refund parameters
             String vnp_RequestId = Config.getRandomNumber(8);
             String vnp_Version = "2.1.0";
@@ -151,12 +171,7 @@ public class VNPayRefundServlet extends HttpServlet {
                     txnInfo.vnpTransactionNo != null ? txnInfo.vnpTransactionNo : "", // Thêm vnp_TransactionNo
                     vnp_TransactionDate, vnp_CreateBy, vnp_CreateDate, vnp_IpAddr, vnp_OrderInfo);
 
-            System.out.println("=== REFUND HASH DEBUG ===");
-            System.out.println("Hash data: " + hash_Data);
-            System.out.println("Secret key: " + Config.secretKey);
-
             String vnp_SecureHash = Config.hmacSHA512(Config.secretKey, hash_Data);
-            System.out.println("Generated hash: " + vnp_SecureHash);
 
             // Tạo JSON request
             Map<String, String> vnp_Params = new HashMap<>();
@@ -179,9 +194,6 @@ public class VNPayRefundServlet extends HttpServlet {
                 vnp_Params.put("vnp_TransactionNo", txnInfo.vnpTransactionNo);
             }
 
-            System.out.println("Calling VNPay refund API...");
-            System.out.println("Request params: " + vnp_Params);
-
             // Call VNPay API
             URL url = new URL(Config.vnp_ApiUrl);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -191,7 +203,6 @@ public class VNPayRefundServlet extends HttpServlet {
 
             // Send request
             String jsonInputString = new com.google.gson.Gson().toJson(vnp_Params);
-            System.out.println("JSON request: " + jsonInputString);
 
             try (OutputStream os = con.getOutputStream()) {
                 byte[] input = jsonInputString.getBytes("utf-8");
@@ -207,8 +218,6 @@ public class VNPayRefundServlet extends HttpServlet {
                 }
             }
 
-            System.out.println("VNPay Refund Response: " + response.toString());
-
             // Parse response
             com.google.gson.JsonObject responseJson = com.google.gson.JsonParser.parseString(response.toString()).getAsJsonObject();
             String responseCodeFromVNP = responseJson.get("vnp_ResponseCode").getAsString();
@@ -221,10 +230,8 @@ public class VNPayRefundServlet extends HttpServlet {
 
             if ("00".equals(responseCodeFromVNP)) {
                 result.success = true;
-                System.out.println("VNPay refund successful");
             } else {
                 result.success = false;
-                System.out.println("VNPay refund failed with code: " + responseCodeFromVNP);
             }
 
         } catch (Exception e) {
@@ -237,23 +244,38 @@ public class VNPayRefundServlet extends HttpServlet {
         return result;
     }
 
+    // Thêm log để debug
     private void updateRefundStatus(int bookingId, double amount, String reason) {
         try {
+
             VNPayPaymentDAO paymentDAO = new VNPayPaymentDAO();
             BookingDAO bookingDAO = new BookingDAO();
+            LoyaltyPointDAO loyaltyPointDAO = new LoyaltyPointDAO();
 
-            // 1. Update VNPayPayment status = 'Refunded'
+            // Update payment and booking status with refund amount
             boolean paymentUpdated = paymentDAO.refundPaymentByBookingId(bookingId);
-
-            // 2. Update VNPayTransaction is_refunded = 1
             boolean transactionUpdated = paymentDAO.updateTransactionRefundStatus(bookingId);
+            boolean bookingUpdated = bookingDAO.updateBookingForRefund(bookingId, "Cancelled", "Paid", reason, amount);
 
-            // 3. Update Booking với cancel_reason
-            boolean bookingUpdated = bookingDAO.updateBookingForRefund(bookingId, "Cancelled", "Unpaid", reason);
+            // Get booking info and subtract points
+            Booking booking = bookingDAO.getBookingById(bookingId);
+            if (booking != null && booking.getUserId() != null) {
 
-            System.out.println("✅ Refund completed - Payment: " + paymentUpdated
-                    + ", Transaction: " + transactionUpdated
-                    + ", Booking: " + bookingUpdated);
+                // Check current points before deduction
+                int currentPoints = loyaltyPointDAO.getPointsByUser(booking.getUserId());
+
+                boolean pointsDeducted = loyaltyPointDAO.subtractPointsForRefund(
+                        booking.getUserId(),
+                        amount,
+                        "Points deducted for refund - Booking #" + bookingId
+                );
+
+                if (pointsDeducted) {
+                    int newPoints = loyaltyPointDAO.getPointsByUser(booking.getUserId());
+
+                    loyaltyPointDAO.checkAndUpdateTier(booking.getUserId());
+                }
+            }
 
         } catch (Exception e) {
             System.err.println("❌ Error updating refund status: " + e.getMessage());
@@ -279,7 +301,6 @@ public class VNPayRefundServlet extends HttpServlet {
                     + "<p>Cảm ơn bạn đã sử dụng dịch vụ!</p>";
 
             EmailUtility.sendRefundEmail(userEmail, subject, emailContent);
-            System.out.println("✅ Refund confirmation email sent to: " + userEmail);
 
         } catch (Exception e) {
             System.err.println("❌ Failed to send refund email: " + e.getMessage());

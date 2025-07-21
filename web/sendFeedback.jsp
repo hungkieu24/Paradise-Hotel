@@ -167,7 +167,7 @@
                             <button type="button" class="cancel-btn" onclick="window.location.reload();">Cancel</button>
 
                             <button type="submit" class="save-btn">Submit a review</button>
-                            <p class="text-end"><a href="viewRoomTypeDetail" class="btn_1">View reviews</a></p>
+                            <p class="text-end"><a href="viewRoomTypeList" class="btn_1">View reviews</a></p>
 
 
 

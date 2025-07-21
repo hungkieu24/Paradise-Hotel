@@ -50,7 +50,6 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
             ResultSet rs = checkPs.executeQuery();
 
             if (rs.next() && rs.getInt(1) > 0) {
-                System.out.println("Transaction already exists for payment_id: " + paymentId + ", TxnRef: " + vnpTxnRef);
                 return; // SKIP nếu đã tồn tại
             }
         } catch (Exception e) {
@@ -69,7 +68,6 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
                 String second = vnpPayDate.substring(12, 14);
 
                 formattedPayDate = year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
-                System.out.println("Converted PayDate: " + vnpPayDate + " -> " + formattedPayDate);
             } catch (Exception e) {
                 System.err.println("Error formatting PayDate: " + e.getMessage());
                 formattedPayDate = null;
@@ -99,8 +97,6 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
             }
 
             int result = ps.executeUpdate();
-            System.out.println("VNPayTransaction inserted: " + result + " row(s) affected");
-            System.out.println("Transaction details - PaymentID: " + paymentId + ", TxnRef: " + vnpTxnRef);
 
         } catch (Exception e) {
             System.err.println("Error creating VNPayTransaction: " + e.getMessage());
@@ -133,7 +129,6 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
 
     public boolean refundPaymentByBookingId(int bookingId) {
         try {
-            System.out.println("Marking payment as refunded for booking: " + bookingId);
 
             String sql = "UPDATE VNPayPayment SET status = 'Refunded' WHERE booking_id = ?";
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -141,7 +136,6 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
 
                 int rowsAffected = ps.executeUpdate();
                 boolean result = rowsAffected > 0;
-                System.out.println("Payment refund status updated: " + result + " (rows affected: " + rowsAffected + ")");
                 return result;
             }
         } catch (Exception e) {
@@ -171,10 +165,7 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
                 info.payDate = rs.getString("pay_date");
                 info.amount = rs.getDouble("amount");
 
-                System.out.println("Found transaction info:");
-                System.out.println("- TxnRef: " + info.vnpTxnRef);
-                System.out.println("- TransactionNo: " + info.vnpTransactionNo);
-                System.out.println("- PayDate: " + info.payDate);
+
                 return info;
             }
         } catch (Exception e) {
@@ -225,6 +216,39 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
         return false;
     }
 
+    /**
+     * Check if payment was made more than 1 day ago
+     * @param bookingId
+     * @return true if payment is older than 1 day, false otherwise
+     */
+    public boolean isPaymentOlderThanOneDay(int bookingId) {
+        try {
+            String sql = "SELECT paid_at FROM VNPayPayment WHERE booking_id = ? AND status = 'Completed'";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, bookingId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                Timestamp paidAt = rs.getTimestamp("paid_at");
+                if (paidAt != null) {
+                    // Calculate 1 day (24 hours) from payment time
+                    long oneDayInMillis = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+                    long currentTime = System.currentTimeMillis();
+                    long paymentTime = paidAt.getTime();
+
+                    boolean isOlderThanOneDay = (currentTime - paymentTime) > oneDayInMillis;
+
+
+
+                    return isOlderThanOneDay;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false; // Default to false if no payment found or error
+    }
+
 // Inner class for transaction info
     public static class VNPayTransactionInfo {
 
@@ -245,7 +269,6 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
             ResultSet rs = checkPs.executeQuery();
 
             if (rs.next() && rs.getInt(1) > 0) {
-                System.out.println("❌ Transaction already exists - SKIPPING");
                 return;
             }
         } catch (Exception e) {
@@ -276,8 +299,6 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
             }
 
             int result = ps.executeUpdate();
-            System.out.println("✅ VNPayTransaction created: " + result + " row(s)");
-            System.out.println("Details - PaymentID: " + paymentId + ", Amount: " + amount + ", Bank: " + vnpBankCode);
 
         } catch (Exception e) {
             System.err.println("❌ Error creating transaction: " + e.getMessage());
@@ -287,7 +308,6 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
 
     private String formatVNPayDate(String vnpPayDate) {
         if (vnpPayDate == null || vnpPayDate.length() != 14) {
-            System.out.println("Invalid PayDate format: " + vnpPayDate);
             return null;
         }
 
@@ -298,7 +318,6 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
                     + vnpPayDate.substring(8, 10) + ":"
                     + vnpPayDate.substring(10, 12) + ":"
                     + vnpPayDate.substring(12, 14);
-            System.out.println("PayDate converted: " + vnpPayDate + " -> " + formatted);
             return formatted;
         } catch (Exception e) {
             System.err.println("Error formatting PayDate: " + vnpPayDate + " - " + e.getMessage());
@@ -316,7 +335,6 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
 
                 int rowsAffected = ps.executeUpdate();
                 boolean result = rowsAffected > 0;
-                System.out.println("Transaction refund status updated: " + result + " (rows affected: " + rowsAffected + ")");
                 return result;
             }
         } catch (Exception e) {
@@ -325,4 +343,5 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
             return false;
         }
     }
+
 }
