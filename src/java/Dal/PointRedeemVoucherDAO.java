@@ -68,25 +68,19 @@ public class PointRedeemVoucherDAO extends DBContext {
         // Simply get all vouchers that user has redeemed
         String sql = "SELECT prv.voucher_id FROM PointRedeemVoucher prv WHERE prv.user_id = ?";
 
-        System.out.println("=== DEBUG getAvailableVoucherIdsByUser ===");
-        System.out.println("UserId: " + userId);
-        System.out.println("SQL: " + sql);
+
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, userId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 int voucherId = rs.getInt("voucher_id");
-                System.out.println("Found available voucher: " + voucherId);
                 result.add(voucherId);
             }
         } catch (SQLException e) {
-            System.out.println("SQL Error: " + e.getMessage());
             e.printStackTrace();
         }
 
-        System.out.println("Final result: " + result);
-        System.out.println("=== END DEBUG ===");
         return result;
     }
 
@@ -116,19 +110,16 @@ public class PointRedeemVoucherDAO extends DBContext {
                         if (deleteResult > 0) {
                             // Both operations successful
                             connection.commit();
-                            System.out.println("Successfully used voucher " + voucherId + " for user " + userId + " in booking " + bookingId);
                             return true;
                         } else {
                             // Failed to delete from PointRedeemVoucher
                             connection.rollback();
-                            System.out.println("Failed to remove voucher from PointRedeemVoucher");
                             return false;
                         }
                     }
                 } else {
                     // Failed to insert into BookingVoucher
                     connection.rollback();
-                    System.out.println("Failed to insert into BookingVoucher");
                     return false;
                 }
             }
