@@ -200,9 +200,9 @@
                                     </c:forEach>
                                 </select>
                                 <fmt:formatDate value="${startDate}" pattern="yyyy-MM-dd" var="startDateFormatted" />
-                                <fmt:formatDate value="${endDate}" pattern="yyyy-MM-dd" var="endDateFormatted" />
+
                                 <input type="date" id="startDate" style="border:1px solid hsl(220 13% 91%); border-radius: 0.375rem; width: 100px" name="startDate" value="${startDateFormatted}" onchange="this.form.submit()">
-                                <input type="date" id="endDate" style="border:1px solid hsl(220 13% 91%); border-radius: 0.375rem; width: 100px" name="endDate" value="${endDateFormatted}" onchange="this.form.submit()">
+
                             </div>
                         </form>
                         <c:if test="${empty rooms}">
@@ -223,8 +223,6 @@
                                         <th>Price</th>
                                         <th>Capacity adult</th>
                                         <th>Capacity child</th>
-                                        <th>In</th>
-                                        <th>Out</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -238,8 +236,6 @@
                                             <td>${room.roomType.base_price} VND</td>
                                             <td>${room.roomType.capacity_adult} pax</td>
                                             <td>${room.roomType.capacity_child} pax</td>
-                                            <td>${room.checkIn}</td>
-                                            <td>${room.checkOut}</td>
                                             <td>
                                                 <button class="btn btn-sm btn-secondary" onclick="editRoom(this)"
                                                         data-id = "${room.id}"
@@ -265,38 +261,42 @@
                         <!-- Pagination -->
                         <div class="pagination">
                             <c:if test="${currentPage > 1}">
-                                <form action="rooms" method="get" style="display:inline;">
+                                <form action="searchRooms" method="get" style="display:inline;">
                                     <input type="hidden" name="page" value="${currentPage - 1}">
                                     <input type="hidden" name="size" value="${pageSize}">
                                     <input type="hidden" name="branchId" value="${branchId}">
+                                    <input type="hidden" name="status" value="${param.status}" />
+                                    <input type="hidden" name="roomType" value="${param.roomType}" />
+                                    <input type="hidden" name="search" value="${param.search}" />
                                     <fmt:formatDate value="${startDate}" pattern="yyyy-MM-dd" var="startDateFormatted" />
-                                    <fmt:formatDate value="${endDate}" pattern="yyyy-MM-dd" var="endDateFormatted" />
                                     <input type="hidden" name="startDate" value="${startDateFormatted}" >
-                                    <input type="hidden"  name="endDate" value="${endDateFormatted}" >
+
                                     <button type="submit">Previous</button>
                                 </form>
                             </c:if>
                             <c:forEach begin="1" end="${totalPages}" var="i">
-                                <form action="rooms" method="get" style="display:inline;">
+                                <form action="searchRooms" method="get" style="display:inline;">
                                     <input type="hidden" name="page" value="${i}">
                                     <input type="hidden" name="size" value="${pageSize}">
                                     <input type="hidden" name="branchId" value="${branchId}">
+                                    <input type="hidden" name="status" value="${param.status}" />
+                                    <input type="hidden" name="roomType" value="${param.roomType}" />
+                                    <input type="hidden" name="search" value="${param.search}" />
                                     <fmt:formatDate value="${startDate}" pattern="yyyy-MM-dd" var="startDateFormatted" />
-                                    <fmt:formatDate value="${endDate}" pattern="yyyy-MM-dd" var="endDateFormatted" />
                                     <input type="hidden" name="startDate" value="${startDateFormatted}" >
-                                    <input type="hidden"  name="endDate" value="${endDateFormatted}" >
                                     <button type="submit" ${i == currentPage ? 'disabled' : ''}>${i}</button>
                                 </form>
                             </c:forEach>
                             <c:if test="${currentPage < totalPages}">
-                                <form action="rooms" method="get" style="display:inline;">
+                                <form action="searchRooms" method="get" style="display:inline;">
                                     <input type="hidden" name="page" value="${currentPage + 1}">
                                     <input type="hidden" name="size" value="${pageSize}">
                                     <input type="hidden" name="branchId" value="${branchId}">
+                                    <input type="hidden" name="status" value="${param.status}" />
+                                    <input type="hidden" name="roomType" value="${param.roomType}" />
+                                    <input type="hidden" name="search" value="${param.search}" />
                                     <fmt:formatDate value="${startDate}" pattern="yyyy-MM-dd" var="startDateFormatted" />
-                                    <fmt:formatDate value="${endDate}" pattern="yyyy-MM-dd" var="endDateFormatted" />
                                     <input type="hidden" name="startDate" value="${startDateFormatted}" >
-                                    <input type="hidden"  name="endDate" value="${endDateFormatted}" >
                                     <button type="submit">Next</button>
                                 </form>
                             </c:if>
@@ -350,17 +350,17 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="capacity_adult">Adult Capacity *</label>
-                                    <input type="number" id="capacity_adult" name="capacity_adult" min="0" required>
+                                    <input type="number" id="capacity_adult" name="capacity_adult" min="0" readonly>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="capacity_child">Child Capacity *</label>
-                                    <input type="number" id="capacity_child" name="capacity_child" min="0" required>
+                                    <input type="number" id="capacity_child" name="capacity_child" min="0" readonly>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="price">Price (VND) *</label>
-                                <input type="number" id="price" name="price" min="0" step="1000" required>
+                                <input type="number" id="price" name="price" min="0" step="1000" readonly>
                             </div>
                             <div class="form-group">
                                 <label for="image">Image *</label>
@@ -376,7 +376,7 @@
                             <div class="form-group">
                                 <label for="description">Description</label>
                                 <textarea id="description" name="description" rows="3"
-                                          placeholder="Description..."></textarea>
+                                          placeholder="Description..." readonly></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -436,17 +436,17 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="edit_capacity_adult">Adult Capacity *</label>
-                                    <input type="number" id="edit_capacity_adult" name="capacity_adult" min="0" require">
+                                    <input type="number" id="edit_capacity_adult" name="capacity_adult" min="0" readonly>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="edit_capacity_child">Child Capacity *</label>
-                                    <input type="number" id="edit_capacity_child" name="capacity_child" min="0" required">
+                                    <input type="number" id="edit_capacity_child" name="capacity_child" min="0" readonly>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="edit_price">Price (VND) *</label>
-                                <input type="number" id="edit_price" name="price" min="0" step="1000" required>
+                                <input type="number" id="edit_price" name="price" min="0" step="1000" readonly>
                             </div>
                             <div class="form-group">
                                 <label for="image">Image *</label>
@@ -462,7 +462,7 @@
                             <div class="form-group">
                                 <label for="edit_description">Description</label>
                                 <textarea id="edit_description" name="description" rows="3"
-                                          placeholder="Description..."></textarea>
+                                          placeholder="Description..." readonly></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -616,21 +616,22 @@
             var errorMsg = "${error != null ? error : ''}";
             var successMsg = "${success != null ? success : ''}";
             var warningMsg = "${warning != null ? warning : ''}";
+            var returnPage = "${returnPage != null ? returnPage :'rooms'}";
             if (errorMsg && errorMsg.trim() !== "") {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
                     text: errorMsg
                 }).then(() => {
-                    document.getElementById("typeFilter").value = '';
-                    document.getElementById("statusFilter").value = '';
-                    document.querySelector('form[action="searchRooms"]').submit();
+                    window.location.href = returnPage;
                 });
             } else if (successMsg && successMsg.trim() !== "") {
                 Swal.fire({
                     icon: 'success',
                     title: 'Success',
                     text: successMsg
+                }).then({
+                    window.location.href = returnPage;
                 });
             } else if (warningMsg && warningMsg.trim() !== "") {
                 Swal.fire({
@@ -638,9 +639,7 @@
                     title: 'Warning',
                     text: warningMsg
                 }).then(() => {
-                    document.getElementById("typeFilter").value = '';
-                    document.getElementById("statusFilter").value = '';
-                    document.querySelector('form[action="searchRooms"]').submit();
+                    window.location.href = returnPage;
                 });
             }
         </script>
