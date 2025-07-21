@@ -2277,4 +2277,137 @@ public class BookingDAO extends DBcontext.DBContext {
         return checkInDate;
     }
 
+    public List<Booking> searchBookingsByBranchWithFilterPaginated(
+            Integer branchId, String keyword, String status, String fromDate, String toDate,
+            int page, int pageSize
+    ) {
+        List<Booking> bookings = new ArrayList<>();
+
+        if (page < 1) {
+            page = 1;
+        }
+        if (pageSize < 1) {
+            pageSize = 10;
+        }
+        if (pageSize > 15) {
+            pageSize = 15;
+        }
+
+        int offset = (page - 1) * pageSize;
+
+        // SUBQUERY approach để avoid JOIN issues
+        StringBuilder sql = new StringBuilder(
+                "SELECT b.*, u.username, u.fullname as user_fullname, "
+                + "(SELECT lp.level FROM LoyaltyPoint lp WHERE lp.user_id = u.id) as user_rank, "
+                + "(SELECT STRING_AGG(rt.name, ', ') "
+                + " FROM BookingRoomType brt "
+                + " INNER JOIN RoomType rt ON brt.room_type_id = rt.id "
+                + " WHERE brt.booking_id = b.id) as room_types "
+                + "FROM Booking b "
+                + "LEFT JOIN UserAccount u ON b.user_id = u.id "
+                + "WHERE b.branch_id = ? "
+                + "AND (b.is_deleted = 0 OR b.is_deleted IS NULL) "
+        );
+
+        List<Object> params = new ArrayList<>();
+        params.add(branchId);
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND (u.fullname LIKE ? OR u.username LIKE ? OR b.note LIKE ?) ");
+            String searchPattern = "%" + keyword.trim() + "%";
+            params.add(searchPattern);
+            params.add(searchPattern);
+            params.add(searchPattern);
+        }
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append("AND LOWER(b.status) = LOWER(?) ");
+            params.add(status.trim());
+        }
+
+        if (fromDate != null && !fromDate.trim().isEmpty()) {
+            try {
+                sql.append("AND CAST(b.check_in AS date) >= ? ");
+                params.add(java.sql.Date.valueOf(fromDate.trim()));
+            } catch (IllegalArgumentException e) {
+                System.err.println("Invalid fromDate for hieu1235: " + fromDate);
+            }
+        }
+
+        if (toDate != null && !toDate.trim().isEmpty()) {
+            try {
+                sql.append("AND CAST(b.check_in AS date) <= ? ");
+                params.add(java.sql.Date.valueOf(toDate.trim()));
+            } catch (IllegalArgumentException e) {
+                System.err.println("Invalid toDate for hieu1235: " + toDate);
+            }
+        }
+
+        // SQL Server pagination syntax
+        sql.append("ORDER BY b.id DESC ");
+        sql.append("OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
+
+        System.out.println("=== FIXED QUERY DEBUG for hieu1235 at 2025-07-15 11:34:20 ===");
+        System.out.println("SQL: " + sql.toString());
+
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            // Set filter parameters
+            for (int i = 0; i < params.size(); ++i) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            // Set pagination parameters
+            ps.setInt(params.size() + 1, offset);
+            ps.setInt(params.size() + 2, pageSize);
+
+            System.out.println("Parameters for hieu1235: " + params.toString() + " + offset=" + offset + ", pageSize=" + pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Booking booking = new Booking();
+
+                    // Map theo database schema
+                    booking.setId(rs.getInt("id"));
+                    booking.setUserId(rs.getString("user_id"));
+                    booking.setBranchId(rs.getInt("branch_id"));
+                    booking.setBookingTime(rs.getTimestamp("booking_time"));
+                    booking.setCheckIn(rs.getTimestamp("check_in"));
+                    booking.setCheckOut(rs.getTimestamp("check_out"));
+                    booking.setTotalPrice(rs.getDouble("total_price"));
+                    booking.setStatus(rs.getString("status"));
+                    booking.setPaymentStatus(rs.getString("payment_status"));
+                    booking.setCancelReason(rs.getString("cancel_reason"));
+                    booking.setCancelTime(rs.getTimestamp("cancel_time"));
+
+                    // Fix promotion_id compatibility
+                    int promotionIdValue = rs.getInt("promotion_id");
+                    booking.setPromotionId(rs.wasNull() ? null : promotionIdValue);
+
+                    booking.setNote(rs.getString("note"));
+                    booking.setIsDeleted(rs.getBoolean("is_deleted"));
+
+                    // User information
+                    booking.setUserName(rs.getString("username"));
+                    booking.setFullName(rs.getString("user_fullname"));
+                    booking.setRank(rs.getString("user_rank"));
+
+                    // ROOM TYPES - Using subquery result
+                    String roomTypes = rs.getString("room_types");
+                    booking.setRoomTypes(roomTypes != null && !roomTypes.trim().isEmpty() ? roomTypes : "Not Assigned");
+
+                    System.out.println("Booking #" + booking.getId() + " for hieu1235 - Room Types: " + booking.getRoomTypes());
+
+                    bookings.add(booking);
+                }
+            }
+
+            System.out.println("Successfully retrieved " + bookings.size() + " bookings for hieu1235 at 2025-07-15 11:34:20");
+
+        } catch (SQLException ex) {
+            System.err.println("SQL Error for hieu1235 at 2025-07-15 11:34:20: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+
+        return bookings;
+    }
 }
