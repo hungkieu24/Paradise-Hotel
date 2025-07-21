@@ -16,181 +16,181 @@
 %>
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Advanced Guest Search & Room Assignment</title>
-    <link rel="stylesheet" href="css/style_1.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .sidebar {
-            height: 100vh;
-            width: 250px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background: #22223b;
-            color: #fff;
-            z-index: 1000;
-        }
-        .sidebar-header {
-            padding: 20px;
-            font-size: 1.25rem;
-            font-weight: bold;
-        }
-        .sidebar-menu {
-            padding: 0 0 20px 0;
-        }
-        .sidebar-menu .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #fff;
-            padding: 12px 20px;
-            text-decoration: none;
-            transition: background 0.2s;
-        }
-        .sidebar-menu .menu-item.active, .sidebar-menu .menu-item:hover {
-            background: #4a4e69;
-            border-left: 4px solid #ffc107;
-        }
-        /* Make logout button red */
-        .sidebar-menu .menu-item.logout {
-            color: #fa5252 !important;
-            font-weight: 600;
-        }
-        .sidebar-menu .menu-item.logout i {
-            color: #fa5252 !important;
-        }
-        .main-content {
-            margin-left: 220px;
-            padding: 0;
-            min-height: 100vh;
-            background: #f4f5fa;
-        }
-        .content-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 28px 40px 0 40px;
-        }
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            font-weight: 600;
-        }
-        .content-body {
-            margin: 35px 40px 0 40px;
-        }
-        .search-section {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 25px;
-        }
-        .results-section {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 25px;
-        }
-        .user-card {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            transition: all 0.3s;
-        }
-        .user-card:hover {
-            border-color: #007bff;
-            box-shadow: 0 4px 12px rgba(0,123,255,0.15);
-        }
-        .user-card.selected {
-            border-color: #28a745;
-            background-color: #f8fff9;
-        }
-        .room-assignment-section {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: none;
-        }
-        .room-card {
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-            min-width: 120px;
-            position: relative;
-        }
-        .room-card:hover {
-            border-color: #007bff;
-            background-color: #f8f9fa;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .room-card.selected {
-            border-color: #28a745;
-            background-color: #d4edda;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(40,167,69,0.3);
-        }
-        .room-card.selected::after {
-            content: '✓';
-            position: absolute;
-            top: 5px;
-            right: 8px;
-            color: #28a745;
-            font-weight: bold;
-            font-size: 16px;
-        }
-        .no-results {
-            text-align: center;
-            padding: 40px;
-            color: #6c757d;
-        }
-        .advanced-search {
-            display: none;
-        }
-        .search-toggle {
-            color: #007bff;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        .search-toggle:hover {
-            text-decoration: underline;
-        }
-        .form-check-input:checked {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-        .room-type-checkbox {
-            transform: scale(1.2);
-        }
-        #selectedRoomsList .badge {
-            position: relative;
-        }
-        #confirmAssignmentBtn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .room-type-section {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            background-color: #f8f9fa;
-        }
-    </style>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <title>Advanced Guest Search & Room Assignment</title>
+        <link rel="stylesheet" href="css/style_1.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <style>
+            .sidebar {
+                height: 100vh;
+                width: 250px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                background: #22223b;
+                color: #fff;
+                z-index: 1000;
+            }
+            .sidebar-header {
+                padding: 20px;
+                font-size: 1.25rem;
+                font-weight: bold;
+            }
+            .sidebar-menu {
+                padding: 0 0 20px 0;
+            }
+            .sidebar-menu .menu-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: #fff;
+                padding: 12px 20px;
+                text-decoration: none;
+                transition: background 0.2s;
+            }
+            .sidebar-menu .menu-item.active, .sidebar-menu .menu-item:hover {
+                background: #4a4e69;
+                border-left: 4px solid #ffc107;
+            }
+            /* Make logout button red */
+            .sidebar-menu .menu-item.logout {
+                color: #fa5252 !important;
+                font-weight: 600;
+            }
+            .sidebar-menu .menu-item.logout i {
+                color: #fa5252 !important;
+            }
+            .main-content {
+                margin-left: 220px;
+                padding: 0;
+                min-height: 100vh;
+                background: #f4f5fa;
+            }
+            .content-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 28px 40px 0 40px;
+            }
+            .user-info {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                font-weight: 600;
+            }
+            .content-body {
+                margin: 35px 40px 0 40px;
+            }
+            .search-section {
+                background: white;
+                padding: 25px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                margin-bottom: 25px;
+            }
+            .results-section {
+                background: white;
+                padding: 25px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                margin-bottom: 25px;
+            }
+            .user-card {
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 15px;
+                transition: all 0.3s;
+            }
+            .user-card:hover {
+                border-color: #007bff;
+                box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+            }
+            .user-card.selected {
+                border-color: #28a745;
+                background-color: #f8fff9;
+            }
+            .room-assignment-section {
+                background: white;
+                padding: 25px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                display: none;
+            }
+            .room-card {
+                border: 2px solid #dee2e6;
+                border-radius: 8px;
+                padding: 15px;
+                margin: 8px;
+                cursor: pointer;
+                transition: all 0.3s;
+                text-align: center;
+                min-width: 120px;
+                position: relative;
+            }
+            .room-card:hover {
+                border-color: #007bff;
+                background-color: #f8f9fa;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+            .room-card.selected {
+                border-color: #28a745;
+                background-color: #d4edda;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+            }
+            .room-card.selected::after {
+                content: '✓';
+                position: absolute;
+                top: 5px;
+                right: 8px;
+                color: #28a745;
+                font-weight: bold;
+                font-size: 16px;
+            }
+            .no-results {
+                text-align: center;
+                padding: 40px;
+                color: #6c757d;
+            }
+            .advanced-search {
+                display: none;
+            }
+            .search-toggle {
+                color: #007bff;
+                cursor: pointer;
+                text-decoration: none;
+            }
+            .search-toggle:hover {
+                text-decoration: underline;
+            }
+            .form-check-input:checked {
+                background-color: #28a745;
+                border-color: #28a745;
+            }
+            .room-type-checkbox {
+                transform: scale(1.2);
+            }
+            #selectedRoomsList .badge {
+                position: relative;
+            }
+            #confirmAssignmentBtn:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+            .room-type-section {
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 20px;
+                background-color: #f8f9fa;
+            }
+        </style>
+    </head>
     <body>
         <div class="app-container">
             <!-- Sidebar -->
@@ -387,27 +387,33 @@
                                 </div>
                             </div>
 
-                            <!-- Room Type Selection -->
-                            <div class="mb-4">
-                                <label class="form-label">Select Room Types:</label>
-                                <div class="row">
-                                    <c:forEach var="roomType" items="${roomTypes}">
-                                        <div class="col-md-4 mb-2">
-                                            <div class="form-check">
-                                                <input class="form-check-input room-type-checkbox" type="checkbox" 
-                                                       value="${roomType.roomTypeID}" id="roomType${roomType.roomTypeID}"
-                                                       onchange="toggleRoomTypeSelection(${roomType.roomTypeID})">
-                                                <label class="form-check-label" for="roomType${roomType.roomTypeID}">
-                                                    ${roomType.name}
-                                                    - <i class="bi bi-people-fill"></i> ${roomType.capacity_adult} Adults, 
-                                                    <i class="bi bi-person-fill"></i> ${roomType.capacity_child} Children, 
-                                                    <i class="bi bi-currency-dollar"></i> <fmt:formatNumber value="${roomType.base_price}" pattern="#,##0" />
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </c:forEach>
-                                </div>
-                            </div>
+                           <!-- Room Type Selection -->
+<div class="mb-4">
+    <label class="form-label">Select Room Types:</label>
+    <div class="row">
+        <c:forEach var="roomType" items="${roomTypes}">
+            <div class="col-md-4 mb-2">
+                <div class="form-check">
+                    <input class="form-check-input room-type-checkbox" type="checkbox" 
+                           value="${roomType.roomTypeID}" id="roomType${roomType.roomTypeID}"
+                           onchange="toggleRoomTypeSelection(${roomType.roomTypeID});fetchBookedQuantity(${roomType.roomTypeID});">
+                    <label class="form-check-label" for="roomType${roomType.roomTypeID}">
+                        ${roomType.name}
+                        - <i class="bi bi-people-fill"></i> ${roomType.capacity_adult} Adults, 
+                        <i class="bi bi-person-fill"></i> ${roomType.capacity_child} Children, 
+                        <i class="bi bi-currency-dollar"></i> 
+                        <br/>
+                        <span>
+                            <fmt:formatNumber value="${roomType.base_price} " pattern="#,##0" />
+                        </span>
+                        <br/>
+                        <span>Booked: <span id="bookedQty${roomType.roomTypeID}"></span></span>
+                    </label>
+                </div>
+            </div>
+        </c:forEach>
+    </div>
+</div>
 
                             <!-- Selected Rooms Display -->
                             <div class="mb-4" id="selectedRoomsDisplay" style="display: none;">
@@ -606,7 +612,7 @@
                                     const roomSection = document.createElement('div');
                                     roomSection.id = 'roomSection' + roomTypeId;
                                     roomSection.className = 'room-type-section';
-                                    let roomHtml = '<h6 class="mb-3"><i class="bi bi-building me-2"></i>' + roomTypeName + ' - Available Rooms:</h6>' +
+                                    let roomHtml = '<h6 class="mb-3"> <i class="bi bi-building me-2"></i>' + roomTypeName + '</h6>' +
                                             '<div class="d-flex flex-wrap gap-2" id="roomCards' + roomTypeId + '">';
                                     if (rooms.length === 0) {
                                     roomHtml += '<div class="text-center p-3 text-muted w-100">No available rooms of this type</div>';
@@ -750,6 +756,38 @@
                                     if (urlParams.get('assignRoom') === 'true' && urlParams.get('userId')) {
                                     // Auto-select user logic can be implemented here
                                     }
+                                    });
+                                    function fetchBookedQuantity(roomTypeId) {
+                                    const checkIn = document.querySelector('input[name="checkIn"]').value;
+                                    const checkOut = document.querySelector('input[name="checkOut"]').value;
+                                    if (!checkIn || !checkOut) {
+                                    document.getElementById('bookedQty' + roomTypeId).innerText = "";
+                                    return;
+                                    }
+
+                                    fetch('<%=request.getContextPath()%>/ajaxBookedQuantity?roomTypeId=' + roomTypeId + '&checkIn=' + encodeURIComponent(checkIn) + '&checkOut=' + encodeURIComponent(checkOut))
+                                            .then(resp => resp.json())
+                                            .then(data => {
+                                            document.getElementById('bookedQty' + roomTypeId).innerText = data.bookedQuantity;
+                                            })
+                                            .catch(err => {
+                                            document.getElementById('bookedQty' + roomTypeId).innerText = "Error";
+                                            });
+                                    }
+
+                                    // Gắn sự kiện onchange cho input ngày
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                    const checkInInput = document.querySelector('input[name="checkIn"]');
+                                    const checkOutInput = document.querySelector('input[name="checkOut"]');
+                                    [checkInInput, checkOutInput].forEach(input => {
+                                    if (input) {
+                                    input.addEventListener('change', function() {
+                                    document.querySelectorAll('.room-type-checkbox').forEach(cb => {
+                                    fetchBookedQuantity(cb.value);
+                                    });
+                                    });
+                                    }
+                                    });
                                     });
         </script>
 
