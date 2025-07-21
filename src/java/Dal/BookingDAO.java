@@ -2143,7 +2143,6 @@ public class BookingDAO extends DBcontext.DBContext {
             ps.setInt(5, bookingId);
 
             int rowsAffected = ps.executeUpdate();
-            System.out.println("✅ Updated booking " + bookingId + " with refund amount: " + refundAmount);
             return rowsAffected > 0;
 
         } catch (Exception e) {
@@ -2164,7 +2163,6 @@ public class BookingDAO extends DBcontext.DBContext {
             ps.setInt(2, bookingId);
 
             int rowsAffected = ps.executeUpdate();
-            System.out.println("✅ Cancelled booking " + bookingId + " without refund. Reason: " + cancelReason);
             return rowsAffected > 0;
 
         } catch (Exception e) {

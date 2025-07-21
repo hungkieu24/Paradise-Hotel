@@ -18,6 +18,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.File;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,14 +100,28 @@ public class DeleteRoomServlet extends HttpServlet {
                 prepareResponse(request, response, user, roomDao.getBranchId(userId), branchname, page, pageSize);
                 return;
             }
-            
+
         }
     }
+
     private void prepareResponse(HttpServletRequest request, HttpServletResponse response, UserAccount user, int branchId,
             String branchname, int page, int pageSize) throws ServletException, IOException {
         int totalRooms = roomDao.getTotalRoomsByBranchId(branchId);
         int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
-        List<Room> rooms = roomDao.getAllRoomByBranchId(branchId, page, pageSize);
+        String startParam = request.getParameter("startDate");
+        String endParam = request.getParameter("endDate");
+        LocalDateTime checkIn;
+        LocalDateTime checkOut;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        if (startParam == null || startParam.isEmpty() || endParam == null || endParam.isEmpty()) {
+            checkIn = LocalDate.now().atStartOfDay();
+            checkOut = checkIn.plusDays(5);
+        } else {
+            checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
+            checkOut = LocalDate.parse(endParam, formatter).atStartOfDay();
+        }
+        List<Room> rooms = roomDao.getAllRoomByBranchId(branchId, page, pageSize, checkIn, checkOut);
         List<RoomType> roomTypes = rtDao.getAllRoomType();
         Map<String, List<String>> roomImageMap = new HashMap<>();
         for (Room room : rooms) {
@@ -131,6 +149,8 @@ public class DeleteRoomServlet extends HttpServlet {
         request.setAttribute("currentPage", page);
         request.setAttribute("pageSize", pageSize);
         request.setAttribute("totalPages", totalPages);
+        request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
+            request.setAttribute("endDate", java.util.Date.from(checkOut.atZone(ZoneId.systemDefault()).toInstant()));
         request.getRequestDispatcher("roomManage.jsp").forward(request, response);
     }
 

@@ -82,7 +82,7 @@
                         <i class="fas fa-tags"></i>
                         <span class="menu-text">Manage promotion</span>
                     </a>
-                    <a href="#" class="menu-item">
+                    <a href="../manager-membership" class="menu-item">
                         <i class="fas fa-users"></i>
                         <span class="menu-text">Manage membership</span>
                     </a>
@@ -122,7 +122,7 @@
                                 <div class="page-action-wrapper">
                                     <div class="page-action">
                                         <label class="page-actions-label">Month From: </label>
-                                        <select name="monthFrom" class="page-actions-select" required>
+                                        <select name="monthFrom" class="page-actions-select" onchange="fixDateRange()" required>
                                             <c:forEach var="i" begin="1" end="12">
                                                 <option value="${i}" ${i == monthFrom ? 'selected' : ''}>
                                                     ${monthNames[i - 1]}
@@ -132,11 +132,11 @@
                                     </div>
                                     <div class="page-action">
                                         <label class="page-actions-label">Year From: </label>
-                                        <input type="text" name="yearFrom" class="page-actions-input" value="${yearFrom}" required />
+                                        <input type="text" name="yearFrom" oninput="fixDateRange()" class="page-actions-input" value="${yearFrom}" required />
                                     </div>
                                     <div class="page-action">
                                         <label class="page-actions-label">Month To: </label>
-                                        <select name="monthTo" class="page-actions-select" required>
+                                        <select name="monthTo" class="page-actions-select" onchange="fixDateRange()" required>
                                             <c:forEach var="i" begin="1" end="12">
                                                 <option value="${i}" ${i == monthTo ? 'selected' : ''}>
                                                     ${monthNames[i - 1]}
@@ -146,17 +146,13 @@
                                     </div>
                                     <div class="page-action">
                                         <label class="page-actions-label">Year To: </label>
-                                        <input type="text" name="yearTo" class="page-actions-input" value="${yearTo}" required />
+                                        <input type="text" name="yearTo" oninput="fixDateRange()" class="page-actions-input" value="${yearTo}" required />
                                     </div>
                                     <div class="page-action">
                                         <button type="submit" class="btn btn-primary btn-filter">Filter</button>
                                     </div>
                                 </div>
                             </form>
-                            <button id="add-branch-btn" class="btn btn-primary js-toggle" toggle-target="#add-modal">
-                                <i class="fas fa-plus"></i>
-                                Add new ?
-                            </button>
                         </div>
 
                         <!-- Summary Cards -->
@@ -296,41 +292,6 @@
                                 <canvas id="serviceChart"></canvas>
                             </div>
                         </div>            
-
-                        <div class="rooms-table" id="roomsTable">
-                            <p class="cart-info__desc profile__desc">Quantity: <strong>${amenitySize}</strong></p>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Name</th>
-                                        <th>Description</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <c:forEach items="${allAmenities}" var="a" >
-                                        <tr>
-                                            <td>${a.getId()}</td>
-                                            <td>${a.getName()}</td>
-                                            <td>${a.getDescription()}</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-secondary edit js-toggle" 
-                                                        toggle-target="#edit-modal" 
-                                                        data-actor-id="${a.getId()}">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-danger delete js-toggle" 
-                                                        toggle-target="#delete-modal" 
-                                                        data-actor-id="${a.getId()}">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </c:forEach>
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
                 </div>
             </main>
@@ -446,6 +407,32 @@
         <script src="../js/hungkd.js"></script>
         <script src="../js/api.js"></script>
         <script src="../js/validationForm.js"></script>
+        <script>
+            function fixDateRange() {
+                const monthFromSelect = document.querySelector('[name="monthFrom"]');
+                const yearFromInput = document.querySelector('[name="yearFrom"]');
+                const monthToSelect = document.querySelector('[name="monthTo"]');
+                const yearToInput = document.querySelector('[name="yearTo"]');
+
+                const monthFrom = parseInt(monthFromSelect.value);
+                const yearFrom = parseInt(yearFromInput.value);
+                let monthTo = parseInt(monthToSelect.value);
+                const yearTo = parseInt(yearToInput.value);
+
+                if (isNaN(monthFrom) || isNaN(yearFrom) || isNaN(monthTo) || isNaN(yearTo)) {
+                    // Nếu người dùng chưa nhập đủ thì không kiểm tra
+                    return;
+                }
+
+                if (yearTo < yearFrom) {
+                    // Nếu năm To nhỏ hơn năm From => reset monthTo về ""
+                    monthToSelect.value = "";
+                } else if (yearTo === yearFrom && monthTo < monthFrom) {
+                    // Nếu cùng năm nhưng monthTo < monthFrom => reset monthTo = monthFrom
+                    monthToSelect.value = monthFrom;
+                }
+            }
+        </script>
         <script>
             function fetchDashboardData(callback) {
 

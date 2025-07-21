@@ -6,18 +6,14 @@ package Controller.HotelOwner;
 
 import Dal.BranchMonthlyReportDAO;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
-import java.sql.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,13 +28,11 @@ public class financialChartData extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String branchIdStr = request.getParameter("branchId");
-        String fromDateStr = request.getParameter("fromDate");
-        String toDateStr = request.getParameter("toDate");
-
-        boolean hasFromDate = fromDateStr != null && !fromDateStr.isEmpty();
-        boolean hasToDate = toDateStr != null && !toDateStr.isEmpty();
-        boolean hasBranch = branchIdStr != null && !branchIdStr.isEmpty();
+        int currentMonth = Integer.parseInt(request.getParameter("monthFrom"));
+        int currentYear = Integer.parseInt(request.getParameter("yearFrom"));
+        int monthTo = Integer.parseInt(request.getParameter("monthTo"));
+        int yearTo = Integer.parseInt(request.getParameter("yearTo"));
+        int branchId = Integer.parseInt(request.getParameter("branchId"));
 
         BranchMonthlyReportDAO dao = new BranchMonthlyReportDAO();
 
@@ -48,23 +42,15 @@ public class financialChartData extends HttpServlet {
         try {
             // === 1. Lấy dữ liệu profit trend ===
             Map<String, Double> profitMap;
-            if (hasBranch && !"0".equals(branchIdStr)) {
-                int branchId = Integer.parseInt(branchIdStr);
-                if (hasFromDate && hasToDate) {
-                    Date fromDate = Date.valueOf(fromDateStr);
-                    Date toDate = Date.valueOf(toDateStr);
-                    profitMap = dao.getMonthlyProfitTrendByBranchAndDateRange(branchId, fromDate, toDate);
-                } else {
-                    profitMap = dao.getMonthlyProfitTrendByBranch(branchId);
-                }
+            // === 2. Lấy dữ liệu branch comparison ===
+            Map<String, Map<String, Double>> comparisonMap;
+
+            if (branchId != 0) {
+                profitMap = dao.getMonthlyProfitTrendByBranchAndDateRange(branchId, currentMonth, currentYear, monthTo, yearTo);
+                comparisonMap = dao.getBranchIndicatorsByMonthRange(branchId, currentMonth, currentYear, monthTo, yearTo);
             } else {
-                if (hasFromDate && hasToDate) {
-                    Date fromDate = Date.valueOf(fromDateStr);
-                    Date toDate = Date.valueOf(toDateStr);
-                    profitMap = dao.getMonthlyProfitTrendByDateRange(fromDate, toDate);
-                } else {
-                    profitMap = dao.getMonthlyProfitTrend();
-                }
+                profitMap = dao.getMonthlyProfitTrendAllBranches(currentMonth, currentYear, monthTo, yearTo);
+                comparisonMap = dao.getBranchComparisonDataByDateRange(currentMonth, currentYear, monthTo, yearTo);
             }
 
             List<String> profitLabels = new ArrayList<>();
@@ -74,16 +60,6 @@ public class financialChartData extends HttpServlet {
                 profitData.add(entry.getValue());
             }
 
-            // === 2. Lấy dữ liệu branch comparison ===
-            Map<String, Map<String, Double>> comparisonMap;
-            if (hasFromDate && hasToDate) {
-                Date fromDate = Date.valueOf(fromDateStr);
-                Date toDate = Date.valueOf(toDateStr);
-                comparisonMap = dao.getBranchComparisonDataByDateRange(fromDate, toDate);
-            } else {
-                comparisonMap = dao.getBranchComparisonData();
-            }
-
             // === 3. Gộp vào JSON object chung ===
             Map<String, Object> responseData = new HashMap<>();
 
@@ -91,7 +67,7 @@ public class financialChartData extends HttpServlet {
                     "labels", profitLabels,
                     "data", profitData
             ));
-
+            responseData.put("branchId", branchId);
             responseData.put("branchChart", comparisonMap);
 
             String json = new Gson().toJson(responseData);

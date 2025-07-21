@@ -63,10 +63,10 @@
                         <p id="page-description">Create, delete, and download system backups</p>
                     </div>
                     <div class="header-right">
-                        <div class="notification-bell">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge">3</span>
-                        </div>
+                        <!--                        <div class="notification-bell">
+                                                    <i class="fas fa-bell"></i>
+                                                    <span class="notification-badge">3</span>
+                                                </div>-->
                         <div class="admin-profile">
                             <div class="profile-dropdown">
                                 <div class="profile-avatar">
@@ -74,14 +74,12 @@
                                 </div>
                                 <div class="dropdown-content">
                                     <div class="dropdown-header">
-                                        <strong>Admin User</strong>
-                                        <small>admin@system.com</small>
+                                        <strong>${sessionScope.user.getUsername()}</strong>
+                                        <small>${sessionScope.user.getEmail()}</small>
                                     </div>
                                     <a href="#">Profile Settings</a>
-                                    <a href="#">Account Security</a>
-                                    <a href="#">Preferences</a>
                                     <hr>
-                                    <a href="#" class="sign-out">Sign Out</a>
+                                    <a href="../login?action=logout" class="sign-out">Sign Out</a>
                                 </div>
                             </div>
                         </div>
@@ -238,7 +236,7 @@
                             <label for="backup-type">Backup Type</label>
                             <select id="backup-type" name="typeBackup">
                                 <option value="Full">Full Backup</option>
-                                <option value="Partial">Partial Backup</option>
+                                <option value="Differential">Differential Backup</option>
                             </select>
                         </div>
 
@@ -275,7 +273,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Restore Confirmation Modal -->
         <div id="restore-modal" class="modal">
             <div class="modal-content">
@@ -329,7 +327,7 @@
                 document.getElementById('delete-modal').classList.remove("show");
                 backupToDelete = null;
             }
-            
+
             function openRestoreModal(backupId) {
                 backupToDelete = backupId;
                 const restore = document.getElementById('restoreID');
@@ -341,7 +339,7 @@
                 document.getElementById('restore-modal').classList.remove("show");
                 backupToDelete = null;
             }
-            
+
             // Close modals with Escape key
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {

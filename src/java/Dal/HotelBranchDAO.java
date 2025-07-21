@@ -289,17 +289,19 @@ public class HotelBranchDAO extends DBcontext.DBContext {
     }
 
     public String getBranchNameById(int branchId) {
-        String sql = "SELECT name FROM HotelBranch WHERE id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        String sql = "SELECT name FROM HotelBranch WHERE id = ? AND is_deleted = 0";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
             ps.setInt(1, branchId);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return rs.getString("name");
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-        return "";
+        return null;
     }
 
     public boolean isPhoneExists(String phone) {

@@ -1,4 +1,4 @@
-    package Controller;
+package Controller;
 
 import java.io.IOException;
 
@@ -35,7 +35,9 @@ public class LoginServlet extends HttpServlet {
         String action = request.getParameter("action");
         if ("logout".equals(action)) {
             HttpSession session = request.getSession(false);
-            if (session != null) session.invalidate();
+            if (session != null) {
+                session.invalidate();
+            }
             response.sendRedirect("homepage.jsp");
             return;
         }
@@ -54,7 +56,7 @@ public class LoginServlet extends HttpServlet {
             // save or update user in database
             UserAccountDAO userDAO = new UserAccountDAO();
             UserAccount user = userDAO.saveUserToDatabase(email, name, avatar_url);
-            
+
             // get user to login
             UserAccount user1 = userDAO.getUserByEmail(email);
             if (user1 != null && user1.getStatus().equals("Active")) {
@@ -116,7 +118,7 @@ public class LoginServlet extends HttpServlet {
             String role = user.getRole();
             if ("admin".equalsIgnoreCase(role)) {
                 session.setAttribute("userRole", "admin");
-                response.sendRedirect("admindashboard.jsp");
+                response.sendRedirect("./admin/account");
             } else if ("Customer".equalsIgnoreCase(role)) {
                 session.setAttribute("userRole", "Customer");
                 response.sendRedirect("homepage");
@@ -130,6 +132,10 @@ public class LoginServlet extends HttpServlet {
                     session.setAttribute("branchName", branchName);
                 }
                 response.sendRedirect("staff-bookings-list");
+            } else if ("Manager".equalsIgnoreCase(role)) {
+                response.sendRedirect("./manager/dashboard");
+            } else if ("HotelOwner".equalsIgnoreCase(role)) {
+                response.sendRedirect("./hotelOwner/financialDashboard");
             } else {
                 session.setAttribute("userRole", role);
                 response.sendRedirect("homepage");

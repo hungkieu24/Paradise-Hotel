@@ -14,6 +14,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 
 /**
@@ -26,6 +27,13 @@ public class BranchServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        UserAccount user = (UserAccount) session.getAttribute("user");
+
+        if (checkLogin(user, session, response)) {
+            response.sendRedirect("../login.jsp");
+            return;
+        }
         String action = request.getParameter("action");
         String keyword = request.getParameter("searchKeyword");
 
@@ -72,4 +80,16 @@ public class BranchServlet extends HttpServlet {
         request.getRequestDispatcher("./manageBranch.jsp").forward(request, response);
     }
 
+    private boolean checkLogin(UserAccount user, HttpSession session, HttpServletResponse response) throws IOException {
+        if (user == null) {
+            setSessionMessage(session, "You need to login!", "error");
+            return true;
+        }
+        return false;
+    }
+
+    private void setSessionMessage(HttpSession session, String message, String type) {
+        session.setAttribute("message", message);
+        session.setAttribute("messageType", type);
+    }
 }
