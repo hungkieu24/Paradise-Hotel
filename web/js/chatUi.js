@@ -19,30 +19,47 @@ function toggleChatWindow() {
 
 function sendMessage() {
     const input = document.getElementById("chat-input");
+    const userId = document.getElementById("userId").value;
     const text = input.value.trim();
-    if (!text) return;
-    currentConversation.push({role: "user", text});
+    if (!text)
+        return;
+    if (!userId) {
+        currentConversation.push({role: "ai", text: "Vui lòng đăng nhập để sử dụng ChatAI.", timestamp: new Date().toISOString()});
+        renderChat();
+        scrollChatToBottom();
+        return;
+    }
+
+    currentConversation.push({role: "user", text, timestamp: new Date().toISOString()});
     renderChat();
     input.value = "";
 
-    // Gửi message lên servlet
+    // Gửi message và userId lên servlet
     fetch("ChatServlet", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({message: text})
+        body: JSON.stringify({message: text, userId: userId})
     })
             .then(res => {
-                if (!res.ok)
-                    throw new Error("Server error");
+                if (!res.ok) {
+                    if (res.status === 400) {
+                        throw new Error("Vui lòng đăng nhập để sử dụng ChatAI.");
+                    } else if (res.status === 403) {
+                        throw new Error("Bạn không có quyền truy cập thông tin này.");
+                    } else {
+                        throw new Error("Server error");
+                    }
+                }
                 return res.json();
             })
             .then(data => {
-                currentConversation.push({role: "ai", text: data.answer});
+                currentConversation.push({role: "ai", text: data.answer, timestamp: new Date().toISOString()});
                 renderChat();
                 scrollChatToBottom();
+                loadHistoryList(); // Cập nhật lịch sử sau khi nhận phản hồi
             })
             .catch(err => {
-                currentConversation.push({role: "ai", text: "Lỗi: Không thể kết nối đến server. Vui lòng thử lại."});
+                currentConversation.push({role: "ai", text: err.message, timestamp: new Date().toISOString()});
                 renderChat();
                 scrollChatToBottom();
             });
@@ -54,7 +71,9 @@ function renderChat() {
     currentConversation.forEach(msg => {
         const div = document.createElement("div");
         div.className = "msg " + (msg.role === "user" ? "user" : "ai");
-        div.textContent = msg.text;
+        const time = new Date(msg.timestamp).toLocaleTimeString();
+        div.innerHTML = `<span>${msg.text}</span>
+                        <small> ${time}</small>`;
         chatBody.appendChild(div);
     });
 }
@@ -74,20 +93,44 @@ function newConversation() {
 }
 
 function loadHistoryList() {
-    const list = document.getElementById("chat-history-list");
-    list.innerHTML = "";
-    allConversations.forEach((conv, idx) => {
-        const div = document.createElement("div");
-        div.textContent = "Chat " + (idx + 1);
-        div.onclick = () => loadConversation(idx);
-        if (currentConversation === conv)
-            div.classList.add("active");
-        list.appendChild(div);
-    });
-    const newDiv = document.createElement("div");
-    newDiv.textContent = "+ New";
-    newDiv.onclick = newConversation;
-    list.appendChild(newDiv);
+    const userId = document.getElementById("userId").value;
+    if (!userId) {
+        document.getElementById("chat-history-list").innerHTML = "<div>Vui lòng đăng nhập để xem lịch sử trò chuyện.</div>";
+        return;
+    }
+
+    fetch(`ChatHistoryServlet?userId=${userId}`, {
+        method: "GET",
+        headers: {"Content-Type": "application/json"}
+    })
+            .then(res => {
+                if (!res.ok)
+                    throw new Error("Không thể tải lịch sử trò chuyện.");
+                return res.json();
+            })
+            .then(data => {
+                allConversations = data.conversations || [];
+                const list = document.getElementById("chat-history-list");
+                list.innerHTML = "";
+                allConversations.forEach((conv, idx) => {
+                    const div = document.createElement("div");
+                    const firstMessage = conv[0]?.text.substring(0, 20) + (conv[0]?.text.length > 20 ? "..." : "");
+                    const time = conv[0]?.timestamp ? new Date(conv[0].timestamp).toLocaleString() : "";
+                    div.innerHTML = `<span>Chat ${idx + 1}: ${firstMessage}</span><small>${time}</small>`;
+                    div.onclick = () => loadConversation(idx);
+                    if (currentConversation === conv)
+                        div.classList.add("active");
+                    list.appendChild(div);
+                });
+                const newDiv = document.createElement("div");
+                newDiv.textContent = "+ New";
+                newDiv.onclick = newConversation;
+                list.appendChild(newDiv);
+            })
+            .catch(err => {
+                const list = document.getElementById("chat-history-list");
+                list.innerHTML = `<div>${err.message}</div>`;
+            });
 }
 
 function loadConversation(idx) {
@@ -95,5 +138,3 @@ function loadConversation(idx) {
     renderChat();
     loadHistoryList();
 }
-
-

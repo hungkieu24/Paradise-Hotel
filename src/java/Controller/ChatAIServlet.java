@@ -4,6 +4,7 @@
  */
 package Controller;
 
+import DBcontext.DBContext;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -16,6 +17,9 @@ import Utility.ChatAIService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.*;
+import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -45,29 +49,46 @@ public class ChatAIServlet extends HttpServlet {
 
         JSONObject reqJson = new JSONObject(sb.toString());// chuyển thành đối tượng JSON
         String userMessage = reqJson.getString("message");// lấy nội dung của message
+        String userId = reqJson.getString("userId");
 
         try {
+            
+
             // Step 1: Generate SQL from user message
-            String sql = chatAIService.generateSQL(userMessage);
+            String sql = chatAIService.generateSQL(userMessage, userId);
 
             System.out.println(sql);
+
             // Step 2: Validate SQL for safety (only SELECT allowed)
-            if (!isSQLSafe(sql)) {
-                sendResponse(response, "Xin lỗi, yêu cầu của bạn vượt ngoài giới hạn cho phép.");
+            if (!isSQLSafe(sql) && !sql.equals("RESTRICTED_QUERY")
+                    && !sql.startsWith("TEMPLATE_RESPONSE:") && !sql.equals("NON_SQL_QUERY")) {
+                saveChatHistoryViolation(userId, userMessage, "Invalid SQL");
+                sendResponse(response, "Yêu cầu không hợp lệ. Chỉ các truy vấn SELECT được phép.", HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
 
             // Step 3: Execute dynamic SQL safely
-            JSONArray resultData = chatAIService.executeDynamicSQL(sql);
+            JSONArray resultData = chatAIService.executeDynamicSQL(sql, userId);
 
             // Step 4: Generate AI answer from the actual data
-            String aiAnswer = chatAIService.generateAnswerFromResult(userMessage, resultData);
+            String aiAnswer = chatAIService.generateAnswerFromResult(userMessage, resultData, userId);
+            saveChatHistory(userId, userMessage, aiAnswer);
 
-            sendResponse(response, aiAnswer);
+            // Ghi nhận vi phạm nếu là RESTRICTED_QUERY
+            if (sql.equals("RESTRICTED_QUERY")) {
+                saveChatHistoryViolation(userId, userMessage, "Restricted query");
+            }
+
+            sendResponse(response, aiAnswer, HttpServletResponse.SC_OK);
 
         } catch (Exception e) {
-            e.printStackTrace();
-            sendResponse(response, "Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau.");
+            try {
+                e.printStackTrace();
+                saveChatHistoryViolation(userId, userMessage, "Error: " + e.getMessage());
+                sendResponse(response, "Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau.", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            } catch (SQLException ex) {
+                Logger.getLogger(ChatAIServlet.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -86,12 +107,41 @@ public class ChatAIServlet extends HttpServlet {
                 && !lowerSql.contains("insert");
     }
 
-    private void sendResponse(HttpServletResponse response, String answer) throws IOException {
+    private void sendResponse(HttpServletResponse response, String answer, int statusCode) throws IOException {
         JSONObject resJson = new JSONObject();
         resJson.put("answer", answer);
+        response.setStatus(statusCode);
         PrintWriter out = response.getWriter();
         out.print(resJson.toString());
         out.flush();
+    }
+
+    private void saveChatHistory(String userId, String message, String aiAnswer) throws SQLException {
+        Connection conn = new DBContext().getConnection();
+        String sql = "INSERT INTO ChatAIHistory (user_id, message, response, created_at) VALUES (?, ?, ?, GETDATE())";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, userId);
+            stmt.setString(2, message);
+            stmt.setString(3, aiAnswer);
+            stmt.executeUpdate();
+        } finally {
+            conn.close();
+        }
+    }
+
+    private void saveChatHistoryViolation(String userId, String message, String violation) throws SQLException {
+        Connection conn = new DBContext().getConnection();
+        String sql = "UPDATE ChatAIHistory SET violation = ? WHERE user_id = ? AND message = ? AND created_at = (SELECT MAX(created_at) FROM ChatAIHistory WHERE user_id = ? AND message = ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, violation);
+            stmt.setString(2, userId);
+            stmt.setString(3, message);
+            stmt.setString(4, userId);
+            stmt.setString(5, message);
+            stmt.executeUpdate();
+        } finally {
+            conn.close();
+        }
     }
 
 }

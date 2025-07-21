@@ -68,7 +68,7 @@ public class SendFeedbackServlet extends HttpServlet {
 
         String bookingIdRaw = request.getParameter("bookingId");
         int bookingId = Integer.parseInt(bookingIdRaw);
-        
+
         FeedbackDAO feedbackDAO = new FeedbackDAO();
 
         if (user == null) {
@@ -92,15 +92,18 @@ public class SendFeedbackServlet extends HttpServlet {
         //Upload anh
         UploadMultyImage uploader = new UploadMultyImage();
 
-        String UPLOAD_DIR = "/img/feedback/customer_id" + user.getId();
+        // ✅ SỬA: Tạo folder riêng cho mỗi booking
+        long timestamp = System.currentTimeMillis();
+        String UPLOAD_DIR = "/img/feedback/customer_id" + user.getId() + "/booking_" + bookingId + "/feedback_" + timestamp;
+
         String pathHost = getServletContext().getRealPath("");
         String uploadPath = pathHost.replace("build\\", "") + UPLOAD_DIR;
         String uploadPath2 = pathHost + UPLOAD_DIR;
 
         uploader.uploadImages(request, "images", uploadPath);
         uploader.uploadImages(request, "images", uploadPath2);
-        //Upload anh
 
+// Lưu path có booking_id vào database
         Feedback feedback = new Feedback(user.getId(), bookingId, rating, comment, UPLOAD_DIR, createdAt, "Visible", "None");
         try {
             feedbackDAO.addFeedback(feedback);

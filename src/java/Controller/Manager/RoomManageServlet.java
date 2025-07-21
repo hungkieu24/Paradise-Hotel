@@ -66,17 +66,16 @@ public class RoomManageServlet extends HttpServlet {
         String branchname = r.getBranchNameById(userId);
         int branchId = r.getBranchId(userId);
         String startParam = request.getParameter("startDate");
-        String endParam = request.getParameter("endDate");
         LocalDateTime checkIn;
-        LocalDateTime checkOut;
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        if (startParam == null || startParam.isEmpty() || endParam == null || endParam.isEmpty()) {
+        if (startParam == null || startParam.isEmpty()) {
             checkIn = LocalDate.now().atStartOfDay();
-            checkOut = checkIn.plusDays(5);
+
         } else {
             checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
-            checkOut = LocalDate.parse(endParam, formatter).atStartOfDay();
+
         }
         // phan trang
         int page = 1;
@@ -99,8 +98,8 @@ public class RoomManageServlet extends HttpServlet {
         int totalRooms = r.getTotalRoomForManager(branchId);
         int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
         //lấy list room và roomtype
-        LocalDate today = LocalDate.now();
-        List<Room> rooms = r.getAllRoomStatusForManager(branchId, page, pageSize, today);
+
+        List<Room> rooms = r.getAllRoomStatusForManager(branchId, page, pageSize, checkIn);
         List<RoomType> roomtypes = rt.getAllRoomType();
         // Dùng map để lấy list ảnh của từng phòng
         Map<String, List<String>> roomImageMap = new HashMap<>();
@@ -132,7 +131,6 @@ public class RoomManageServlet extends HttpServlet {
         request.setAttribute("pageSize", pageSize);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
-        request.setAttribute("endDate", java.util.Date.from(checkOut.atZone(ZoneId.systemDefault()).toInstant()));
         request.getRequestDispatcher("roomManage.jsp").forward(request, response);
 
     }
@@ -224,22 +222,21 @@ public class RoomManageServlet extends HttpServlet {
                 pageSize = 5;
             }
             String startParam = request.getParameter("startDate");
-            String endParam = request.getParameter("endDate");
             LocalDateTime checkIn;
-            LocalDateTime checkOut;
+
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-            if (startParam == null || startParam.isEmpty() || endParam == null || endParam.isEmpty()) {
+            if (startParam == null || startParam.isEmpty()) {
                 checkIn = LocalDate.now().atStartOfDay();
-                checkOut = checkIn.plusDays(5);
+
             } else {
                 checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
-                checkOut = LocalDate.parse(endParam, formatter).atStartOfDay();
+
             }
 
-            int totalRooms = r.getTotalRoomsByBranchId(branchId);
+            int totalRooms = r.getTotalRoomForManager(branchId);
             int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
-            List<Room> rooms = r.getAllRoomByBranchId(branchId, page, pageSize, checkIn, checkOut);
+            List<Room> rooms = r.getAllRoomStatusForManager(branchId, page, pageSize, checkIn);
             List<RoomType> roomTypes = rt.getAllRoomType();
             Map<String, List<String>> roomImageMap = new HashMap<>();
             for (Room room : rooms) {
@@ -267,7 +264,6 @@ public class RoomManageServlet extends HttpServlet {
             request.setAttribute("pageSize", pageSize);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
-            request.setAttribute("endDate", java.util.Date.from(checkOut.atZone(ZoneId.systemDefault()).toInstant()));
             request.getRequestDispatcher("roomManage.jsp").forward(request, response);
             return;
         }
@@ -309,17 +305,16 @@ public class RoomManageServlet extends HttpServlet {
             String pageParam = request.getParameter("page");
             String sizeParam = request.getParameter("size");
             String startParam = request.getParameter("startDate");
-            String endParam = request.getParameter("endDate");
             LocalDateTime checkIn;
-            LocalDateTime checkOut;
+
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-            if (startParam == null || startParam.isEmpty() || endParam == null || endParam.isEmpty()) {
+            if (startParam == null || startParam.isEmpty()) {
                 checkIn = LocalDate.now().atStartOfDay();
-                checkOut = checkIn.plusDays(5);
+
             } else {
                 checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
-                checkOut = LocalDate.parse(endParam, formatter).atStartOfDay();
+
             }
             if (pageParam != null && !pageParam.isEmpty()) {
                 page = Integer.parseInt(pageParam);
@@ -334,9 +329,9 @@ public class RoomManageServlet extends HttpServlet {
                 pageSize = 5;
             }
 
-            int totalRooms = r.getTotalRoomsByBranchId(branchId);
+            int totalRooms = r.getTotalRoomForManager(branchId);
             int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
-            List<Room> rooms = r.getAllRoomByBranchId(branchId, page, pageSize, checkIn, checkOut);
+            List<Room> rooms = r.getAllRoomStatusForManager(branchId, page, pageSize, checkIn);
             List<RoomType> roomTypes = rt.getAllRoomType();
             Map<String, List<String>> roomImageMap = new HashMap<>();
             for (Room r : rooms) {
@@ -364,7 +359,6 @@ public class RoomManageServlet extends HttpServlet {
             request.setAttribute("pageSize", pageSize);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
-            request.setAttribute("endDate", java.util.Date.from(checkOut.atZone(ZoneId.systemDefault()).toInstant()));
             request.getRequestDispatcher("roomManage.jsp").forward(request, response);
         }
     }
