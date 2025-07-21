@@ -274,7 +274,7 @@ CREATE TABLE ChatAIHistory (
     user_id VARCHAR(10),
     message NVARCHAR(MAX),
     created_at DATETIME DEFAULT GETDATE(),
-    violation VARCHAR(10)
+    violation VARCHAR(MAX)
 );
 
 CREATE TABLE MemberTierHistory (
@@ -449,7 +449,7 @@ ALTER TABLE Revenue ADD CONSTRAINT FK_Revenue_Branch FOREIGN KEY (branch_id) REF
 ALTER TABLE Booking ADD exported_to_revenue BIT DEFAULT 0;
 ALTER TABLE BenefitRank ADD CONSTRAINT FK_BenefitRank_TierRule FOREIGN KEY (level) REFERENCES MemberTierRule(level);
 ALTER TABLE VNPayTransaction ADD vnp_PayDate VARCHAR(20);
-
+ALTER TABLE ChatAIHistory ADD response NVARCHAR(MAX);
 GO
 
 -- INSERT SAMPLE DATA
@@ -559,20 +559,68 @@ VALUES
 ('Wine Tasting', 'Local wine tasting experience', 550000.00, 5, 'Active', 'img/wine.jpg'),
 ('City Transfer', 'Private transfer around city', 350000.00, 5, 'Active', 'img/city.jpg');
 
--- Booking (10 rows)
-INSERT INTO Booking (user_id, created_by, check_in, check_out, status, total_price, payment_status, branch_id, note)
+-- Bảng Booking (đã sửa)
+INSERT INTO Booking (user_id, created_by, booking_time, check_in, check_out, status, total_price, payment_status, branch_id, note, cancel_time)
 VALUES 
-('U001', NULL, '2025-07-01 14:00:00', '2025-07-03 12:00:00', 'Pending', 100.00, 'Unpaid', 1, 'Early check-in requested'),
-('U001', 'U002', '2025-07-05 14:00:00', '2025-07-07 12:00:00', 'Paid', 200.00, 'Paid', 1, NULL),
-('U001', NULL, '2025-07-10 14:00:00', '2025-07-12 12:00:00', 'CheckedIn', 150.00, 'Paid', 2, 'Extra pillows'),
-('U001', NULL, '2025-07-15 14:00:00', '2025-07-17 12:00:00', 'CheckedOut', 300.00, 'Paid', 2, NULL),
-('U001', 'U002', '2025-07-20 14:00:00', '2025-07-22 12:00:00', 'Completed', 120.00, 'Paid', 3, 'Late checkout'),
-('U001', NULL, '2025-07-25 14:00:00', '2025-07-27 12:00:00', 'Cancelled', 80.00, 'Unpaid', 3, 'Cancelled due to schedule change'),
-('U001', NULL, '2025-08-01 14:00:00', '2025-08-03 12:00:00', 'NoShow', 90.00, 'Unpaid', 4, NULL),
-('U001', 'U002', '2025-08-05 14:00:00', '2025-08-07 12:00:00', 'Pending', 110.00, 'Unpaid', 4, 'Payment pending'),
-('U001', NULL, '2025-08-10 14:00:00', '2025-08-12 12:00:00', 'Paid', 130.00, 'Paid', 1, 'Special request for view'),
-('U001', NULL, '2025-08-15 14:00:00', '2025-08-17 12:00:00', 'Paid', 250.00, 'Paid', 2, NULL);
+('U001', NULL, '2025-06-28 10:00:00', '2025-07-01 14:00:00', '2025-07-03 12:00:00', 'NoShow', 100.00, 'Unpaid', 1, 'Early check-in requested', NULL),
+('U001', 'U002', '2025-07-02 09:00:00', '2025-07-05 14:00:00', '2025-07-07 12:00:00', 'Completed', 200.00, 'Paid', 1, NULL, NULL),
+('U001', NULL, '2025-07-07 10:00:00', '2025-07-10 14:00:00', '2025-07-12 12:00:00', 'Completed', 150.00, 'Paid', 2, 'Extra pillows', NULL),
+('U001', NULL, '2025-07-12 11:00:00', '2025-07-15 14:00:00', '2025-07-17 12:00:00', 'Completed', 300.00, 'Paid', 2, NULL, NULL),
+('U001', 'U002', '2025-07-18 14:00:00', '2025-07-20 14:00:00', '2025-07-22 12:00:00', 'CheckedIn', 120.00, 'Paid', 3, 'Late checkout', NULL),
+('U001', NULL, '2025-07-20 10:00:00', '2025-07-25 14:00:00', '2025-07-27 12:00:00', 'Cancelled', 80.00, 'Unpaid', 3, 'Cancelled due to schedule change', '2025-07-20 12:00:00'),
+('U001', NULL, '2025-07-20 11:00:00', '2025-08-01 14:00:00', '2025-08-03 12:00:00', 'Pending', 90.00, 'Unpaid', 4, NULL, NULL),
+('U001', 'U002', '2025-07-20 12:00:00', '2025-08-05 14:00:00', '2025-08-07 12:00:00', 'Pending', 110.00, 'Unpaid', 4, 'Payment pending', NULL),
+('U001', NULL, '2025-07-20 13:00:00', '2025-08-10 14:00:00', '2025-08-12 12:00:00', 'Paid', 130.00, 'Paid', 1, 'Special request for view', NULL),
+('U001', NULL, '2025-07-20 14:00:00', '2025-08-15 14:00:00', '2025-08-17 12:00:00', 'Paid', 250.00, 'Paid', 2, NULL, NULL),
+('U003', NULL, '2025-07-15 10:00:00', '2025-07-18 14:00:00', '2025-07-20 12:00:00', 'Completed', 300.00, 'Paid', 1, 'Already checked in', NULL),
+('U004', NULL, '2025-07-16 10:00:00', '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'CheckedIn', 400.00, 'Paid', 1, 'Paid but not assigned room yet', NULL),
+('U005', NULL, '2025-07-16 11:00:00', '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'Cancelled', 250.00, 'Unpaid', 1, 'Waiting for payment', '2025-07-20 15:48:00'),
+('U006', NULL, '2025-07-16 12:00:00', '2025-07-19 14:00:00', '2025-07-20 12:00:00', 'Completed', 600.00, 'Paid', 1, 'Booked multiple rooms', NULL),
+('U007', NULL, '2025-07-16 13:00:00', '2025-07-19 12:00:00', '2025-07-21 12:00:00', 'CheckedIn', 350.00, 'Paid', 1, 'Checked in early', NULL),
+('U008', NULL, '2025-07-16 14:00:00', '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'CheckedIn', 500.00, 'Paid', 1, 'Staying from yesterday', NULL),
+('U007', NULL, '2025-07-18 10:00:00', '2025-07-20 14:00:00', '2025-07-22 12:00:00', 'CheckedIn', 700.00, 'Paid', 1, 'Booking paid today', NULL),
+('U006', NULL, '2025-07-18 11:00:00', '2025-07-20 14:00:00', '2025-07-21 12:00:00', 'CheckedIn', 900.00, 'Paid', 1, 'Booked multiple room types', NULL),
+('U005', NULL, '2025-07-18 12:00:00', '2025-07-20 10:00:00', '2025-07-21 12:00:00', 'CheckedIn', 600.00, 'Paid', 1, 'Checked in this morning', NULL),
+('U004', NULL, '2025-07-18 13:00:00', '2025-07-20 14:00:00', '2025-07-21 12:00:00', 'Cancelled', 300.00, 'Unpaid', 1, 'Waiting for payment', '2025-07-20 15:48:00');
 
+-- Bảng BookingRoomType (giữ nguyên)
+INSERT INTO BookingRoomType (booking_id, room_type_id, quantity, price_per_room)
+VALUES 
+(1, 1, 1, 500000.00),
+(2, 2, 1, 1000000.00),
+(3, 3, 1, 1500000.00),
+(4, 4, 2, 1500000.00),
+(5, 5, 1, 400000.00),
+(11, 1, 1, 300000.00),
+(12, 2, 1, 400000.00),
+(13, 3, 1, 250000.00),
+(14, 1, 2, 200000.00),
+(14, 3, 1, 200000.00),
+(15, 2, 1, 350000.00),
+(16, 1, 1, 500000.00),
+(17, 2, 1, 700000.00),
+(18, 1, 2, 300000.00),
+(18, 3, 1, 300000.00),
+(19, 2, 1, 600000.00),
+(20, 3, 1, 300000.00);
+
+-- Bảng RoomAssignment (giữ nguyên)
+INSERT INTO RoomAssignment (booking_id, room_id, assigned_at)
+VALUES 
+(1, 1, '2025-07-01 14:00:00'),
+(2, 2, '2025-07-05 14:00:00'),
+(3, 3, '2025-07-10 14:00:00'),
+(4, 4, '2025-07-15 14:00:00'),
+(5, 5, '2025-07-20 14:00:00'),
+(11, 3, '2025-07-18 14:00:00'),
+(12, 12, '2025-07-19 14:00:00'), -- Thêm cho booking ID 12
+(15, 10, '2025-07-19 12:00:00'),
+(16, 4, '2025-07-19 14:00:00'),
+(17, 13, '2025-07-20 14:00:00'), -- Thêm cho booking ID 17
+(18, 14, '2025-07-20 14:00:00'), -- Thêm cho booking ID 18
+(18, 15, '2025-07-20 14:00:00'), -- Thêm cho booking ID 18
+(18, 16, '2025-07-20 14:00:00'), -- Thêm cho booking ID 18
+(19, 11, '2025-07-20 10:00:00');
 -- Voucher (5 rows)
 INSERT INTO Voucher (code, description, discount_percent, discount_amount, min_price, total_quantity, used_quantity, branch_id, valid_from, valid_to, status)
 VALUES 
@@ -592,19 +640,6 @@ VALUES
 (4, 4, '2025-07-15 10:00:00'),
 (5, 5, '2025-07-20 10:00:00');
 
--- BookingRoomType (5 rows)
-INSERT INTO BookingRoomType (booking_id, room_type_id, quantity, price_per_room)
-VALUES 
-(1, 1, 1, 500000.00),
-(2, 2, 1, 1000000.00),
-(3, 3, 1, 1500000.00),
-(4, 4, 2, 1500000.00),
-(5, 5, 1, 400000.00);
-
--- RoomAssignment (5 rows)
-INSERT INTO RoomAssignment (booking_id, room_id)
-VALUES 
-(1, 1), (2, 2), (3, 3), (4, 4), (5, 5);
 
 -- BookingService (5 rows)
 INSERT INTO BookingService (booking_id, service_id, quantity, paid_status)
@@ -868,50 +903,4 @@ INSERT INTO Expense (branch_id, expense_type, amount, description, expense_date,
 (3, 'Staff Salary', 40000000, 'May salaries', '2025-05-28', 'U003'),
 (3, 'Marketing', 45000000, 'Social media and event promotion', '2025-06-02', 'U003'),
 (3, 'Utilities', 40000000, 'Electricity and water', '2025-06-19', 'U003');
-
--- Ngày 19/07/2025 (5 booking)
-INSERT INTO Booking (user_id, created_by, check_in, check_out, status, total_price, payment_status, branch_id, note)
-VALUES 
-('U003', NULL, '2025-07-18 14:00:00', '2025-07-20 12:00:00', 'CheckedIn', 300.00, 'Paid', 1, 'Already checked in'), -- ID 11
-('U004', NULL, '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'Paid', 400.00, 'Paid', 1, 'Paid but not assigned room yet'), -- ID 12
-('U005', NULL, '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'Pending', 250.00, 'Unpaid', 1, 'Waiting for payment'), -- ID 13
-('U006', NULL, '2025-07-19 14:00:00', '2025-07-20 12:00:00', 'Paid', 600.00, 'Paid', 1, 'Booked multiple rooms'), -- ID 14
-('U007', NULL, '2025-07-19 12:00:00', '2025-07-21 12:00:00', 'CheckedIn', 350.00, 'Paid', 1, 'Checked in early'); -- ID 15
-
--- Ngày 20/07/2025 (5 booking)
-INSERT INTO Booking (user_id, created_by, check_in, check_out, status, total_price, payment_status, branch_id, note)
-VALUES 
-('U008', NULL, '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'CheckedIn', 500.00, 'Paid', 1, 'Staying from yesterday'), -- ID 16
-('U007', NULL, '2025-07-20 14:00:00', '2025-07-22 12:00:00', 'Paid', 700.00, 'Paid', 1, 'Booking paid today'), -- ID 17
-('U006', NULL, '2025-07-20 14:00:00', '2025-07-21 12:00:00', 'Paid', 900.00, 'Paid', 1, 'Booked multiple room types'), -- ID 18
-('U005', NULL, '2025-07-20 10:00:00', '2025-07-21 12:00:00', 'CheckedIn', 600.00, 'Paid', 1, 'Checked in this morning'), -- ID 19
-('U004', NULL, '2025-07-20 14:00:00', '2025-07-21 12:00:00', 'Pending', 300.00, 'Unpaid', 1, 'Waiting for payment'); -- ID 20
-
-INSERT INTO BookingRoomType (booking_id, room_type_id, quantity, price_per_room)
-VALUES
--- Ngày 19/07/2025
-(11, 1, 1, 300000.00), -- CheckedIn
-(12, 2, 1, 400000.00), -- Paid
-(13, 3, 1, 250000.00), -- Pending (không ảnh hưởng dashboard)
-(14, 1, 2, 200000.00), -- Paid (multi roomtype)
-(14, 3, 1, 200000.00),
-(15, 2, 1, 350000.00), -- CheckedIn
-
--- Ngày 20/07/2025
-(16, 1, 1, 500000.00), -- CheckedIn
-(17, 2, 1, 700000.00), -- Paid
-(18, 1, 2, 300000.00), -- Paid (multi roomtype)
-(18, 3, 1, 300000.00),
-(19, 2, 1, 600000.00), -- CheckedIn
-(20, 3, 1, 300000.00); -- Pending
-
-INSERT INTO RoomAssignment (booking_id, room_id)
-VALUES
--- Ngày 19/07/2025
-(11, 3),  -- room_id = 3 (103)
-(15, 10), -- room_id = 10 (202)
-
--- Ngày 20/07/2025
-(16, 4),  -- room_id = 4 (104)
-(19, 11); -- room_id = 11 (203)
 

@@ -67,17 +67,16 @@ public class EditRoomServlet extends HttpServlet {
         String pageParam = request.getParameter("page");
         String sizeParam = request.getParameter("size");
         String startParam = request.getParameter("startDate");
-        String endParam = request.getParameter("endDate");
         LocalDateTime checkIn;
-        LocalDateTime checkOut;
+
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        if (startParam == null || startParam.isEmpty() || endParam == null || endParam.isEmpty()) {
+        if (startParam == null || startParam.isEmpty()) {
             checkIn = LocalDate.now().atStartOfDay();
-            checkOut = checkIn.plusDays(5);
+
         } else {
             checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
-            checkOut = LocalDate.parse(endParam, formatter).atStartOfDay();
+
         }
         if (pageParam != null && !pageParam.isEmpty()) {
             page = Integer.parseInt(pageParam);
@@ -214,9 +213,9 @@ public class EditRoomServlet extends HttpServlet {
             response.sendRedirect(redirectUrl);
         } else {
             request.setAttribute("error", "Failed to update room.");
-            int totalRooms = rDao.getTotalRoomsByBranchId(branchId);
+            int totalRooms = rDao.getTotalRoomForManager(branchId);
             int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
-            List<Room> rooms = rDao.getAllRoomByBranchId(branchId, page, pageSize, checkIn, checkOut);
+            List<Room> rooms = rDao.getAllRoomStatusForManager(branchId, page, pageSize, checkIn);
             Room roomObj = rDao.getRoomById(roomId);
             List<RoomType> roomTypes = rt.getAllRoomType();
             Map<String, List<String>> roomImageMap = new HashMap<>();
@@ -247,7 +246,6 @@ public class EditRoomServlet extends HttpServlet {
             request.setAttribute("pageSize", pageSize);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
-            request.setAttribute("endDate", java.util.Date.from(checkOut.atZone(ZoneId.systemDefault()).toInstant()));
             request.getRequestDispatcher("roomManage.jsp").forward(request, response);
         }
     }

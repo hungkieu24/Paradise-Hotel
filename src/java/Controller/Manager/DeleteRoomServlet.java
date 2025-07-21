@@ -106,22 +106,21 @@ public class DeleteRoomServlet extends HttpServlet {
 
     private void prepareResponse(HttpServletRequest request, HttpServletResponse response, UserAccount user, int branchId,
             String branchname, int page, int pageSize) throws ServletException, IOException {
-        int totalRooms = roomDao.getTotalRoomsByBranchId(branchId);
+        int totalRooms = roomDao.getTotalRoomForManager(branchId);
         int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
         String startParam = request.getParameter("startDate");
-        String endParam = request.getParameter("endDate");
         LocalDateTime checkIn;
-        LocalDateTime checkOut;
+        
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        if (startParam == null || startParam.isEmpty() || endParam == null || endParam.isEmpty()) {
+        if (startParam == null || startParam.isEmpty()) {
             checkIn = LocalDate.now().atStartOfDay();
-            checkOut = checkIn.plusDays(5);
+            
         } else {
             checkIn = LocalDate.parse(startParam, formatter).atStartOfDay();
-            checkOut = LocalDate.parse(endParam, formatter).atStartOfDay();
+           
         }
-        List<Room> rooms = roomDao.getAllRoomByBranchId(branchId, page, pageSize, checkIn, checkOut);
+        List<Room> rooms = roomDao.getAllRoomStatusForManager(branchId, page, pageSize, checkIn);
         List<RoomType> roomTypes = rtDao.getAllRoomType();
         Map<String, List<String>> roomImageMap = new HashMap<>();
         for (Room room : rooms) {
@@ -150,7 +149,6 @@ public class DeleteRoomServlet extends HttpServlet {
         request.setAttribute("pageSize", pageSize);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("startDate", java.util.Date.from(checkIn.atZone(ZoneId.systemDefault()).toInstant()));
-            request.setAttribute("endDate", java.util.Date.from(checkOut.atZone(ZoneId.systemDefault()).toInstant()));
         request.getRequestDispatcher("roomManage.jsp").forward(request, response);
     }
 
