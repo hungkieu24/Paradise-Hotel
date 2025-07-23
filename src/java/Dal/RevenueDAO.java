@@ -365,6 +365,49 @@ public class RevenueDAO extends DBcontext.DBContext {
         return totalRevenue;
     }
 
+    public List<Revenue> getRevenueByBranchAndMonthRange(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        List<Revenue> revenueList = new ArrayList<>();
+        String sql = "SELECT * FROM Revenue "
+                + "WHERE branch_id = ? "
+                + "AND revenue_date BETWEEN ? AND ? "
+                + "ORDER BY revenue_date DESC";
+
+        try {
+            // Tính ngày bắt đầu: YYYY-MM-01
+            LocalDate startDate = LocalDate.of(yearFrom, monthFrom, 1);
+
+            // Tính ngày kết thúc: ngày cuối cùng của thángTo
+            YearMonth ymEnd = YearMonth.of(yearTo, monthTo);
+            LocalDate endDate = ymEnd.atEndOfMonth();
+
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, branchId);
+            st.setDate(2, Date.valueOf(startDate));
+            st.setDate(3, Date.valueOf(endDate));
+
+            ResultSet rs = st.executeQuery();
+
+            while (rs.next()) {
+                Revenue revenue = new Revenue(
+                        rs.getInt("id"),
+                        rs.getInt("branch_id"),
+                        rs.getString("revenue_type"),
+                        rs.getDouble("amount"),
+                        rs.getDate("revenue_date"),
+                        rs.getString("source"),
+                        rs.getString("description"),
+                        rs.getString("created_by"),
+                        rs.getTimestamp("created_at")
+                );
+                revenueList.add(revenue);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return revenueList;
+    }
+
     public static void main(String[] args) {
         RevenueDAO aO = new RevenueDAO();
         LocalDate today = LocalDate.now();
