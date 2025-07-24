@@ -123,21 +123,35 @@
                         </div>
                         <div class="page-actions">
                             <form action="">
-                                <input type="hidden" name="action" value="filterByMonthYear">
+                                <input type="hidden" name="action" value="filterByMonthRange">
                                 <div class="page-action-wrapper">
                                     <div class="page-action">
-                                        <label class="page-actions-label">Month: </label>
-                                        <select name="month" class="page-actions-select" required>
+                                        <label class="page-actions-label">Month From: </label>
+                                        <select name="monthFrom" class="page-actions-select" onchange="fixDateRange()" required>
                                             <c:forEach var="i" begin="1" end="12">
-                                                <option value="${i}" ${i == month ? 'selected' : ''}>
+                                                <option value="${i}" ${i == monthFrom ? 'selected' : ''}>
                                                     ${monthNames[i - 1]}
                                                 </option>
                                             </c:forEach>
                                         </select>
                                     </div>
                                     <div class="page-action">
-                                        <label class="page-actions-label">Year: </label>
-                                        <input type="text" name="year" class="page-actions-input" value="${year}" required />
+                                        <label class="page-actions-label">Year From: </label>
+                                        <input type="text" name="yearFrom" oninput="fixDateRange()" class="page-actions-input" value="${yearFrom}" required />
+                                    </div>
+                                    <div class="page-action">
+                                        <label class="page-actions-label">Month To: </label>
+                                        <select name="monthTo" class="page-actions-select" onchange="fixDateRange()" required>
+                                            <c:forEach var="i" begin="1" end="12">
+                                                <option value="${i}" ${i == monthTo ? 'selected' : ''}>
+                                                    ${monthNames[i - 1]}
+                                                </option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="page-action">
+                                        <label class="page-actions-label">Year To: </label>
+                                        <input type="text" name="yearTo" oninput="fixDateRange()" class="page-actions-input" value="${yearTo}" required />
                                     </div>
                                     <div class="page-action">
                                         <button type="submit" class="btn btn-primary btn-filter">Filter</button>
@@ -342,7 +356,32 @@
         <script src="../js/hungkd.js"></script>
         <script src="../js/api.js"></script>
         <script src="../js/validationForm.js"></script>
+        <script>
+            function fixDateRange() {
+                const monthFromSelect = document.querySelector('[name="monthFrom"]');
+                const yearFromInput = document.querySelector('[name="yearFrom"]');
+                const monthToSelect = document.querySelector('[name="monthTo"]');
+                const yearToInput = document.querySelector('[name="yearTo"]');
 
+                const monthFrom = parseInt(monthFromSelect.value);
+                const yearFrom = parseInt(yearFromInput.value);
+                let monthTo = parseInt(monthToSelect.value);
+                const yearTo = parseInt(yearToInput.value);
+
+                if (isNaN(monthFrom) || isNaN(yearFrom) || isNaN(monthTo) || isNaN(yearTo)) {
+                    // Nếu người dùng chưa nhập đủ thì không kiểm tra
+                    return;
+                }
+
+                if (yearTo < yearFrom) {
+                    // Nếu năm To nhỏ hơn năm From => reset monthTo về ""
+                    monthToSelect.value = "";
+                } else if (yearTo === yearFrom && monthTo < monthFrom) {
+                    // Nếu cùng năm nhưng monthTo < monthFrom => reset monthTo = monthFrom
+                    monthToSelect.value = monthFrom;
+                }
+            }
+        </script>
         <script>
             function formatCurrencyVND(value) {
                 // Loại bỏ tất cả ký tự không phải số

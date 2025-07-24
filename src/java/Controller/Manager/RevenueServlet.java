@@ -35,59 +35,59 @@ public class RevenueServlet extends HttpServlet {
         HttpSession session = request.getSession();
         UserAccount user = (UserAccount) session.getAttribute("user");
 
-        if (user != null) {
-            String managerId = user.getId();
-            HotelBranchDAO branchDAO = new HotelBranchDAO();
-
-            HotelBranch branch = branchDAO.getBranchByManagerId(managerId);
-            int branchId = branch.getId();
-
-            RevenueDAO revenueDAO = new RevenueDAO();
-
-            LocalDate today = LocalDate.now();
-            int currentMonth = today.getMonthValue(); // từ 1 đến 12
-            int currentYear = today.getYear();
-
-            List<Revenue> revenueList = revenueDAO.getRevenueByBranchAndMonthYear(branchId, currentMonth, currentYear);
-            double totalRevenue = revenueDAO.getTotalRevenueByBranchAndMonthYear(branchId, currentMonth, currentYear);
-
-            List<String> monthNames = new ArrayList<>();
-            DateFormatSymbols dfs = new DateFormatSymbols(Locale.ENGLISH);
-            String[] months = dfs.getMonths();
-            for (int i = 0; i < 12; i++) {
-                monthNames.add(months[i]); // January → December
-            }
-            List<String> sourceList = revenueDAO.getAllRevenueSourcesByBranchId(branchId);
-
-            String action = request.getParameter("action");
-            if (action != null) {
-                if (action.equals("filterByMonthYear")) {
-                    currentMonth = Integer.parseInt(request.getParameter("month"));
-                    currentYear = Integer.parseInt(request.getParameter("year"));
-                    String sourceType = request.getParameter("sourceType");
-                    
-                    if(sourceType.equals("all")) {
-                        revenueList = revenueDAO.getRevenueByBranchAndMonthYear(branchId, currentMonth, currentYear);
-                        totalRevenue = revenueDAO.getTotalRevenueByBranchAndMonthYear(branchId, currentMonth, currentYear);
-                    } else {
-                        revenueList = revenueDAO.getRevenueBySourceAndMonthYear(branchId, sourceType, currentMonth, currentYear);
-                        totalRevenue = revenueDAO.getTotalRevenueBySourceAndMonthYear(branchId, sourceType, currentMonth, currentYear);
-                    }
-                }
-            }
-
-            request.setAttribute("sourceList", sourceList);
-            request.setAttribute("monthNames", monthNames);
-            request.setAttribute("month", currentMonth);
-            request.setAttribute("year", currentYear);
-            request.setAttribute("totalRevenue", totalRevenue);
-            request.setAttribute("revenueList", revenueList);
-            request.setAttribute("branch", branch);
-            request.getRequestDispatcher("./revenue.jsp").forward(request, response);
-        } else {
+        if (user == null) {
             setSessionMessage(session, "You need to login!", "error");
             response.sendRedirect("../login.jsp");
+            return;
         }
+        String managerId = user.getId();
+        HotelBranchDAO branchDAO = new HotelBranchDAO();
+
+        HotelBranch branch = branchDAO.getBranchByManagerId(managerId);
+        int branchId = branch.getId();
+
+        RevenueDAO revenueDAO = new RevenueDAO();
+
+        LocalDate today = LocalDate.now();
+        int currentMonth = today.getMonthValue(); // từ 1 đến 12
+        int currentYear = today.getYear();
+        int monthTo = currentMonth; // từ 1 đến 12
+        int yearTo = currentYear;
+
+        List<Revenue> revenueList = revenueDAO.getRevenueByBranchAndMonthRange(branchId, currentMonth, currentYear, monthTo, yearTo);
+        double totalRevenue = revenueDAO.getTotalRevenueByBranchAndMonthRange(branchId, currentMonth, currentYear, monthTo, yearTo);
+
+        String action = request.getParameter("action");
+        if (action != null) {
+            if (action.equals("filterByMonthRange")) {
+                currentMonth = Integer.parseInt(request.getParameter("monthFrom"));
+                currentYear = Integer.parseInt(request.getParameter("yearFrom"));
+                monthTo = Integer.parseInt(request.getParameter("monthTo"));
+                yearTo = Integer.parseInt(request.getParameter("yearTo"));
+
+                revenueList = revenueDAO.getRevenueByBranchAndMonthRange(branchId, currentMonth, currentYear, monthTo, yearTo);
+                totalRevenue = revenueDAO.getTotalRevenueByBranchAndMonthRange(branchId, currentMonth, currentYear, monthTo, yearTo);
+            }
+        }
+
+        List<String> monthNames = new ArrayList<>();
+        DateFormatSymbols dfs = new DateFormatSymbols(Locale.ENGLISH);
+        String[] months = dfs.getMonths();
+        for (int i = 0; i < 12; i++) {
+            monthNames.add(months[i]); // January → December
+        }
+
+        request.setAttribute("monthNames", monthNames);
+        request.setAttribute("branchId", branchId);
+        request.setAttribute("monthFrom", currentMonth);
+        request.setAttribute("yearFrom", currentYear);
+        request.setAttribute("monthTo", monthTo);
+        request.setAttribute("yearTo", yearTo);
+        request.setAttribute("totalRevenue", totalRevenue);
+        request.setAttribute("revenueList", revenueList);
+        request.setAttribute("branch", branch);
+        request.getRequestDispatcher("./revenue.jsp").forward(request, response);
+
     }
 
     private void setSessionMessage(HttpSession session, String message, String type) {

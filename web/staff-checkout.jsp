@@ -553,6 +553,22 @@
         </style>
     </head>
     <body>
+        <c:if test="${not empty sessionScope.message}">
+            <div id="toastMessage" class="toast-message ${sessionScope.messageType}">
+                <c:choose>
+                    <c:when test="${sessionScope.messageType == 'success'}">
+                        <i class="fa fa-check-circle"></i>
+                    </c:when>
+                    <c:when test="${sessionScope.messageType == 'error'}">
+                        <i class="fa fa-times-circle"></i>
+                    </c:when>
+                </c:choose>
+                ${sessionScope.message}
+            </div>
+
+            <c:remove var="message" scope="session" />
+            <c:remove var="messageType" scope="session" />
+        </c:if>
         <div class="app-container">
             <%@ include file="sidebar.jsp" %>
 
@@ -789,7 +805,7 @@
 
                         <!-- Payment Methods -->
                         <div class="payment-methods">                     
-                            <form action="vnpayajax" method="post" id="checkoutForm">
+                            <form action="checkOutPayment" method="post">
                                 <input type="hidden" name="bookingId" value="<%= booking.getId() %>">
                                 <input type="hidden" name="amountToPay" value="<%= checkoutDetails.get("amountToPay") %>">                                 
                                 <div class="checkout-actions">
@@ -822,6 +838,7 @@
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="./js/toastMessage.js"></script>    
         <script>
             function selectPayment(element, method) {
                 // Remove selected class from all options

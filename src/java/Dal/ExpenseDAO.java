@@ -206,4 +206,45 @@ public class ExpenseDAO extends DBcontext.DBContext {
         return total;
     }
 
+    public List<Expense> getExpenseByBranchAndMonthRange(int branchId, int monthFrom, int yearFrom, int monthTo, int yearTo) {
+        List<Expense> expenseList = new ArrayList<>();
+        String sql = "SELECT * FROM Expense "
+                + "WHERE branch_id = ? "
+                + "AND expense_date BETWEEN ? AND ? "
+                + "ORDER BY expense_date DESC";
+
+        try {
+            // Ngày bắt đầu: ngày 1 của monthFrom/yearFrom
+            LocalDate startDate = LocalDate.of(yearFrom, monthFrom, 1);
+
+            // Ngày kết thúc: ngày cuối cùng của monthTo/yearTo
+            YearMonth ymEnd = YearMonth.of(yearTo, monthTo);
+            LocalDate endDate = ymEnd.atEndOfMonth();
+
+            try (PreparedStatement st = connection.prepareStatement(sql)) {
+                st.setInt(1, branchId);
+                st.setDate(2, Date.valueOf(startDate));
+                st.setDate(3, Date.valueOf(endDate));
+
+                ResultSet rs = st.executeQuery();
+                while (rs.next()) {
+                    Expense expense = new Expense(
+                            rs.getInt("id"),
+                            rs.getInt("branch_id"),
+                            rs.getString("expense_type"),
+                            rs.getDouble("amount"),
+                            rs.getString("description"),
+                            rs.getDate("expense_date"),
+                            rs.getString("created_by")
+                    );
+                    expenseList.add(expense);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return expenseList;
+    }
+
 }
