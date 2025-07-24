@@ -194,7 +194,6 @@
                         <div class="user-info">
                             <i class="fas fa-user-circle"></i>
                             <span><%= staffName %></span>
-                            <small class="text-muted ms-2">2025-07-15 13:48:26 UTC</small>
                         </div>
                     </div>
                 </header>

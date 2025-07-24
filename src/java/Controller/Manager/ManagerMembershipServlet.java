@@ -7,6 +7,7 @@ import Model.Branch;
 import Model.HotelBranch;
 import Model.UserAccount;
 import Model.PointTransaction;
+import Utility.EmailUtility;
 
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -24,7 +25,9 @@ public class ManagerMembershipServlet extends HttpServlet {
 
     private final MembershipDAO membershipDAO = new MembershipDAO();
     private final HotelBranchDAO branchDAO = new HotelBranchDAO();
-    
+
+    private static final int DEFAULT_ITEMS_PER_PAGE = 10;
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -43,9 +46,38 @@ public class ManagerMembershipServlet extends HttpServlet {
             if ("view".equals(action)) {
                 viewCustomerDetails(request, response);
             } else {
-                // Mặc định hiển thị tất cả customer khi vào trang
+                // Pagination params
+                int currentPage = 1;
+                int itemsPerPage = DEFAULT_ITEMS_PER_PAGE;
+                try {
+                    if (request.getParameter("page") != null) {
+                        currentPage = Integer.parseInt(request.getParameter("page"));
+                        if (currentPage < 1) currentPage = 1;
+                    }
+                    if (request.getParameter("itemsPerPage") != null) {
+                        itemsPerPage = Integer.parseInt(request.getParameter("itemsPerPage"));
+                        if (itemsPerPage <= 0) itemsPerPage = DEFAULT_ITEMS_PER_PAGE;
+                    }
+                } catch (NumberFormatException ignored) {}
+
+                // Show all customers with pagination
                 List<UserAccount> allCustomers = membershipDAO.getAllCustomers();
-                request.setAttribute("allCustomers", allCustomers);
+                int totalCustomer = allCustomers.size();
+                int totalPages = (int) Math.ceil((double) totalCustomer / itemsPerPage);
+
+                int fromIndex = (currentPage - 1) * itemsPerPage;
+                int toIndex = Math.min(fromIndex + itemsPerPage, totalCustomer);
+
+                List<UserAccount> pagedCustomers = (fromIndex < toIndex && fromIndex < allCustomers.size())
+                        ? allCustomers.subList(fromIndex, toIndex)
+                        : java.util.Collections.emptyList();
+
+                request.setAttribute("allCustomers", pagedCustomers);
+                request.setAttribute("currentPage", currentPage);
+                request.setAttribute("itemsPerPage", itemsPerPage);
+                request.setAttribute("totalPages", totalPages);
+                request.setAttribute("totalCustomer", totalCustomer);
+
                 request.getRequestDispatcher("/manage_membership_list.jsp").forward(request, response);
             }
         } catch (Exception e) {
@@ -82,7 +114,6 @@ public class ManagerMembershipServlet extends HttpServlet {
                 case "adjustPoints":
                     adjustPoints(request, response, manager.getId());
                     break;
-                // ĐÃ BỎ: case "changeTier"
                 default:
                     response.sendRedirect(request.getContextPath() + "/manager-membership");
             }
@@ -94,17 +125,30 @@ public class ManagerMembershipServlet extends HttpServlet {
     }
 
     /**
-     * Search customers by name/email/phone and rank (tier)
+     * Search customers by name/email/phone and rank (tier) with pagination
      */
     private void searchCustomers(HttpServletRequest request, HttpServletResponse response, int branchId)
             throws ServletException, IOException, SQLException {
         String searchTerm = request.getParameter("searchTerm");
         String rankFilter = request.getParameter("rankFilter");
 
+        // Phân trang
+        int currentPage = 1;
+        int itemsPerPage = DEFAULT_ITEMS_PER_PAGE;
+        try {
+            if (request.getParameter("page") != null) {
+                currentPage = Integer.parseInt(request.getParameter("page"));
+                if (currentPage < 1) currentPage = 1;
+            }
+            if (request.getParameter("itemsPerPage") != null) {
+                itemsPerPage = Integer.parseInt(request.getParameter("itemsPerPage"));
+                if (itemsPerPage <= 0) itemsPerPage = DEFAULT_ITEMS_PER_PAGE;
+            }
+        } catch (NumberFormatException ignored) {}
+
         List<UserAccount> searchResults;
         if ((searchTerm == null || searchTerm.trim().isEmpty())
                 && (rankFilter == null || rankFilter.trim().isEmpty())) {
-            // Nếu không nhập gì thì show all
             searchResults = membershipDAO.getAllCustomers();
         } else {
             List<UserAccount> baseResults = membershipDAO.searchCustomers(
@@ -119,9 +163,23 @@ public class ManagerMembershipServlet extends HttpServlet {
                 searchResults = baseResults;
             }
         }
-        request.setAttribute("searchResults", searchResults);
+
+        int totalCustomer = searchResults.size();
+        int totalPages = (int) Math.ceil((double) totalCustomer / itemsPerPage);
+        int fromIndex = (currentPage - 1) * itemsPerPage;
+        int toIndex = Math.min(fromIndex + itemsPerPage, totalCustomer);
+
+        List<UserAccount> pagedResults = (fromIndex < toIndex && fromIndex < searchResults.size())
+                ? searchResults.subList(fromIndex, toIndex)
+                : java.util.Collections.emptyList();
+
+        request.setAttribute("searchResults", pagedResults);
         request.setAttribute("searchTerm", searchTerm);
         request.setAttribute("rankFilter", rankFilter);
+        request.setAttribute("currentPage", currentPage);
+        request.setAttribute("itemsPerPage", itemsPerPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalCustomer", totalCustomer);
 
         setCommonAttributes(request);
         request.getRequestDispatcher("/manage_membership_list.jsp").forward(request, response);
@@ -164,7 +222,7 @@ public class ManagerMembershipServlet extends HttpServlet {
     }
 
     /**
-     * Điều chỉnh điểm thưởng
+     * Điều chỉnh điểm cho khách hàng và gửi email thông báo.
      */
     private void adjustPoints(HttpServletRequest request, HttpServletResponse response, String managerId)
             throws IOException, SQLException {
@@ -185,7 +243,26 @@ public class ManagerMembershipServlet extends HttpServlet {
             boolean success = membershipDAO.adjustPoints(userId, points, reason.trim(), managerId);
 
             if (success) {
-                session.setAttribute("success", "Points adjusted successfully.");
+                // Lấy lại thông tin khách hàng sau khi cộng/trừ điểm
+                UserAccount customer = membershipDAO.getCustomerById(userId);
+                int newTotalPoints = customer.getLoyaltyPoint() != null ? customer.getLoyaltyPoint().getPoints() : 0;
+                String customerEmail = customer.getEmail();
+                String customerName = customer.getFullname();
+
+                // Gửi email thông báo
+                try {
+                    EmailUtility.sendPointAdjustmentEmail(
+                        customerEmail,
+                        customerName,
+                        points,         // số điểm thay đổi (+/-)
+                        reason.trim(),  // lý do điều chỉnh
+                        newTotalPoints  // tổng điểm mới
+                    );
+                    session.setAttribute("success", "Points adjusted successfully and notification sent to customer.");
+                } catch (Exception mailEx) {
+                    mailEx.printStackTrace();
+                    session.setAttribute("success", "Points adjusted successfully, but failed to send notification email.");
+                }
             } else {
                 session.setAttribute("error", "Failed to adjust points.");
             }
@@ -198,7 +275,6 @@ public class ManagerMembershipServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/manager-membership?action=view&userId=" + userId);
     }
 
-    // ĐÃ BỎ: Hàm changeTier và isValidTierLevel
     private void setCommonAttributes(HttpServletRequest request) throws SQLException {
         UserAccount manager = (UserAccount) request.getSession().getAttribute("user");
         if (manager != null) {
@@ -207,7 +283,7 @@ public class ManagerMembershipServlet extends HttpServlet {
                 displayName = manager.getUsername();
             }
             request.setAttribute("username", displayName);
-            
+
             HotelBranch currentBranch = branchDAO.getBranchByManagerId(manager.getId());
             if (currentBranch != null) {
                 request.setAttribute("branchname", currentBranch.getName());

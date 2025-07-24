@@ -423,7 +423,7 @@
                                     <li><a href="searchRoomResult22.html">Rooms &amp; Suites</a></li>
                                     <li><a href="news-1.html">News &amp; Events</a></li>
                                     <li><a href="contacts.html">Contacts</a></li>
-                                    <li><a href="about.html">Terms and Conditions</a></li>
+                                    <li><a href="about.jsp ">Terms and Conditions</a></li>
                                 </ul>
                             </div>
                         </div>
