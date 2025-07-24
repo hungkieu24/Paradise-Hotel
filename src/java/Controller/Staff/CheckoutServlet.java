@@ -21,9 +21,13 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
-@WebServlet(name="CheckoutServlet", urlPatterns={"/staff-checkout"})
+@WebServlet(name = "CheckoutServlet", urlPatterns = {"/staff-checkout"})
 public class CheckoutServlet extends HttpServlet {
+
     private final BookingDAO bookingDAO = new BookingDAO();
     private final UserAccountDAO userAccountDAO = new UserAccountDAO();
     private final RoomDAO roomDAO = new RoomDAO();
@@ -33,7 +37,7 @@ public class CheckoutServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         // Check session and role
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
@@ -43,14 +47,14 @@ public class CheckoutServlet extends HttpServlet {
 
         UserAccount staffUser = (UserAccount) session.getAttribute("user");
         String userRole = staffUser.getRole();
-        
+
         if (!"Staff".equalsIgnoreCase(userRole) && !"Manager".equalsIgnoreCase(userRole) && !"Admin".equalsIgnoreCase(userRole)) {
             response.sendRedirect("access-denied.jsp");
             return;
         }
         String bookingIdParam = request.getParameter("bookingId");
         String errorMessage = null;
-        
+
         try {
             if (bookingIdParam == null || bookingIdParam.trim().isEmpty()) {
                 errorMessage = "Booking ID is required";
@@ -59,10 +63,10 @@ public class CheckoutServlet extends HttpServlet {
                 return;
             }
             int bookingId = Integer.parseInt(bookingIdParam);
-            
+
             // Get booking information
             Booking booking = bookingDAO.getBookingById(bookingId);
-            
+
             if (booking == null) {
                 errorMessage = "Booking not found";
                 request.setAttribute("errorMessage", errorMessage);
@@ -70,7 +74,7 @@ public class CheckoutServlet extends HttpServlet {
                 return;
             }
 
-            // Security  check
+            // Security check
             if (booking.getBranchId() != staffUser.getBranchId()) {
                 errorMessage = "You don't have permission to checkout this booking";
                 request.setAttribute("errorMessage", errorMessage);
@@ -95,6 +99,23 @@ public class CheckoutServlet extends HttpServlet {
 
             // Get booking room types
             List<BookingRoomType> bookingRoomTypes = bookingDAO.getBookingRoomTypesByBookingId(bookingId);
+
+            // ==== SET SỐ ĐÊM CHO TỪNG BookingRoomType ====
+            if (bookingRoomTypes != null && booking != null) {
+                LocalDateTime checkIn = booking.getCheckIn() != null ? booking.getCheckIn().toLocalDateTime() : null;
+                LocalDateTime checkOut = booking.getCheckOut() != null ? booking.getCheckOut().toLocalDateTime() : null;
+                int numberOfNights = 1;
+                try {
+                    if (checkIn != null && checkOut != null) {
+                        numberOfNights = (int) calculateNumberOfNights(checkIn, checkOut);
+                    }
+                } catch (Exception ex) {
+                    numberOfNights = 1; 
+                }
+                for (BookingRoomType brt : bookingRoomTypes) {
+                    brt.setNumberOfNights(numberOfNights);
+                }
+            }
 
             // Get assigned rooms
             List<Room> assignedRooms = roomDAO.getAssignedRoomsByBookingId(bookingId);
@@ -128,7 +149,7 @@ public class CheckoutServlet extends HttpServlet {
             } else if ("update_failed".equals(error)) {
                 errorMessage = "Failed to update booking status.";
             }
-            
+
             request.setAttribute("errorMessage", errorMessage);
 
         } catch (NumberFormatException e) {
@@ -143,120 +164,124 @@ public class CheckoutServlet extends HttpServlet {
         request.getRequestDispatcher("staff-checkout.jsp").forward(request, response);
     }
 
+    private Map<String, Object> calculateCheckoutDetails(Booking booking,
+            List<BookingRoomType> bookingRoomTypes, List<Service> services, UserAccount customer) {
+        Map<String, Object> details = new HashMap<>();
 
- private Map<String, Object> calculateCheckoutDetails(Booking booking, 
-        List<BookingRoomType> bookingRoomTypes, List<Service> services, UserAccount customer) {
-    Map<String, Object> details = new HashMap<>();
-    
-    try {
-        // Calculate room total - FIX: Kiểm tra xem getTotalPrice() có đúng logic không
-        BigDecimal totalRoomPriceBD = BigDecimal.ZERO;
-        if (bookingRoomTypes != null && !bookingRoomTypes.isEmpty()) {
-            for (BookingRoomType brt : bookingRoomTypes) {
-                BigDecimal roomSubtotal;
-                
-                // FIX: Xử lý đúng logic tính tiền phòng
-                // Kiểm tra xem dữ liệu có nhất quán không
-                if (brt.getPricePerRoom() != null && brt.getQuantity() > 0) {
-                    // Cách 1: Sử dụng getTotalPrice() nếu chắc chắn logic đúng
-                    roomSubtotal = brt.getPricePerRoom();
-                    
-                    // Cách 2: Tính toán lại để đảm bảo (uncomment nếu cần)
-                    // BigDecimal expectedTotal = brt.getPricePerRoom().multiply(BigDecimal.valueOf(brt.getQuantity()));
-                    // roomSubtotal = expectedTotal;
-        
-                } else {
-                    roomSubtotal = BigDecimal.ZERO;
-                }
-                
-                if (roomSubtotal != null) {
-                    totalRoomPriceBD = totalRoomPriceBD.add(roomSubtotal);
+        try {
+            BigDecimal totalRoomPriceBD = BigDecimal.ZERO;
+            if (bookingRoomTypes != null && !bookingRoomTypes.isEmpty()) {
+                for (BookingRoomType brt : bookingRoomTypes) {
+                    // getTotalPrice() sẽ tính: pricePerNight * quantity * numberOfNights
+                    BigDecimal roomSubtotal = brt.getTotalPrice();
+                    if (roomSubtotal != null) {
+                        totalRoomPriceBD = totalRoomPriceBD.add(roomSubtotal);
+                    }
                 }
             }
-        }
-        
-        // Convert BigDecimal to double for the rest of calculations
-        double totalRoomPrice = totalRoomPriceBD.doubleValue();
 
-        // Calculate service totals
-        double totalServicePrice = 0.0;
-        double paidServicePrice = 0.0;
-        double unpaidServicePrice = 0.0;
-        
-        if (services != null && !services.isEmpty()) {
-            for (Service service : services) {
-                double serviceTotal = service.getPrice() * service.getQuantity();
-                totalServicePrice += serviceTotal;
-                
-                // FIX: Kiểm tra null safety cho status
-                String status = service.getBookingServiceStatus();
-                if (status != null && "Paid".equalsIgnoreCase(status.trim())) {
-                    paidServicePrice += serviceTotal;
-                } else {
-                    unpaidServicePrice += serviceTotal;
+            double totalRoomPrice = totalRoomPriceBD.doubleValue();
+
+            // Calculate service totals
+            double totalServicePrice = 0.0;
+            double paidServicePrice = 0.0;
+            double unpaidServicePrice = 0.0;
+
+            if (services != null && !services.isEmpty()) {
+                for (Service service : services) {
+                    double serviceTotal = service.getPrice() * service.getQuantity();
+                    totalServicePrice += serviceTotal;
+
+                    String status = service.getBookingServiceStatus();
+                    if (status != null && "Paid".equalsIgnoreCase(status.trim())) {
+                        paidServicePrice += serviceTotal;
+                    } else {
+                        unpaidServicePrice += serviceTotal;
+                    }
                 }
             }
-        }
 
-        // Calculate rank discount
-        double rankDiscountPercent = 0.0;
-        if (customer != null && customer.getRank() != null) {
-            String rank = customer.getRank().toLowerCase().trim();
-            switch (rank) {
-                case "silver": 
-                    rankDiscountPercent = 5.0; 
-                    break;
-                case "gold": 
-                    rankDiscountPercent = 10.0; 
-                    break;
-                case "vip": 
-                    rankDiscountPercent = 15.0; 
-                    break;
-                default: 
-                    rankDiscountPercent = 0.0;
-                    break;
+            // Calculate rank discount
+            double rankDiscountPercent = 0.0;
+            if (customer != null && customer.getRank() != null) {
+                String rank = customer.getRank().toLowerCase().trim();
+                switch (rank) {
+                    case "silver":
+                        rankDiscountPercent = 5.0;
+                        break;
+                    case "gold":
+                        rankDiscountPercent = 10.0;
+                        break;
+                    case "vip":
+                        rankDiscountPercent = 15.0;
+                        break;
+                    default:
+                        rankDiscountPercent = 0.0;
+                        break;
+                }
             }
+
+            // Apply discount only to unpaid amount
+            double discountableAmount = totalRoomPrice + unpaidServicePrice;
+            double rankDiscount = discountableAmount * (rankDiscountPercent / 100.0);
+
+            // Calculate what customer needs to pay now
+            double amountToPay = Math.max(0, discountableAmount - rankDiscount);
+
+            // Total bill (including already paid services)
+            double grandTotal = totalRoomPrice + totalServicePrice - rankDiscount;
+
+            // Store all calculated values
+            details.put("totalRoomPrice", totalRoomPrice);
+            details.put("totalServicePrice", totalServicePrice);
+            details.put("paidServicePrice", paidServicePrice);
+            details.put("unpaidServicePrice", unpaidServicePrice);
+            details.put("rankDiscountPercent", rankDiscountPercent);
+            details.put("rankDiscount", rankDiscount);
+            details.put("amountToPay", amountToPay);
+            details.put("grandTotal", grandTotal);
+            details.put("voucherDiscount", 0.0);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error in calculateCheckoutDetails: " + e.getMessage());
+
+            // Set default values in case of error
+            details.put("totalRoomPrice", 0.0);
+            details.put("totalServicePrice", 0.0);
+            details.put("paidServicePrice", 0.0);
+            details.put("unpaidServicePrice", 0.0);
+            details.put("rankDiscountPercent", 0.0);
+            details.put("rankDiscount", 0.0);
+            details.put("amountToPay", 0.0);
+            details.put("grandTotal", 0.0);
+            details.put("voucherDiscount", 0.0);
         }
-        
-        // Apply discount only to unpaid amount
-        double discountableAmount = totalRoomPrice + unpaidServicePrice;
-        double rankDiscount = discountableAmount * (rankDiscountPercent / 100.0);
 
-        // Calculate what customer needs to pay now
-        double amountToPay = Math.max(0, discountableAmount - rankDiscount);
-
-        // Total bill (including already paid services)
-        double grandTotal = totalRoomPrice + totalServicePrice - rankDiscount;
-
-        // Store all calculated values
-        details.put("totalRoomPrice", totalRoomPrice);
-        details.put("totalServicePrice", totalServicePrice);
-        details.put("paidServicePrice", paidServicePrice);
-        details.put("unpaidServicePrice", unpaidServicePrice);
-        details.put("rankDiscountPercent", rankDiscountPercent);
-        details.put("rankDiscount", rankDiscount);
-        details.put("amountToPay", amountToPay);
-        details.put("grandTotal", grandTotal);
-        details.put("voucherDiscount", 0.0);
-
-
-    } catch (Exception e) {
-        e.printStackTrace();
-        System.err.println("Error in calculateCheckoutDetails: " + e.getMessage());
-        
-        // Set default values in case of error
-        details.put("totalRoomPrice", 0.0);
-        details.put("totalServicePrice", 0.0);
-        details.put("paidServicePrice", 0.0);
-        details.put("unpaidServicePrice", 0.0);
-        details.put("rankDiscountPercent", 0.0);
-        details.put("rankDiscount", 0.0);
-        details.put("amountToPay", 0.0);
-        details.put("grandTotal", 0.0);
-        details.put("voucherDiscount", 0.0);
+        return details;
     }
 
-    return details;
+    private long calculateNumberOfNights(LocalDateTime checkIn, LocalDateTime checkOut) {
+        final int STANDARD_CHECKIN_HOUR = 7;  // 7:00 AM
+        final int STANDARD_CHECKOUT_HOUR = 14; // 2:00 PM
+
+        LocalDate checkInDate = checkIn.toLocalDate();
+        LocalDate checkOutDate = checkOut.toLocalDate();
+
+        long daysBetween = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
+
+        if (daysBetween == 0) {
+            return 1;
+        } else if (daysBetween == 1) {
+            if (checkOut.getHour() < STANDARD_CHECKOUT_HOUR) {
+                long totalHours = ChronoUnit.HOURS.between(checkIn, checkOut);
+                if (totalHours < 12) {
+                    return 1;
+                }
+            }
+            return 1;
+        } else {
+            return daysBetween;
+        }
+    }
 }
-}
-            

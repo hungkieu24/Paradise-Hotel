@@ -30,7 +30,7 @@ public class ProcessCheckoutServlet extends HttpServlet {
     private final RoomDAO roomDAO = new RoomDAO();
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+   protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
         // Check session and role
@@ -93,10 +93,10 @@ public class ProcessCheckoutServlet extends HttpServlet {
                     serviceDAO.markAllServicesAsPaid(bookingId);
 
                     // Set assigned rooms back to Available status
-                    roomDAO.updateRoomStatusAfterCheckout(bookingId, "Available");
+//                    roomDAO.updateRoomStatusAfterCheckout(bookingId, "Available");
 
                     // Award loyalty points (1 point per 100,000 VND)
-                    awardLoyaltyPoints(booking.getUserId(), amountToPay);
+//                    awardLoyaltyPoints(booking.getUserId(), amountToPay);
 
                     // Generate invoice
                     generateInvoice(booking, amountToPay);

@@ -238,6 +238,7 @@ public class PaymentResultServlet extends HttpServlet {
             Booking bookingCurrent = bookingDAO.getBookingById(bookingId);
 
             bookingDAO.updateBookingStatus(bookingId, "Completed");
+            bookingDAO.updateBookingPaymentStatus(bookingId, "Paid");
             request.setAttribute("vnp_TxnRef", vnp_TxnRef);
             request.setAttribute("vnp_TransactionNo", vnp_TransactionNo);
             request.setAttribute("vnp_BankCode", vnp_BankCode);
