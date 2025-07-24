@@ -378,15 +378,44 @@
                         <div class="brand"><i class="fas fa-building"></i><span class="brand-text">${branchname}</span></div>
                     </button>
                 </div>
-                <div class="sidebar-menu">
-                    <a href="#" class="menu-item"><i class="fas fa-chart-line"></i><span class="menu-text">Dashboard</span></a>
-                    <a href="rooms" class="menu-item"><i class="fas fa-bed"></i><span class="menu-text">Manage room</span></a>
-                    <a href="#" class="menu-item"><i class="fas fa-comments"></i><span class="menu-text">Manage feedback</span></a>
-                    <a href="serviceManage" class="menu-item"><i class="fas fa-concierge-bell"></i><span class="menu-text">Manage service</span></a>
-                    <a href="promotions" class="menu-item"><i class="fas fa-tags"></i><span class="menu-text">Manage promotion</span></a>
-                    <a href="manager-membership" class="menu-item active"><i class="fas fa-users"></i><span class="menu-text">Manage membership</span></a>
-                    <a href="#" class="menu-item logout"><i class="fas fa-sign-out-alt"></i><span class="menu-text">Logout</span></a>
-                </div>
+               <div class="sidebar-menu">
+                <a href="./manager/dashboard" class="menu-item ">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="menu-text">Dashboard</span>
+                </a>
+                <a href="rooms" class="menu-item ">
+                    <i class="fas fa-bed"></i>
+                    <span class="menu-text">Manage room</span>
+                </a>
+                <a href="./manager/roomType" class="menu-item">
+                    <i class="fas fa-bed"></i>
+                    <span class="menu-text">Manage room type</span>
+                </a>
+                <a href="./manager/revenue" class="menu-item">
+                    <i class="fa-solid fa-dollar-sign"></i>
+                    <span class="menu-text">Manage Revenue & Expense</span>
+                </a>
+                <a href="./manager/feedback" class="menu-item">
+                    <i class="fas fa-comments"></i>
+                    <span class="menu-text">Manage feedback</span>
+                </a>
+                <a href="serviceManage" class="menu-item active">
+                    <i class="fas fa-concierge-bell"></i>
+                    <span class="menu-text">Manage service</span>
+                </a>
+                <a href="promotions" class="menu-item">
+                    <i class="fas fa-tags"></i>
+                    <span class="menu-text">Manage promotion</span>
+                </a>
+                <a href="manager-membership" class="menu-item">
+                    <i class="fas fa-users"></i>
+                    <span class="menu-text">Manage membership</span>
+                </a>
+                <a href="../login?action=logout" class="menu-item logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="menu-text">logout</span>
+                </a>
+            </div>
             </nav>
 
             <!-- Main Content -->
@@ -451,12 +480,15 @@
                                         <div class="value"><fmt:formatNumber value="${selectedCustomer.loyaltyPoint.points}" type="number"/></div>
                                         <div class="label">Current Points</div>
                                     </div>
-                                    <div class="stat-item">
-                                        <div class="value">
+                                    <div class="stat-item" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                        <div class="value" style="font-size: 2.5rem; font-weight: 700; color: #007bff; margin-bottom: 0.5rem; line-height: 1.2;">
                                             <fmt:formatNumber value="${selectedCustomer.loyaltyPoint.totalSpending}" type="currency" currencySymbol="₫" maxFractionDigits="0"/>
                                         </div>
-                                        <div class="label">Total Spending</div>
+                                        <div class="label" style="font-size: 1rem; color: #6c757d; font-weight: 500;">
+                                            Total Spending
+                                        </div>
                                     </div>
+
                                     <div class="stat-item">
                                         <div class="value">${selectedCustomer.loyaltyPoint.lifetimePoints}</div>
                                         <div class="label">Lifetime Points</div>
@@ -495,7 +527,7 @@
                                                         <tr>
                                                             <td><fmt:formatDate value="${tx.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>
                                                             <td>
-                                                                <span class="badge bg-${tx.changeType == 'Earn' ? 'success' : (tx.changeType == 'Redeem' ? 'danger' : 'warning')}">
+                                                                <span class="badge bg-${tx.changeType == 'Earn' ? 'success' : (tx.changeType == 'Change' ? 'danger' : 'warning')}">
                                                                     ${tx.changeType}
                                                                 </span>
                                                             </td>
@@ -539,7 +571,7 @@
                             <input type="hidden" name="action" value="adjustPoints">
                             <input type="hidden" name="userId" value="${selectedCustomer.id}">
                             <div class="modal-body">
-                                <div class="form-group">
+                                <div class="form-group">    
                                     <label for="points">Points to Add/Subtract</label>
                                     <input type="number" name="points" id="points" class="form-control" required 
                                            placeholder="Use negative number for subtraction (e.g., -50)">
@@ -565,52 +597,52 @@
 
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-            function openModal(modalId) {
-                document.getElementById(modalId).classList.add('show');
-            }
-            
-            function closeModal(modalId) {
-                document.getElementById(modalId).classList.remove('show');
-            }
-            
-            function showTab(evt, tabName) {
-                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-                document.querySelectorAll('.tab-button').forEach(tb => tb.classList.remove('active'));
-                document.getElementById(tabName + '-tab').classList.add('active');
-                evt.currentTarget.classList.add('active');
-            }
+                                    function openModal(modalId) {
+                                        document.getElementById(modalId).classList.add('show');
+                                    }
 
-            // Close modal when clicking outside
-            document.addEventListener('click', function(event) {
-                const modals = document.querySelectorAll('.modal.show');
-                modals.forEach(modal => {
-                    if (event.target === modal) {
-                        closeModal(modal.id);
-                    }
-                });
-            });
+                                    function closeModal(modalId) {
+                                        document.getElementById(modalId).classList.remove('show');
+                                    }
 
-            // Handle success/error messages
-            var errorMsg = "<c:out value='${sessionScope.error}'/>";
-            var successMsg = "<c:out value='${sessionScope.success}'/>";
-            
-            if (errorMsg && errorMsg.trim() !== "") {
-                Swal.fire({
-                    icon: 'error', 
-                    title: 'Error', 
-                    text: errorMsg,
-                    confirmButtonColor: '#dc3545'
-                });
-                <% session.removeAttribute("error"); %>
-            } else if (successMsg && successMsg.trim() !== "") {
-                Swal.fire({
-                    icon: 'success', 
-                    title: 'Success', 
-                    text: successMsg,
-                    confirmButtonColor: '#28a745'
-                });
-                <% session.removeAttribute("success"); %>
-            }
+                                    function showTab(evt, tabName) {
+                                        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+                                        document.querySelectorAll('.tab-button').forEach(tb => tb.classList.remove('active'));
+                                        document.getElementById(tabName + '-tab').classList.add('active');
+                                        evt.currentTarget.classList.add('active');
+                                    }
+
+                                    // Close modal when clicking outside
+                                    document.addEventListener('click', function (event) {
+                                        const modals = document.querySelectorAll('.modal.show');
+                                        modals.forEach(modal => {
+                                            if (event.target === modal) {
+                                                closeModal(modal.id);
+                                            }
+                                        });
+                                    });
+
+                                    // Handle success/error messages
+                                    var errorMsg = "<c:out value='${sessionScope.error}'/>";
+                                    var successMsg = "<c:out value='${sessionScope.success}'/>";
+
+                                    if (errorMsg && errorMsg.trim() !== "") {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Error',
+                                            text: errorMsg,
+                                            confirmButtonColor: '#dc3545'
+                                        });
+            <% session.removeAttribute("error"); %>
+                                    } else if (successMsg && successMsg.trim() !== "") {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Success',
+                                            text: successMsg,
+                                            confirmButtonColor: '#28a745'
+                                        });
+            <% session.removeAttribute("success"); %>
+                                    }
         </script>
     </body>
 </html>

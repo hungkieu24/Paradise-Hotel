@@ -74,42 +74,44 @@ public class LoyaltyPointDAO extends DBContext {
      * Thêm điểm thưởng cho khách hàng
      */
     public boolean addPoints(String userId, int points, String reason) {
-        try {
-            // Update loyalty points
-            String updateSql = "UPDATE LoyaltyPoint SET points = points + ?, last_updated = GETDATE() WHERE user_id = ?";
+    try {
+        // Update loyalty points: both points and lifetime_points
+        String updateSql = "UPDATE LoyaltyPoint SET points = points + ?, lifetime_points = lifetime_points + ?, last_updated = GETDATE() WHERE user_id = ?";
 
-            try (PreparedStatement ps = connection.prepareStatement(updateSql)) {
-                ps.setInt(1, points);
-                ps.setString(2, userId);
+        try (PreparedStatement ps = connection.prepareStatement(updateSql)) {
+            ps.setInt(1, points);
+            ps.setInt(2, points);
+            ps.setString(3, userId);
 
-                int rowsAffected = ps.executeUpdate();
+            int rowsAffected = ps.executeUpdate();
 
-                if (rowsAffected == 0) {
-                    // Insert new record if user doesn't exist
-                    String insertSql = "INSERT INTO LoyaltyPoint (user_id, points, level, last_updated) VALUES (?, ?, 'Member', GETDATE())";
-                    try (PreparedStatement insertPs = connection.prepareStatement(insertSql)) {
-                        insertPs.setString(1, userId);
-                        insertPs.setInt(2, points);
-                        insertPs.executeUpdate();
-                    }
+            if (rowsAffected == 0) {
+                // Insert new record if user doesn't exist
+                String insertSql = "INSERT INTO LoyaltyPoint (user_id, points, lifetime_points, level, last_updated) VALUES (?, ?, ?, 'Member', GETDATE())";
+                try (PreparedStatement insertPs = connection.prepareStatement(insertSql)) {
+                    insertPs.setString(1, userId);
+                    insertPs.setInt(2, points);
+                    insertPs.setInt(3, points); 
+                    insertPs.executeUpdate();
                 }
-
-                // Record transaction
-                String transactionSql = "INSERT INTO PointTransaction (user_id, change_type, points_changed, reason, created_at) VALUES (?, 'Earn', ?, ?, GETDATE())";
-                try (PreparedStatement transactionPs = connection.prepareStatement(transactionSql)) {
-                    transactionPs.setString(1, userId);
-                    transactionPs.setInt(2, points);
-                    transactionPs.setString(3, reason);
-                    transactionPs.executeUpdate();
-                }
-
-                return true;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+
+            // Record transaction
+            String transactionSql = "INSERT INTO PointTransaction (user_id, change_type, points_changed, reason, created_at) VALUES (?, 'Earn', ?, ?, GETDATE())";
+            try (PreparedStatement transactionPs = connection.prepareStatement(transactionSql)) {
+                transactionPs.setString(1, userId);
+                transactionPs.setInt(2, points);
+                transactionPs.setString(3, reason);
+                transactionPs.executeUpdate();
+            }
+
+            return true;
         }
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
     }
+}
 
     /**
      * Lấy rank của user

@@ -223,7 +223,7 @@ public class MembershipDAO extends DBContext {
             try (PreparedStatement ps = connection.prepareStatement(insertTransactionSql)) {
                 ps.setString(1, customerId);
                 ps.setInt(2, pointsChange);
-                ps.setString(3, pointsChange > 0 ? "Earn" : "Redeem");
+                ps.setString(3, pointsChange > 0 ? "Earn" : "Change");
                 ps.setString(4, reason);
                 ps.executeUpdate();
             }
