@@ -5,9 +5,18 @@
 package Utility;
 
 import Dal.BankAccountDAO;
+import Dal.BookingDAO;
+import Dal.BookingRoomTypeDAO;
+import Dal.InvoiceDAO;
+import Dal.LoyaltyPointDAO;
+import Dal.RoomDAO;
+import Dal.UserAccountDAO;
 import Dal.WalletDAO;
 import Dal.WalletTransactionDAO;
-import Model.BankAccount;
+import Model.Booking;
+import Model.BookingRoomType;
+import Model.Invoice;
+import Model.Room;
 import Model.UserAccount;
 import Model.Wallet;
 import Model.WalletTransaction;
@@ -22,34 +31,33 @@ import jakarta.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import java.util.List;
 import org.json.JSONObject;
 
 /**
  *
  * @author hungk
  */
-@WebServlet(name = "SuccessServlet", urlPatterns = {"/success"})
-public class SuccessServlet extends HttpServlet {
+@WebServlet(name = "CheckOutSuccess", urlPatterns = {"/checkOutSuccess"})
+public class CheckOutSuccess extends HttpServlet {
 
     private final String API_KEY = PaymentConfig.API_KEY;
     private final String CLIENT_ID = PaymentConfig.CLIENT_ID;
+    private final String RETURN_PAGE = "./staff-bookings-list";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String orderCode = request.getParameter("orderCode");
         String amountStr = request.getParameter("amount");
+        String bookingIdStr = request.getParameter("bookingId");
+
         HttpSession session = request.getSession();
         UserAccount user = (UserAccount) session.getAttribute("user");
-        BankAccountDAO bankAccountDAO = new BankAccountDAO();
-        WalletTransactionDAO transactionDAO = new WalletTransactionDAO();
+
         if (user == null) {
             setSessionMessage(session, "You need to login!", "error");
             response.sendRedirect("./login.jsp");
@@ -58,7 +66,7 @@ public class SuccessServlet extends HttpServlet {
 
         if (orderCode == null || orderCode.isEmpty()) {
             setSessionMessage(session, "Missing orderCode", "error");
-            response.sendRedirect("./myWallet");
+            response.sendRedirect(RETURN_PAGE);
             return;
         }
 
@@ -87,25 +95,45 @@ public class SuccessServlet extends HttpServlet {
             if ("PAID".equalsIgnoreCase(status)) {
                 // TODO: update đơn hàng, ví dụ nạp tiền vào Wallet, lưu vào DB...
                 double amount = Double.parseDouble(amountStr);
-                String userId = user.getId();
-                WalletDAO walletDAO = new WalletDAO();
+                String staffId = user.getId();
 
-                Wallet wallet = walletDAO.getWalletByUserId(userId);
-                boolean success = walletDAO.updateWalletBalance(userId, amount);
-                setSessionMessage(session, success ? "Added successfully!" : "Fail to update wallet", success ? "success" : "error");
-                
-                WalletTransaction transaction = new WalletTransaction();
-                transaction.setWalletID(wallet.getWalletID());
-                transaction.setAmount(amount);
-                transaction.setTransactionType("Deposit"); // hoặc "Refund", "Withdraw", "Payment"
-                transaction.setDescription("Deposit From PayOS");
-                transaction.setBookingID(0);
-                transaction.setBranchID(0);
-                transaction.setCreatedBy(userId);
-                transaction.setStatus("Success"); // hoặc "Pending", "Failed"
-                transaction.setBankAccountNumber(null);
-                transactionDAO.addWalletTransaction(transaction);
-                
+                // Update Booking
+                int bookingId = Integer.parseInt(bookingIdStr);
+                BookingDAO bookingDAO = new BookingDAO();
+                Booking bookingCurrent = bookingDAO.getBookingById(bookingId);
+                bookingDAO.updateBookingStatus(bookingId, "Completed");
+                bookingDAO.updateBookingPaymentStatus(bookingId, "Paid");
+
+                // Set invoice
+                InvoiceDAO invoiceDAO = new InvoiceDAO();
+                Invoice invoice = new Invoice();
+                invoice.setBookingId(bookingId);
+                invoice.setTotalAmount(amount);
+                invoiceDAO.createInvoice(invoice);
+
+                //Plus point
+                LoyaltyPointDAO loyaltyPointDAO = new LoyaltyPointDAO();
+                loyaltyPointDAO.addPoints(bookingCurrent.getUserId(), (int) amount / 100000, "Payment success " + amount);
+                boolean loyaltyUpdated = loyaltyPointDAO.updateTotalSpending(bookingCurrent.getUserId(), amount);
+
+                //Set roomtype to Available
+                RoomDAO roomDAO = new RoomDAO();
+                roomDAO.updateRoomStatusAfterCheckout(bookingId, "Available");
+
+                UserAccountDAO userDAO = new UserAccountDAO();
+                UserAccount customer = userDAO.findById(bookingCurrent.getUserId());
+                Integer branchId = user.getBranchId();
+
+                List<Room> bookingRoomList = bookingDAO.getRoomsByBookingIdAndBranch(bookingId, branchId != null ? branchId : 1);
+                BookingRoomTypeDAO bookingRoomTypeDAO = new BookingRoomTypeDAO();
+                List<BookingRoomType> bookingRoomTypes = bookingRoomTypeDAO.getBookingRoomTypesByBookingId(bookingId);
+
+                try {
+                    EmailUtility.sendInvoice(customer.getEmail(), "Invoice", amountStr, amountStr,
+                            bookingRoomList, customer, bookingCurrent, bookingRoomTypes);
+                } catch (Exception e) {
+                }
+                setSessionMessage(session, "Payment completed", "success");
             } else {
                 setSessionMessage(session, "Payment not completed", "error");
             }
@@ -116,11 +144,12 @@ public class SuccessServlet extends HttpServlet {
         }
 
         // Redirect về myWallet
-        response.sendRedirect("./myWallet");
+        response.sendRedirect(RETURN_PAGE);
     }
 
     private void setSessionMessage(HttpSession session, String message, String type) {
         session.setAttribute("message", message);
         session.setAttribute("messageType", type);
     }
+
 }

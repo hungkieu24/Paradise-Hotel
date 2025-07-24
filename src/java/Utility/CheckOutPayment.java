@@ -4,7 +4,9 @@
  */
 package Utility;
 
+import static Utility.DepositWallet.hmacSHA256;
 import java.io.IOException;
+import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -26,41 +28,45 @@ import org.json.JSONObject;
  *
  * @author hungk
  */
-@WebServlet(name = "DepositWallet", urlPatterns = {"/deposit"})
-public class DepositWallet extends HttpServlet {
+@WebServlet(name = "CheckOutPayment", urlPatterns = {"/checkOutPayment"})
+public class CheckOutPayment extends HttpServlet {
 
     private final String API_KEY = PaymentConfig.API_KEY;
     private final String CLIENT_ID = PaymentConfig.CLIENT_ID;
     private final String CHECKSUM_KEY = PaymentConfig.CHECKSUM_KEY;
+    private final String RETURN_PAGE = "./staff-checkout?bookingId=";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
 
-        String amountStr = request.getParameter("amountDeposit");
+        String amountStr = request.getParameter("amountToPay");
+        String bookingIdStr = request.getParameter("bookingId");
         if (amountStr == null || amountStr.trim().isEmpty()) {
             setSessionMessage(session, "Amount is required", "error");
-            response.sendRedirect("./myWallet");
+            response.sendRedirect(RETURN_PAGE + bookingIdStr);
             return;
         }
 
+        double amountDouble;
         long amount;
         try {
-            amount = Long.parseLong(amountStr.trim());
+            amountDouble = Double.parseDouble(amountStr);
+            amount = (long) amountDouble; 
             if (amount <= 0) {
                 throw new NumberFormatException();
             }
         } catch (NumberFormatException e) {
             setSessionMessage(session, "Invalid amount", "error");
-            response.sendRedirect("./myWallet");
+            response.sendRedirect(RETURN_PAGE + bookingIdStr);
             return;
         }
 
         long orderCode = System.currentTimeMillis();
-        String description = "Deposit";
-        String returnUrl = "http://localhost:8080/ParadiseHotel/success?orderCode=" + orderCode + "&amount=" + amount;
-        String cancelUrl = "http://localhost:8080/ParadiseHotel/cancel-payment";
+        String description = "CheckOut Payment";
+        String returnUrl = "http://localhost:8080/ParadiseHotel/checkOutSuccess?orderCode=" + orderCode + "&amount=" + amount + "&bookingId=" + bookingIdStr;
+        String cancelUrl = "http://localhost:8080/ParadiseHotel/checkOutCancelPayment?bookingId=" + bookingIdStr;
 
         String dataToSign = "amount=" + amount
                 + "&cancelUrl=" + cancelUrl
@@ -73,7 +79,7 @@ public class DepositWallet extends HttpServlet {
             signature = hmacSHA256(dataToSign, CHECKSUM_KEY);
         } catch (Exception e) {
             setSessionMessage(session, "Failed to sign request", "error");
-            response.sendRedirect("./myWallet");
+            response.sendRedirect(RETURN_PAGE + bookingIdStr);
             return;
         }
 
@@ -121,11 +127,11 @@ public class DepositWallet extends HttpServlet {
                 response.sendRedirect(checkoutUrl); // redirect đến PayOS
             } else {
                 setSessionMessage(session, "Unable to get payment link", "error");
-                response.sendRedirect("./myWallet");
+                response.sendRedirect(RETURN_PAGE + bookingIdStr);
             }
         } catch (IOException e) {
             setSessionMessage(session, "Error connecting to payment gateway", "error");
-            response.sendRedirect("./myWallet");
+            response.sendRedirect(RETURN_PAGE + bookingIdStr);
         }
     }
 
@@ -156,4 +162,5 @@ public class DepositWallet extends HttpServlet {
         session.setAttribute("message", message);
         session.setAttribute("messageType", type);
     }
+
 }
