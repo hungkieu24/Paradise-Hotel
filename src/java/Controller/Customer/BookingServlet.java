@@ -224,16 +224,30 @@ public class BookingServlet extends HttpServlet {
                 return;
             }
 
-            Timestamp checkInTimestamp = Timestamp.valueOf(checkInStr.replace("T", " ") + ":00");
-            Timestamp checkOutTimestamp = Timestamp.valueOf(checkOutStr.replace("T", " ") + ":00");
+            LocalDate checkInDate = LocalDate.parse(checkInStr);
+            LocalDate checkOutDate = LocalDate.parse(checkOutStr);
 
-            if (!checkOutTimestamp.after(checkInTimestamp)) {
-                out.write("{\"status\":\"error\", \"message\":\"Check-out must be after Check-in\"}");
+// Convert to Timestamp at start of day
+            Timestamp checkInTimestamp = Timestamp.valueOf(checkInDate.atStartOfDay());
+            Timestamp checkOutTimestamp = Timestamp.valueOf(checkOutDate.atStartOfDay());
+
+            Timestamp now = new Timestamp(System.currentTimeMillis());
+            long durationMillis = checkOutTimestamp.getTime() - checkInTimestamp.getTime();
+            if (checkInTimestamp.before(now) || checkOutTimestamp.before(now)) {
+                response.getWriter().write("{\"status\":\"error\", \"message\":\"Dates must be in the future\"}");
+                return;
+            } else if (!checkOutTimestamp.after(checkInTimestamp)) {
+                response.getWriter().write("{\"status\":\"error\", \"message\":\"Check-out must be after Check-in\"}");
+                return;
+            } else if (durationMillis < 3600 * 1000) {
+                response.getWriter().write("{\"status\":\"error\", \"message\":\"Booking duration must be at least 1 hour\"}");
+                return;
+            } else if (durationMillis > (365L * 24 * 3600 * 1000)) {
+                response.getWriter().write("{\"status\":\"error\", \"message\":\"Booking duration cannot exceed 1 year\"}");
                 return;
             }
-            
             double totalPrice = Double.parseDouble(totalPriceStr);
-                 
+
             Map<Integer, Integer> serviceMap = new HashMap<>();
             if (serviceIdList != null && !serviceIdList.trim().isEmpty()) {
                 String[] entries = serviceIdList.split(",");
@@ -315,11 +329,18 @@ public class BookingServlet extends HttpServlet {
                 if (selectedVoucherId != null && !selectedVoucherId.trim().isEmpty()) {
                     try {
                         int voucherId = Integer.parseInt(selectedVoucherId);
+                        VoucherDAO voucherDAO = new VoucherDAO();
+                        Voucher voucher = voucherDAO.getVoucherById(voucherId);
+
+                        if (voucher != null && totalPrice < voucher.getMin_price()) {
+                            out.write("{\"status\":\"error\", \"message\":\"Order is not eligible to use this voucher\"}");
+                            return;
+                        }
+
                         PointRedeemVoucherDAO pointRedeemVoucherDAO = new PointRedeemVoucherDAO();
                         pointRedeemVoucherDAO.useVoucher(user.getId(), voucherId, bookingId);
                     } catch (NumberFormatException e) {
-                        // Log error but don't fail the booking
-                        e.printStackTrace();
+                        e.printStackTrace(); // Ghi log
                     }
                 }
 
@@ -363,16 +384,33 @@ public class BookingServlet extends HttpServlet {
             String totalPriceStr = request.getParameter("finalTotalPrice"); // Sử dụng finalTotalPrice như doPost()
             String selectedVoucherId = request.getParameter("selectedVoucherId");
 
-            // ✅ Parse timestamp giống doPost()
-            Timestamp checkInTimestamp = Timestamp.valueOf(checkInStr.replace("T", " ") + ":00");
-            Timestamp checkOutTimestamp = Timestamp.valueOf(checkOutStr.replace("T", " ") + ":00");
-
-            // ✅ Validate giống doPost()
-            if (!checkOutTimestamp.after(checkInTimestamp)) {
-                out.write("{\"status\":\"error\", \"message\":\"Check-out must be after Check-in\"}");
+            if (checkInStr == null || checkOutStr == null || checkInStr.isEmpty() || checkOutStr.isEmpty()) {
+                out.write("{\"status\":\"error\", \"message\":\"Check-in and Check-out must not be empty\"}");
                 return;
             }
 
+            LocalDate checkInDate = LocalDate.parse(checkInStr);
+            LocalDate checkOutDate = LocalDate.parse(checkOutStr);
+
+// Convert to Timestamp at start of day
+            Timestamp checkInTimestamp = Timestamp.valueOf(checkInDate.atStartOfDay());
+            Timestamp checkOutTimestamp = Timestamp.valueOf(checkOutDate.atStartOfDay());
+
+            Timestamp now = new Timestamp(System.currentTimeMillis());
+            long durationMillis = checkOutTimestamp.getTime() - checkInTimestamp.getTime();
+            if (checkInTimestamp.before(now) || checkOutTimestamp.before(now)) {
+                response.getWriter().write("{\"status\":\"error\", \"message\":\"Dates must be in the future\"}");
+                return;
+            } else if (!checkOutTimestamp.after(checkInTimestamp)) {
+                response.getWriter().write("{\"status\":\"error\", \"message\":\"Check-out must be after Check-in\"}");
+                return;
+            } else if (durationMillis < 3600 * 1000) {
+                response.getWriter().write("{\"status\":\"error\", \"message\":\"Booking duration must be at least 1 hour\"}");
+                return;
+            } else if (durationMillis > (365L * 24 * 3600 * 1000)) {
+                response.getWriter().write("{\"status\":\"error\", \"message\":\"Booking duration cannot exceed 1 year\"}");
+                return;
+            }
             double totalPrice = Double.parseDouble(totalPriceStr);
 
             BookingDAO bookingDAO = new BookingDAO();
@@ -418,11 +456,18 @@ public class BookingServlet extends HttpServlet {
                 if (selectedVoucherId != null && !selectedVoucherId.trim().isEmpty()) {
                     try {
                         int voucherId = Integer.parseInt(selectedVoucherId);
+                        VoucherDAO voucherDAO = new VoucherDAO();
+                        Voucher voucher = voucherDAO.getVoucherById(voucherId);
+
+                        if (voucher != null && totalPrice < voucher.getMin_price()) {
+                            out.write("{\"status\":\"error\", \"message\":\"Order is not eligible to use this voucher\"}");
+                            return;
+                        }
+
                         PointRedeemVoucherDAO pointRedeemVoucherDAO = new PointRedeemVoucherDAO();
                         pointRedeemVoucherDAO.useVoucher(user.getId(), voucherId, bookingId);
                     } catch (NumberFormatException e) {
-                        // Log error but don't fail the booking
-                        e.printStackTrace();
+                        e.printStackTrace(); // Ghi log
                     }
                 }
 

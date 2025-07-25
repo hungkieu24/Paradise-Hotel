@@ -106,24 +106,24 @@ public class RoomTypeDAO extends DBContext {
         Timestamp checkOutTimestamp = Timestamp.valueOf(checkOut.atStartOfDay());
 
         String sql = """
-        SELECT DISTINCT rt.*
-          FROM RoomType rt
-          WHERE rt.is_deleted = 0
-            AND EXISTS (
-                SELECT 1
-                FROM Room r
-                WHERE r.room_type_id = rt.id
-                  AND r.status NOT IN ('Maintenance', 'Booked')
-                  AND r.id NOT IN (
-                      SELECT br.room_type_id
-                      FROM BookingRoomType br
-                      JOIN Booking b ON br.booking_id = b.id
-                      WHERE b.status NOT IN ('Cancelled', 'Locked')
-                        AND b.check_in < ?
-                        AND b.check_out > ?
-                  )
-            )
-    """;
+    SELECT DISTINCT rt.*
+      FROM RoomType rt
+      WHERE rt.is_deleted = 0
+        AND EXISTS (
+            SELECT 1
+            FROM Room r
+            WHERE r.room_type_id = rt.id
+              AND r.status NOT IN ('Maintenance', 'Booked')
+              AND r.id NOT IN (
+                  SELECT ra.room_id
+                  FROM RoomAssignment ra
+                  JOIN Booking b ON ra.booking_id = b.id
+                  WHERE b.status NOT IN ('Cancelled', 'Locked')
+                    AND b.check_in < ?
+                    AND b.check_out > ?
+              )
+        )
+""";
 
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setTimestamp(1, checkOutTimestamp); // b.check_in < checkOut
@@ -159,34 +159,39 @@ public class RoomTypeDAO extends DBContext {
     public List<RoomType> getAvailableRoomTypesByPriceAndDate(double minPrice, double maxPrice, LocalDate checkIn, LocalDate checkOut) {
         List<RoomType> availableRoomTypes = new ArrayList<>();
         BranchDAO branchDAO = new BranchDAO();
+
+        // Chuyển LocalDate -> Timestamp để nhất quán
+        Timestamp checkInTimestamp = Timestamp.valueOf(checkIn.atStartOfDay());
+        Timestamp checkOutTimestamp = Timestamp.valueOf(checkOut.atStartOfDay());
+
         String sql = """
-        SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price,
-                        rt.capacity_adult, rt.capacity_child,
-                        rt.image_url, rt.branch_id, rt.is_deleted
-        FROM RoomType rt
-        WHERE rt.is_deleted = 0
-          AND rt.base_price BETWEEN ? AND ?
-          AND EXISTS (
-              SELECT 1
-              FROM Room r
-              WHERE r.room_type_id = rt.id
-                AND r.status NOT IN ('Maintenance', 'Booked')
-                                        AND r.id NOT IN (
-                                            SELECT br.room_type_id
-                                            FROM BookingRoomType br
-                                            JOIN Booking b ON br.booking_id = b.id
-                                            WHERE b.status NOT IN ('Cancelled', 'Locked')
-                                              AND b.check_in < ?
-                                              AND b.check_out > ?
-                )
-          )
-    """;
+    SELECT DISTINCT rt.id, rt.name, rt.description, rt.base_price,
+                    rt.capacity_adult, rt.capacity_child,
+                    rt.image_url, rt.branch_id, rt.is_deleted
+    FROM RoomType rt
+    WHERE rt.is_deleted = 0
+      AND rt.base_price BETWEEN ? AND ?
+      AND EXISTS (
+          SELECT 1
+          FROM Room r
+          WHERE r.room_type_id = rt.id
+            AND r.status NOT IN ('Maintenance', 'Booked')
+            AND r.id NOT IN (
+                SELECT ra.room_id
+                FROM RoomAssignment ra
+                JOIN Booking b ON ra.booking_id = b.id
+                WHERE b.status NOT IN ('Cancelled', 'Locked')
+                  AND b.check_in < ?
+                  AND b.check_out > ?
+            )
+      )
+""";
 
         try (PreparedStatement st = connection.prepareStatement(sql)) {
             st.setDouble(1, minPrice);
             st.setDouble(2, maxPrice);
-            st.setDate(3, Date.valueOf(checkOut)); // b.check_in < checkOut
-            st.setDate(4, Date.valueOf(checkIn));  // b.check_out > checkIn
+            st.setTimestamp(3, checkOutTimestamp); // b.check_in < checkOut
+            st.setTimestamp(4, checkInTimestamp);  // b.check_out > checkIn
 
             ResultSet rs = st.executeQuery();
             while (rs.next()) {

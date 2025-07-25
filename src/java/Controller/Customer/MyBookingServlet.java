@@ -16,6 +16,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -46,17 +50,38 @@ public class MyBookingServlet extends HttpServlet {
 
         BookingDAO bookingDao = new BookingDAO();
         List<Booking> allBookings = bookingDao.getBookingsByUserId11(user.getId());
-        int totalBookings = allBookings.size();
+
+        String branchName = request.getParameter("branchName");
+        String roomTypeName = request.getParameter("roomTypeName");
+        String status = request.getParameter("status");
+
+        List<Booking> filteredBookings = allBookings.stream()
+                .filter(b -> branchName == null || branchName.isEmpty() || b.getBranchName().toLowerCase().contains(branchName.toLowerCase()))
+                .filter(b -> roomTypeName == null || roomTypeName.isEmpty() || b.getRoomTypeName().toLowerCase().contains(roomTypeName.toLowerCase()))
+                .filter(b -> status == null || status.isEmpty() || b.getStatus().equalsIgnoreCase(status))
+                .collect(Collectors.toList());
+        Set<String> branchNames = allBookings.stream()
+                .map(Booking::getBranchName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(TreeSet::new));
+
+        Set<String> roomTypeNames = allBookings.stream()
+                .map(Booking::getRoomTypeName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(TreeSet::new));
+
+        int totalBookings = filteredBookings.size();
         int totalPages = (int) Math.ceil((double) totalBookings / pageSize);
 
         int startIndex = (page - 1) * pageSize;
         int endIndex = Math.min(startIndex + pageSize, totalBookings);
-        List<Booking> bookings = allBookings.subList(startIndex, endIndex);
-
+        List<Booking> bookings = filteredBookings.subList(startIndex, endIndex);
         request.setAttribute("bookings", bookings);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
-
+        request.setAttribute("branchNames", branchNames);
+        request.setAttribute("roomTypeNames", roomTypeNames);
+        request.setAttribute("status", status);
         request.setAttribute("bookings", bookings);
         request.getRequestDispatcher("myBooking.jsp").forward(request, response);
     }
