@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.sql.Date;
+import java.time.LocalDate;
 
 /**
  *
@@ -56,6 +57,7 @@ public class EditVoucherServletManage extends HttpServlet {
             String totalQuantityStr = request.getParameter("total_quantity");
             String fromDateStr = request.getParameter("from_date");
             String toDateStr = request.getParameter("to_date");
+            String newStatus = request.getParameter("status");
 
             double discountPercent = (discountPercentStr != null && !discountPercentStr.isEmpty())
                     ? Double.parseDouble(discountPercentStr) : 0.0;
@@ -65,6 +67,22 @@ public class EditVoucherServletManage extends HttpServlet {
             int totalQuantity = Integer.parseInt(totalQuantityStr);
             Date fromDate = Date.valueOf(fromDateStr);
             Date toDate = Date.valueOf(toDateStr);
+            Voucher current = v.getVoucherById(voucherId);
+            LocalDate from = fromDate.toLocalDate();
+            LocalDate to = toDate.toLocalDate();
+            LocalDate today = LocalDate.now();
+            if(newStatus.equalsIgnoreCase("Inactive") && current.getStatus().equalsIgnoreCase("Active")){
+                if(from.isAfter(to)){
+                    session.setAttribute("error", "Start date must be before or equal to end date.");
+                    response.sendRedirect("vouchers");
+                    return;
+                }
+                if(to.isBefore(today)){
+                    session.setAttribute("error", "End date must not be in the past when activating voucher.");
+                    response.sendRedirect("vouchers");
+                    return;
+                }
+            }
 
             Voucher voucher = new Voucher();
             voucher.setId(voucherId);
@@ -76,6 +94,8 @@ public class EditVoucherServletManage extends HttpServlet {
             voucher.setTotal_quantity(totalQuantity);
             voucher.setValid_from(fromDate);
             voucher.setValid_to(toDate);
+            voucher.setStatus(newStatus);
+            
 
             boolean success = v.updateVoucher(voucher);
 

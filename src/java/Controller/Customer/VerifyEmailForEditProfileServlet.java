@@ -24,55 +24,15 @@ import java.util.Random;
 @WebServlet(name = "VerifyEmailForEditProfileServlet", urlPatterns = {"/verifyEmailForEditProfile"})
 public class VerifyEmailForEditProfileServlet extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet VerifyEmailForEditProfileServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet VerifyEmailForEditProfileServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
+  
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+       
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
+    
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -82,7 +42,7 @@ public class VerifyEmailForEditProfileServlet extends HttpServlet {
             sendVerificationCode(request, response);
             return;
         }
-        HttpSession session = request.getSession();
+        HttpSession session = request.getSession(false);
 
         // Kiểm tra sessionCode và expiryTime
         String sessionCode = (String) session.getAttribute("authCode");
@@ -104,10 +64,10 @@ public class VerifyEmailForEditProfileServlet extends HttpServlet {
             UserAccountDAO uadao = new UserAccountDAO();
             String email = (String) session.getAttribute("email");
             String userId = (String) session.getAttribute("userId");
-            String username = (String) session.getAttribute("username");
+            String fullname = (String) session.getAttribute("fullname");
             String phonenumber = (String) session.getAttribute("phonenumber");
             String avatarUrl = (String) session.getAttribute("avatarUrl");
-            boolean updated = uadao.updateUserInfo(userId, username, email, phonenumber, avatarUrl);
+            boolean updated = uadao.updateUserInfo(userId, fullname, email, phonenumber, avatarUrl);
 
             if (updated) {
                 UserAccount useraccount = uadao.getUserById(userId);
@@ -132,7 +92,7 @@ public class VerifyEmailForEditProfileServlet extends HttpServlet {
     }
 
     public void sendVerificationCode(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        HttpSession session = request.getSession();
+        HttpSession session = request.getSession(false);
         String email = (String) session.getAttribute("email");
 
         // Sinh mã xác nhận 6 chữ số
@@ -159,14 +119,6 @@ public class VerifyEmailForEditProfileServlet extends HttpServlet {
         response.sendRedirect("verifyEmailForEditProfile.jsp");
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
+   
 
 }
