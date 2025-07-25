@@ -292,7 +292,7 @@
                                 </form>
                             </div>
                         </div>
-                        
+
                         <!--delete modal-->
                         <div id="deleteModal" class="modal" style="display: none;">
                             <div class="modal-content">
@@ -302,7 +302,7 @@
                                     <input type="hidden" name="action" value="delete" />
                                     <input type="hidden" id="idDelete" name="idDelete" />
                                     <p style="text-align: start" >Are you sure you want to delete this bank account?</strong></p>
-                                    
+
                                     <div class="modal-action">
                                         <button type="submit" class="btn_1">Delete</button>
                                         <button type="button" class="btn_1 gray" onclick="closeDeleteModal()">Cancel</button>
@@ -518,7 +518,7 @@
                 document.getElementById("addBankAccountModal").style.display = "none";
             }
             function openDeleteModal(IdDelete) {
-            document.getElementById("idDelete").value = IdDelete;
+                document.getElementById("idDelete").value = IdDelete;
                 document.getElementById("deleteModal").style.display = "block";
             }
 
@@ -526,8 +526,8 @@
                 document.getElementById("deleteModal").style.display = "none";
             }
         </script>
-          
-       
-       
+
+
+
     </body>
 </html>

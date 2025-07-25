@@ -125,6 +125,7 @@
                         <li><a href="editProfile">Personal Info</a></li>
                         <li><a href="bookingHistory">Booking History</a></li>
                         <li><a href="myBooking">My Booking</a></li>
+                        <li><a href="myWallet">My Wallet</a></li>
                         <li><a href="redeemVoucher">Loyalty Status</a> </li>
                         <li><a href="changePassword.jsp">Change Password</a></li>
                         <li><a href="./homepage?action=logout">Log out</a></li>
@@ -184,7 +185,7 @@
                                         <h5 class="card-title">
                                             <c:choose>
                                                 <c:when test="${b.branchName != null}">${b.branchName}</c:when>
-                                                <c:otherwise>Chi nhánh không xác định</c:otherwise>
+                                                <c:otherwise>Unknown branch</c:otherwise>
                                             </c:choose>
                                         </h5>
 
@@ -208,14 +209,14 @@
                                         </p>
 
                                         <div class="d-flex justify-content-between mt-3">
-                                            <a style="margin-left: 325px" href="#" class="btn_1 small open-detail" data-id="${b.id}">Chi tiết</a>
+                                            <a style="margin-left: 325px" href="#" class="btn_1 small open-detail" data-id="${b.id}">Detail</a>
 
-                                            <a href="rebook?id=${b.id}" class="btn_1 small outline">Đặt lại</a>
+                                            <a href="rebook?id=${b.id}" class="btn_1 small outline">Rebook</a>
 
                                         </div>
                                         <div class="d-flex justify-content-between mt-3">
                                             <c:if test="${b.status eq 'Completed'}">
-                                                <a style="margin-left: 350px" href="sendFeedback?bookingId=${b.id}" class="btn_1 small">Gửi Feedback</a>
+                                                <a style="margin-left: 350px" href="sendFeedback?bookingId=${b.id}" class="btn_1 small">Send Feedback</a>
                                             </c:if>
                                         </div>
                                     </div>
