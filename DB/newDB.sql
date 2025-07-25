@@ -940,7 +940,7 @@ CREATE TABLE WalletTransaction (
     Description NVARCHAR(500),
     BookingID INT NULL,
     BranchID INT NULL,
-	BankAccountNumber VARCHAR(50) NULL,
+	BankAccountID INT NULL,
     CreatedBy VARCHAR(10),
     Status VARCHAR(20) NOT NULL CHECK (
         Status IN ('Pending', 'Success', 'Failed', 'Cancelled')
@@ -950,7 +950,8 @@ CREATE TABLE WalletTransaction (
     FOREIGN KEY (WalletID) REFERENCES Wallet(WalletID),
     FOREIGN KEY (BookingID) REFERENCES Booking(id),
     FOREIGN KEY (BranchID) REFERENCES HotelBranch(id),
-    FOREIGN KEY (CreatedBy) REFERENCES UserAccount(id)
+    FOREIGN KEY (CreatedBy) REFERENCES UserAccount(id),
+	FOREIGN KEY (BankAccountID) REFERENCES BankAccount(BankAccountID),
 );
 
 -- Giả sử WalletID:
@@ -962,16 +963,16 @@ INSERT INTO WalletTransaction
 (WalletID, Amount, TransactionType, Description, BookingID, BranchID,BankAccountNumber, CreatedBy, Status)
 VALUES
 -- U001: Nạp tiền vào ví
-(1, 1000000, 'Deposit', N'Nạp 1 triệu vào ví', NULL, NULL,'0123456789', 'U001', 'Success'),
+(1, 1000000, 'Deposit', N'Nạp 1 triệu vào ví', NULL, NULL,1, 'U001', 'Success'),
 
 -- U001: Thanh toán đơn đặt phòng (BookingID = 2, branch_id = 1)
-(1, 800000, 'Payment', N'Thanh toán đơn đặt phòng #2', 2, 1,'0123456789', 'U001', 'Success'),
+(1, 800000, 'Payment', N'Thanh toán đơn đặt phòng #2', 2, 1,1, 'U001', 'Success'),
 
 -- U001: Hoàn tiền đơn đã hủy (BookingID = 6, branch_id = 3)
-(1, 800000, 'Refund', N'Hoàn tiền do hủy đơn phòng #2', 6, 3,'0123456789', 'U003', 'Success'),
+(1, 800000, 'Refund', N'Hoàn tiền do hủy đơn phòng #2', 6, 3,1, 'U003', 'Success'),
 
 -- U002: Yêu cầu rút tiền
-(2, 300000, 'Withdraw', N'Yêu cầu rút tiền về tài khoản ngân hàng', NULL, NULL,'1122334455', 'U002', 'Pending'),
+(2, 300000, 'Withdraw', N'Yêu cầu rút tiền về tài khoản ngân hàng', NULL, NULL,3, 'U002', 'Pending'),
 
 -- U003: Thanh toán thất bại (BookingID = 11, branch_id = 1)
-(3, 1000000, 'Payment', N'Thanh toán đơn đặt phòng #11 không thành công', 11, 1,'5566778899', 'U003', 'Failed');
+(3, 1000000, 'Payment', N'Thanh toán đơn đặt phòng #11 không thành công', 11, 1,4, 'U003', 'Failed');
