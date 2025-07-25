@@ -172,8 +172,8 @@
                             <div class="modal-content">
                                 <span class="close" onclick="closeWithdrawModal()">×</span>
                                 <h3>Withdraw</h3>
-                                <form action="" method="post" id="withdrawForm">
-                                    <input type="hidden" name="action" value="deposit" />
+                                <form action="myWalletEventHandler" method="post" id="withdrawForm">
+                                    <input type="hidden" name="action" value="withdraw" />
                                     <p style="text-align: start" >Your money: <strong> <fmt:formatNumber value="${wallet.getBalance()}" type="currency"/> </strong></p>
                                     <div class="modal-row">
                                         <div class="form__group">
@@ -332,7 +332,7 @@
                                             <td>${r.getTransactionType()}</td>
                                             <td><fmt:formatNumber value="${r.getAmount()}" type="currency"/></td>
                                             <td>${r.getDescription()}</td>
-                                            <td>${r.getBankAccountNumber()}</td>
+                                            <td>${r.getBankAccount().getAccountNumber()}</td>
                                             <td>${r.getStatus()}</td>
                                             <td>${r.getCreatedAt()}</td>
                                         </tr>

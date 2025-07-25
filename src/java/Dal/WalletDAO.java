@@ -5,6 +5,7 @@
 package Dal;
 
 import Model.Wallet;
+import java.sql.Timestamp;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -53,6 +54,33 @@ public class WalletDAO extends DBcontext.DBContext {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public Wallet getWalletById(int walletId) {
+        Wallet wallet = null;
+        String sql = "SELECT WalletID, UserID, Balance, UpdatedAt FROM Wallet WHERE WalletID = ?";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+
+            ps.setInt(1, walletId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                int WalletID = rs.getInt("WalletID");
+                String UserID = rs.getString("UserID");
+                double Balance = rs.getDouble("Balance");
+                Timestamp UpdatedAt = rs.getTimestamp("UpdatedAt");
+
+                wallet = new Wallet(WalletID, UserID, Balance, UpdatedAt);
+            }
+
+            rs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return wallet;
     }
 
     public static void main(String[] args) {
