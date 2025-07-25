@@ -103,7 +103,7 @@ public class SuccessServlet extends HttpServlet {
                 transaction.setBranchID(0);
                 transaction.setCreatedBy(userId);
                 transaction.setStatus("Success"); // hoặc "Pending", "Failed"
-                transaction.setBankAccountNumber(null);
+                transaction.setBankAccountID(0);
                 transactionDAO.addWalletTransaction(transaction);
                 
             } else {

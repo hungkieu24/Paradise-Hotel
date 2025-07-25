@@ -36,7 +36,19 @@
         <%@ include file="./header.jsp"%>
 
         <main>
-            <div class="container margin_120_95">
+            <div class="hero medium-height jarallax" data-jarallax data-speed="0.2">
+                <img class="jarallax-img" src="img/registerbg.jpg" alt="">
+                <div class="wrapper opacity-mask d-flex align-items-center justify-content-center text-center animate_hero" data-opacity-mask="rgba(0, 0, 0, 0.5)">
+                    <div class="container">
+                        <small class="slide-animated one">Luxury Hotel Experience</small>
+                        <h1 class="slide-animated two">About Paradise Hotel</h1>
+                    </div>
+                </div>
+            </div>
+            <!-- /Background Img Parallax -->
+
+
+            <div class="container margin_120_95" id="first_section">
                 <div class="row justify-content-center">
                     <div class="col-lg-8">
                         <div class="title text-center mb-5">
@@ -61,11 +73,15 @@
                             <div class="hotel-policy">
                                 <h4>Terms, Policies & Rules</h4>
                                 <ul>
-                                    <li><strong>Check-in/Check-out:</strong> Standard check-in time is 2:00 PM and check-out is 12:00 PM. Early check-in or late check-out is subject to availability and may incur additional charges.</li>
+                                    <li><strong>Check-in/Check-out:</strong> Standard check-in time is 8:00 AM and check-out is 12:00 PM. Early check-in or late check-out is subject to availability and may incur additional charges.</li>
                                     <li><strong>Payment Methods:</strong> We accept Visa, MasterCard, JCB, bank transfers, selected e-wallets, and direct payment at some partner hotels.</li>
-                                    <li><strong>Deposit & Cancellation:</strong> A deposit of 10-30% may be required. Cancellation policy is specified for each booking and hotel. Cancellation fees (if any) will be deducted from the deposit.</li>
-                                    <li><strong>Refunds:</strong> Refunds are processed within 5-10 business days after eligible cancellations and are made via the original payment method.</li>
-                                    <li><strong>Security:</strong> Your payment information is protected according to PCI DSS standards. We do not store card information in our system. All transactions are SSL-secured.</li>
+                                    <li>
+                                        <strong>Cancellation & Refunds:</strong> <br>
+                                        - Cancellations within 12 hours: 100% refund the money you paid.<br>
+                                        - Cancellations within 24 hours: 75% refund the money you paid.<br>
+                                        - Cancellations after 2 days: No refund.<br>
+                                        Refunds are processed within 1-2 business days after eligible cancellations and made via the original payment method.
+                                    </li>                                    <li><strong>Security:</strong> Your payment information is protected according to PCI DSS standards. We do not store card information in our system. All transactions are SSL-secured.</li>
                                     <li><strong>Rank & Points:</strong> For every 100,000 VND spent, you earn 1 point. Membership levels:
                                         <ul>
                                             <li>Member: Spending from 0 VND</li>
@@ -94,7 +110,7 @@
         <footer class="revealed">
             <div class="footer_bg">
                 <div class="gradient_over"></div>
-                <div class="background-image" data-background="url(img/rooms/3.jpg)"></div>
+                <div class="background-image" data-background="url(img/registerbg.jpg)"></div>
             </div>
             <div class="container">
                 <div class="row move_content">

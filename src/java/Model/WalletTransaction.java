@@ -16,28 +16,37 @@ public class WalletTransaction {
     private double Amount;
     private String TransactionType;
     private String Description;
-    private String BankAccountNumber;
+    private int BankAccountID;
     private int BookingID;
     private int BranchID;
     private String CreatedBy;
     private String Status;
     private Timestamp CreatedAt;
+    private BankAccount bankAccount;
 
     public WalletTransaction() {
     }
 
-    public WalletTransaction(int TransactionID, int WalletID, double Amount, String TransactionType, String Description, String BankAccountNumber, int BookingID, int BranchID, String CreatedBy, String Status, Timestamp CreatedAt) {
+    public WalletTransaction(int TransactionID, int WalletID, double Amount, String TransactionType, String Description, int BankAccountID, int BookingID, int BranchID, String CreatedBy, String Status, Timestamp CreatedAt) {
         this.TransactionID = TransactionID;
         this.WalletID = WalletID;
         this.Amount = Amount;
         this.TransactionType = TransactionType;
         this.Description = Description;
-        this.BankAccountNumber = BankAccountNumber;
+        this.BankAccountID = BankAccountID;
         this.BookingID = BookingID;
         this.BranchID = BranchID;
         this.CreatedBy = CreatedBy;
         this.Status = Status;
         this.CreatedAt = CreatedAt;
+    }
+
+    public BankAccount getBankAccount() {
+        return bankAccount;
+    }
+
+    public void setBankAccount(BankAccount bankAccount) {
+        this.bankAccount = bankAccount;
     }
 
     public int getTransactionID() {
@@ -120,18 +129,16 @@ public class WalletTransaction {
         this.CreatedAt = CreatedAt;
     }
 
-    public String getBankAccountNumber() {
-        return BankAccountNumber;
+    public int getBankAccountID() {
+        return BankAccountID;
     }
 
-    public void setBankAccountNumber(String BankAccountNumber) {
-        this.BankAccountNumber = BankAccountNumber;
+    public void setBankAccountID(int BankAccountID) {
+        this.BankAccountID = BankAccountID;
     }
 
-    @Override
-    public String toString() {
-        return "WalletTransaction{" + "TransactionID=" + TransactionID + ", WalletID=" + WalletID + ", Amount=" + Amount + ", TransactionType=" + TransactionType + ", Description=" + Description + ", BankAccountNumber=" + BankAccountNumber + ", BookingID=" + BookingID + ", BranchID=" + BranchID + ", CreatedBy=" + CreatedBy + ", Status=" + Status + ", CreatedAt=" + CreatedAt + '}';
-    }
+    
+
     
     
 }

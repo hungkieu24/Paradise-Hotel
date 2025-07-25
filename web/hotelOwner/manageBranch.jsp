@@ -55,6 +55,10 @@
                         <i class="fa-solid fa-dollar-sign"></i>
                         <span>Investment</span>
                     </a>
+                    <a href="./withdraw" class="nav-item" data-page="upload">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                        <span>Withdraw</span>
+                    </a>
                     <a href="./manageBranch" class="nav-item active" data-page="upload">
                         <i class="fa-solid fa-hotel"></i>
                         <span>Manage Branch</span>
@@ -67,7 +71,7 @@
                 <!-- Header -->
                 <header class="header">
                     <div class="header-left">
-                        <a href="./financialDashboard" style="text-decoration: none">
+                        <a href="./manageBranch" style="text-decoration: none">
                             <h1 id="page-title">Manage Branch</h1>
                         </a>
                         <p id="page-description">View branches, add and adjust for all hotel branche</p>
