@@ -124,7 +124,7 @@
                                 <input type="hidden" name="action" value="search">
                                 <div class="search-box">
                                     <i class="fas fa-search"></i>
-                                    <input type="text" name="searchKeyword" id="roomSearch" value="${param.searchKeyword}" placeholder="Search branch..." >
+                                    <input type="text" name="searchKeyword" id="roomSearch" value="${param.searchKeyword}" placeholder="Search amenity..." >
                                 </div>
                             </form>
                             <button id="add-branch-btn" class="btn btn-primary js-toggle" toggle-target="#add-modal">

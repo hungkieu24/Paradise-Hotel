@@ -343,7 +343,7 @@
                             </div>
 
                             <div class="wallet-info" style="margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                                <h4>Wallet Balance:</h4>
+                                <h4>Wallet Balance:<a href="./myWallet"><h6>(Go to wallet)</h6></a></h4>
                                 <p><strong><span id="wallet-balance">${sessionScope.wallet.balance} VND</span></strong></p>
                                 <p id="wallet-status" style="color: green;">✓ Sufficient balance</p>
                             </div>
@@ -368,16 +368,16 @@
         <footer class="revealed">
             <div class="footer_bg">
                 <div class="gradient_over"></div>
-                <div class="background-image" data-background="url(img/rooms/3.jpg)"></div>
+                <div class="background-image" data-background="url(img/registerbg.jpg)"></div>
             </div>
             <div class="container">
                 <div class="row move_content">
                     <div class="col-lg-4 col-md-12">
                         <h5>Contacts</h5>
                         <ul>
-                            <li>Baker Street 567, Los Angeles 11023<br>California - US<br><br></li>
-                            <li><strong><a href="#0">info@Paradisehotel.com</a></strong></li>
-                            <li><strong><a href="#0">+434 43242232</a></strong></li>
+                            <li>FPT University<br>HaNoi-VN<br><br></li>
+                            <li><strong><a href="#0">hotelparadise.work@gmail.com</a></strong></li>
+                            <li><strong><a href="#0">+84 867298400</a></strong></li>
                         </ul>
                         <div class="social">
                             <ul>
@@ -392,12 +392,8 @@
                         <h5>Explore</h5>
                         <div class="footer_links">
                             <ul>
-                                <li><a href="index.html">Home</a></li>
-                                <li><a href="about.html">About Us</a></li>
-                                <li><a href="room-list-1.html">Rooms &amp; Suites</a></li>
-                                <li><a href="news-1.html">News &amp; Events</a></li>
-                                <li><a href="contacts.html">Contacts</a></li>
-                                <li><a href="about.html">Terms and Conditions</a></li>
+                                <li><a href="homepage">Home</a></li>
+                                <li><a href="about.jsp">About Us</a></li>
                             </ul>
                         </div>
                     </div>
@@ -420,7 +416,7 @@
             <!--/container-->
             <div class="copy">
                 <div class="container">
-                    © Paradise - by <a href="#">Ansonika</a>
+                    © Paradise - by <a href="#">SE1912_Group2</a>
                 </div>
             </div>
         </footer>

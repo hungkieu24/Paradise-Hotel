@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -65,6 +66,16 @@ public class SearchPromotionsServlet extends HttpServlet {
             int totalPage = (int) Math.ceil((double) totalPromotions / pageSize);
 
             List<SeasonalPromotion> promotions = p.getSearchPromotionByBranchId(branchId, search, status, startDate, endDate, page, pageSize);
+            LocalDate today = LocalDate.now();
+            for (SeasonalPromotion pro : promotions) {
+                LocalDate endDa = pro.getEndDate().toLocalDate();
+
+                if (endDa.isBefore(today) && pro.getStatus().equalsIgnoreCase("Active")) {
+                    // Cập nhật trạng thái trong DB nếu đã hết hạn
+                    pro.setStatus("Inactive");
+                    p.updateStatus(pro.getId(), "Inactive");
+                }
+            }
             // set Attribute
             request.setAttribute("branchId", branchId);
             request.setAttribute("username", username);

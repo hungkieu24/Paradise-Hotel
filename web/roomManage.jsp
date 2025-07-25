@@ -137,7 +137,7 @@
                         <i class="fas fa-users"></i>
                         <span class="menu-text">Manage membership</span>
                     </a>
-                    <a href="../login?action=logout" class="menu-item logout">
+                    <a href="login?action=logout" class="menu-item logout">
                         <i class="fas fa-sign-out-alt"></i>
                         <span class="menu-text">logout</span>
                     </a>
@@ -533,26 +533,38 @@
         // js để gửi form soft delete
         <script>
             function deleteRoom(roomId) {
-                if (confirm("Are you sure you want to delete this room?")) {
-                    let form = document.createElement('form');
-                    form.method = 'post';
-                    form.action = 'deleteRoom';
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Tạo form để submit POST
+                        let form = document.createElement('form');
+                        form.method = 'post';
+                        form.action = 'deleteRoom';
 
-                    let inputAction = document.createElement('input');
-                    inputAction.type = 'hidden';
-                    inputAction.name = 'action';
-                    inputAction.value = 'delete';
-                    form.appendChild(inputAction);
+                        let inputAction = document.createElement('input');
+                        inputAction.type = 'hidden';
+                        inputAction.name = 'action';
+                        inputAction.value = 'delete';
+                        form.appendChild(inputAction);
 
-                    let inputId = document.createElement('input');
-                    inputId.type = 'hidden';
-                    inputId.name = 'roomId';
-                    inputId.value = roomId;
-                    form.appendChild(inputId);
+                        let inputId = document.createElement('input');
+                        inputId.type = 'hidden';
+                        inputId.name = 'roomId';
+                        inputId.value = roomId;
+                        form.appendChild(inputId);
 
-                    document.body.appendChild(form);
-                    form.submit();
-                }
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
             }
         </script>
         //edit
@@ -630,7 +642,7 @@
                     icon: 'success',
                     title: 'Success',
                     text: successMsg
-                }).then({
+                }).then(() => {
                     window.location.href = returnPage;
                 });
             } else if (warningMsg && warningMsg.trim() !== "") {

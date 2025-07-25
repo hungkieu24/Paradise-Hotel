@@ -280,15 +280,15 @@
                         <i class="fas fa-concierge-bell"></i>
                         <span class="menu-text">Manage service</span>
                     </a>
-                    <a href="promotions" class="menu-item active">
+                    <a href="promotions" class="menu-item">
                         <i class="fas fa-tags"></i>
                         <span class="menu-text">Manage promotion</span>
                     </a>
-                    <a href="manager-membership" class="menu-item">
+                    <a href="manager-membership" class="menu-item active">
                         <i class="fas fa-users"></i>
                         <span class="menu-text">Manage membership</span>
                     </a>
-                    <a href="../login?action=logout" class="menu-item logout">
+                    <a href="login?action=logout" class="menu-item logout">
                         <i class="fas fa-sign-out-alt"></i>
                         <span class="menu-text">logout</span>
                     </a>

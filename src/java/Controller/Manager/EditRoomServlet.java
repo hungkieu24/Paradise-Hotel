@@ -217,7 +217,7 @@ public class EditRoomServlet extends HttpServlet {
             int totalPages = (int) Math.ceil((double) totalRooms / pageSize);
             List<Room> rooms = rDao.getAllRoomStatusForManager(branchId, page, pageSize, checkIn);
             Room roomObj = rDao.getRoomById(roomId);
-            List<RoomType> roomTypes = rt.getAllRoomType();
+            List<RoomType> roomTypes = rt.getRoomTypesByBranchId(branchId);
             Map<String, List<String>> roomImageMap = new HashMap<>();
             for (Room r : rooms) {
                 String room_number = r.getRoomNumber();

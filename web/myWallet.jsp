@@ -292,7 +292,7 @@
                                 </form>
                             </div>
                         </div>
-                        
+
                         <!--delete modal-->
                         <div id="deleteModal" class="modal" style="display: none;">
                             <div class="modal-content">
@@ -302,7 +302,7 @@
                                     <input type="hidden" name="action" value="delete" />
                                     <input type="hidden" id="idDelete" name="idDelete" />
                                     <p style="text-align: start" >Are you sure you want to delete this bank account?</strong></p>
-                                    
+
                                     <div class="modal-action">
                                         <button type="submit" class="btn_1">Delete</button>
                                         <button type="button" class="btn_1 gray" onclick="closeDeleteModal()">Cancel</button>
@@ -368,20 +368,19 @@
             </div>
 
         </main>
-
         <footer class="revealed">
             <div class="footer_bg">
                 <div class="gradient_over"></div>
-                <div class="background-image" data-background="url(img/rooms/3.jpg)"></div>
+                <div class="background-image" data-background="url(img/registerbg.jpg)"></div>
             </div>
             <div class="container">
                 <div class="row move_content">
                     <div class="col-lg-4 col-md-12">
                         <h5>Contacts</h5>
                         <ul>
-                            <li>Baker Street 567, Los Angeles 11023<br>California - US<br><br></li>
-                            <li><strong><a href="#0">info@Paradisehotel.com</a></strong></li>
-                            <li><strong><a href="#0">+434 43242232</a></strong></li>
+                            <li>FPT University<br>HaNoi-VN<br><br></li>
+                            <li><strong><a href="#0">hotelparadise.work@gmail.com</a></strong></li>
+                            <li><strong><a href="#0">+84 867298400</a></strong></li>
                         </ul>
                         <div class="social">
                             <ul>
@@ -397,11 +396,7 @@
                         <div class="footer_links">
                             <ul>
                                 <li><a href="homepage">Home</a></li>
-                                <li><a href="about.html">About Us</a></li>
-                                <li><a href="room-list-1.html">Rooms &amp; Suites</a></li>
-                                <li><a href="news-1.html">News &amp; Events</a></li>
-                                <li><a href="contacts.html">Contacts</a></li>
-                                <li><a href="about.html">Terms and Conditions</a></li>
+                                <li><a href="about.jsp">About Us</a></li>
                             </ul>
                         </div>
                     </div>
@@ -424,11 +419,10 @@
             <!--/container-->
             <div class="copy">
                 <div class="container">
-                    © Paradise - by <a href="#">Ansonika</a>
+                    © Paradise - by <a href="#">SE1912_Group2</a>
                 </div>
             </div>
         </footer>
-        <!-- /footer -->
 
         <div class="progress-wrap">
             <svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
@@ -518,7 +512,7 @@
                 document.getElementById("addBankAccountModal").style.display = "none";
             }
             function openDeleteModal(IdDelete) {
-            document.getElementById("idDelete").value = IdDelete;
+                document.getElementById("idDelete").value = IdDelete;
                 document.getElementById("deleteModal").style.display = "block";
             }
 
@@ -526,8 +520,8 @@
                 document.getElementById("deleteModal").style.display = "none";
             }
         </script>
-          
-       
-       
+
+
+
     </body>
 </html>

@@ -222,7 +222,7 @@ public class BookingServlet extends HttpServlet {
 
         if (action == null) {
             setSessionMessage(session, "Action is required", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         }
 
@@ -236,7 +236,7 @@ public class BookingServlet extends HttpServlet {
 
         if (checkInStr == null || checkOutStr == null || checkInStr.isEmpty() || checkOutStr.isEmpty()) {
             setSessionMessage(session, "Check-in and Check-out must not be empty", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         }
 
@@ -251,19 +251,19 @@ public class BookingServlet extends HttpServlet {
         long durationMillis = checkOutTimestamp.getTime() - checkInTimestamp.getTime();
         if (checkInTimestamp.before(now) || checkOutTimestamp.before(now)) {
             setSessionMessage(session, "Dates must be in the future", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         } else if (!checkOutTimestamp.after(checkInTimestamp)) {
             setSessionMessage(session, "Check-out must be after Check-in", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         } else if (durationMillis < 3600 * 1000) {
             setSessionMessage(session, "Booking duration must be at least 1 hour", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         } else if (durationMillis > (365L * 24 * 3600 * 1000)) {
             setSessionMessage(session, "Booking duration cannot exceed 1 year", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         }
         double totalPrice = Double.parseDouble(totalPriceStr);
@@ -295,7 +295,7 @@ public class BookingServlet extends HttpServlet {
 
             if (bookingId == null) {
                 setSessionMessage(session, "Failed to create booking", "error");
-                response.sendRedirect("./booking");
+                response.sendRedirect("./viewRoomTypeList");
                 return;
             }
 
@@ -321,7 +321,7 @@ public class BookingServlet extends HttpServlet {
 
             if (bookingId == null) {
                 setSessionMessage(session, "Failed to create bookingy", "error");
-                response.sendRedirect("./booking");
+                response.sendRedirect("./viewRoomTypeList");
                 return;
             }
 
@@ -356,7 +356,7 @@ public class BookingServlet extends HttpServlet {
 
                     if (voucher != null && totalPrice < voucher.getMin_price()) {
                         setSessionMessage(session, "Order is not eligible to use this voucher", "error");
-                        response.sendRedirect("./booking");
+                        response.sendRedirect("./viewRoomTypeList");
                         return;
                     }
 
@@ -372,7 +372,7 @@ public class BookingServlet extends HttpServlet {
 
             if (bookingIdStr == null || amountStr == null) {
                 setSessionMessage(session, "Missing parameters", "error");
-                response.sendRedirect("./booking");
+                response.sendRedirect("./viewRoomTypeList");
                 return;
             }
 
@@ -383,13 +383,13 @@ public class BookingServlet extends HttpServlet {
 
             if (wallet == null) {
                 setSessionMessage(session, "Wallet not found", "error");
-                response.sendRedirect("./booking");
+                response.sendRedirect("./viewRoomTypeList");
                 return;
             }
 
             if (wallet.getBalance() < amount) {
                 setSessionMessage(session, "Insufficient wallet balance", "error");
-                response.sendRedirect("./booking");
+                response.sendRedirect("./viewRoomTypeList");
                 return;
             }
 
@@ -422,13 +422,13 @@ public class BookingServlet extends HttpServlet {
                 return;
             } else {
                 setSessionMessage(session, "Payment failed", "error");
-                response.sendRedirect("./booking");
+                response.sendRedirect("./viewRoomTypeList");
                 return;
             }
 
         } else {
             setSessionMessage(session, "Failed to save booking details", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         }
     }
@@ -462,7 +462,7 @@ public class BookingServlet extends HttpServlet {
 
         if (checkInStr == null || checkOutStr == null || checkInStr.isEmpty() || checkOutStr.isEmpty()) {
             setSessionMessage(session, "Check-in and Check-out must not be empty", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         }
 
@@ -478,19 +478,19 @@ public class BookingServlet extends HttpServlet {
         if (checkInTimestamp.before(now) || checkOutTimestamp.before(now)) {
             response.getWriter().write("{\"status\":\"error\", \"message\":\"Dates must be in the future\"}");
             setSessionMessage(session, "Dates must be in the future", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         } else if (!checkOutTimestamp.after(checkInTimestamp)) {
             setSessionMessage(session, "Check-out must be after Check-in", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         } else if (durationMillis < 3600 * 1000) {
             setSessionMessage(session, "Booking duration must be at least 1 hour", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         } else if (durationMillis > (365L * 24 * 3600 * 1000)) {
             setSessionMessage(session, "Booking duration cannot exceed 1 year", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         }
         double totalPrice = Double.parseDouble(totalPriceStr);
@@ -507,7 +507,7 @@ public class BookingServlet extends HttpServlet {
 
         if (bookingId == null) {
             setSessionMessage(session, "Failed to create rebook", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         }
 
@@ -544,7 +544,7 @@ public class BookingServlet extends HttpServlet {
 
                     if (voucher != null && totalPrice < voucher.getMin_price()) {
                         setSessionMessage(session, "Order is not eligible to use this voucher", "error");
-                        response.sendRedirect("./booking");
+                        response.sendRedirect("./viewRoomTypeList");
                         return;
                     }
 
@@ -560,7 +560,7 @@ public class BookingServlet extends HttpServlet {
 
             if (bookingIdStr == null || amountStr == null) {
                 setSessionMessage(session, "Missing parameters", "error");
-                response.sendRedirect("./booking");
+                response.sendRedirect("./viewRoomTypeList");
                 return;
             }
 
@@ -571,13 +571,13 @@ public class BookingServlet extends HttpServlet {
 
             if (wallet == null) {
                 setSessionMessage(session, "Wallet not found", "error");
-                response.sendRedirect("./booking");
+                response.sendRedirect("./viewRoomTypeList");
                 return;
             }
 
             if (wallet.getBalance() < amount) {
                 setSessionMessage(session, "Insufficient wallet balance", "error");
-                response.sendRedirect("./booking");
+                response.sendRedirect("./viewRoomTypeList");
                 return;
             }
 
@@ -610,13 +610,13 @@ public class BookingServlet extends HttpServlet {
                 return;
             } else {
                 setSessionMessage(session, "Payment failed", "error");
-                response.sendRedirect("./booking");
+                response.sendRedirect("./viewRoomTypeList");
                 return;
             }
 
         } else {
             setSessionMessage(session, "Failed to save booking details", "error");
-            response.sendRedirect("./booking");
+            response.sendRedirect("./viewRoomTypeList");
             return;
         }
     }

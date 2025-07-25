@@ -95,10 +95,8 @@ public class SearchRoomServlet extends HttpServlet {
 
         List<Room> rooms = rDao.getRoomsByBranch(branchId, status, roomType, search, page, pageSize, checkIn);
         if (rooms.isEmpty()) {
-            session.setAttribute("warning", "No rooms found matching filter criteria.");
-            session.setAttribute("returnPage", "searchRooms");
-            response.sendRedirect("searchRooms");
-            return;
+            request.setAttribute("warning", "No rooms found matching filter criteria.");
+            request.setAttribute("returnPage", "searchRooms");
         }
         // Build roomImageMap
         Map<String, List<String>> roomImageMap = new HashMap<>();
