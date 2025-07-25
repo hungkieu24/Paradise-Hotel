@@ -18,8 +18,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import DBcontext.DBContext;
+import Model.Room;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -899,6 +904,144 @@ public class RoomTypeDAO extends DBContext {
         }
 
         return amenities;
+    }
+
+    public int getTotalAvailableRooms(int roomTypeId, int branchId, LocalDateTime checkIn, LocalDateTime checkOut) {
+        List<Room> rooms = new ArrayList<>();
+
+        // 1. Lấy toàn bộ phòng theo roomTypeId và branchId
+        String sql = "SELECT r.id, r.status FROM Room r "
+                + "JOIN RoomType rt ON r.room_type_id = rt.id "
+                + "WHERE r.is_deleted = 0 AND rt.is_deleted = 0 "
+                + "AND r.branch_id = ? AND r.room_type_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, branchId);
+            stmt.setInt(2, roomTypeId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Room room = new Room();
+                room.setId(rs.getInt("id"));
+                room.setStatus(rs.getString("status"));
+                rooms.add(room);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+
+        // 2. Xác định phòng đang "Occupied"
+        try {
+            String occupiedSql = "SELECT ra.room_id "
+                    + "FROM RoomAssignment ra "
+                    + "JOIN Booking b ON ra.booking_id = b.id "
+                    + "WHERE b.status = 'CheckedIn' "
+                    + "AND b.check_in <= ? AND b.check_out >= ?";
+
+            try (PreparedStatement ps = connection.prepareStatement(occupiedSql)) {
+                ps.setTimestamp(1, Timestamp.valueOf(checkOut));
+                ps.setTimestamp(2, Timestamp.valueOf(checkIn));
+                ResultSet rs = ps.executeQuery();
+                Set<Integer> occupiedRoomIds = new HashSet<>();
+                while (rs.next()) {
+                    occupiedRoomIds.add(rs.getInt("room_id"));
+                }
+                for (Room room : rooms) {
+                    if (occupiedRoomIds.contains(room.getId()) && !room.getStatus().equalsIgnoreCase("Maintenance")) {
+                        room.setStatus("Occupied");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // 3. Gán trạng thái "Booked"
+        try {
+            String bookedSql = "SELECT brt.room_type_id, SUM(brt.quantity) AS total_booked "
+                    + "FROM Booking b "
+                    + "JOIN BookingRoomType brt ON b.id = brt.booking_id "
+                    + "WHERE b.status IN ('Pending', 'Paid') AND b.is_deleted = 0 "
+                    + "AND b.branch_id = ? AND brt.room_type_id = ? "
+                    + "AND b.check_in <= ? AND b.check_out >= ? "
+                    + "GROUP BY brt.room_type_id";
+
+            try (PreparedStatement ps = connection.prepareStatement(bookedSql)) {
+                ps.setInt(1, branchId);
+                ps.setInt(2, roomTypeId);
+                ps.setTimestamp(3, Timestamp.valueOf(checkOut));
+                ps.setTimestamp(4, Timestamp.valueOf(checkIn));
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next()) {
+                    int totalBooked = rs.getInt("total_booked");
+                    int count = 0;
+                    for (Room room : rooms) {
+                        if (count >= totalBooked) {
+                            break;
+                        }
+                        if (room.getStatus().equalsIgnoreCase("Available")) {
+                            room.setStatus("Booked");
+                            count++;
+                        }
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // 4. Đếm số phòng không phải Available
+        long totalUnavailable = rooms.stream()
+                .filter(r -> r.getStatus().equalsIgnoreCase("Available"))
+                .count();
+
+        return (int) totalUnavailable;
+    }
+
+    public List<RoomType> searchAvailableRoomTypesV2(LocalDate checkIn, LocalDate checkOut, int guests, int branchId) {
+        List<RoomType> availableRoomTypes = new ArrayList<>();
+
+        // 1. Lấy danh sách tất cả room types trong chi nhánh
+        String sql = """
+        SELECT rt.id, rt.name, rt.description, rt.base_price, rt.capacity_adult, rt.capacity_child, rt.image_url
+        FROM RoomType rt
+        WHERE rt.is_deleted = 0
+    """;
+        LocalDateTime in = checkIn.atTime(LocalTime.MIN);
+        LocalDateTime out = checkOut.atTime(LocalTime.MAX);
+
+        try (PreparedStatement st = connection.prepareStatement(sql)) {
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                int rtId = rs.getInt("id");
+                int capacity = rs.getInt("capacity_adult") + rs.getInt("capacity_child");
+
+                if (capacity < guests) {
+                    continue; // Bỏ qua nếu không đủ sức chứa
+                }
+                // 2. Đếm số phòng AVAILABLE của loại này tại branch
+               int totalRooms = getTotalAvailableRooms(rtId, branchId,in, out);
+               
+
+                if (totalRooms > 0) {
+                    RoomType roomType = new RoomType(
+                            rtId,
+                            rs.getString("name"),
+                            rs.getString("description"),
+                            rs.getDouble("base_price"),
+                            rs.getInt("capacity_adult"),
+                            rs.getInt("capacity_child"),
+                            rs.getString("image_url")
+                    );
+                    availableRoomTypes.add(roomType);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return availableRoomTypes;
     }
 
 }
