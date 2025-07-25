@@ -52,10 +52,25 @@
     </head>
 
     <body> 
+        <c:if test="${not empty sessionScope.message}">
+            <div id="toastMessage" class="toast-message ${sessionScope.messageType}">
+                <c:choose>
+                    <c:when test="${sessionScope.messageType == 'success'}">
+                        <i class="fa fa-check-circle"></i>
+                    </c:when>
+                    <c:when test="${sessionScope.messageType == 'error'}">
+                        <i class="fa fa-times-circle"></i>
+                    </c:when>
+                </c:choose>
+                ${sessionScope.message}
+            </div>
 
-        <div id="preloader">
-            <div data-loader="circle-side"></div>
-        </div><!-- /Page Preload -->
+            <c:remove var="message" scope="session" />
+            <c:remove var="messageType" scope="session" />
+        </c:if>
+        <!--        <div id="preloader">
+                    <div data-loader="circle-side"></div>
+                </div> /Page Preload -->
 
         <div class="layer"></div><!-- Opacity Mask -->
 
@@ -139,12 +154,7 @@
 
             <div class="checkout-container">
                 <form action="booking" method="post" id="booking-form">
-                    <input type="hidden" name="roomTypeId" value="${empty param.roomTypeId ? '' : param.roomTypeId}">
-                    <input type="hidden" name="action" value="${param.action}">
-                    <c:if test="${param.rebook == '1'}">
-                        <input type="hidden" name="rebook" value="1">
-                        <input type="hidden" name="action" value="book">
-                    </c:if>
+
                     <div class="left-column">
 
                         <!-- Customer info -->
@@ -332,11 +342,22 @@
                                 </strong>
                             </div>
 
-                            <!-- Submit Button inside summary -->
-                            <form id="payment-form" action="vnpayajax" method="post">
-                                <input type="hidden" name="bookingId" id="bookingId" value="">
-                                <button type="submit" class="btn btn-danger">Book now</button>
-                            </form>
+                            <div class="wallet-info" style="margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                                <h4>Wallet Balance:</h4>
+                                <p><strong><span id="wallet-balance">${sessionScope.wallet.balance} VND</span></strong></p>
+                                <p id="wallet-status" style="color: green;">✓ Sufficient balance</p>
+                            </div>
+
+
+                            <input type="hidden" name="bookingId" id="bookingId" value="">
+                            <input type="hidden" name="amountToPay" id="amountToPay" value="">
+                            <input type="hidden" name="roomTypeId" value="${empty param.roomTypeId ? '' : param.roomTypeId}">
+                            <input type="hidden" name="action" value="${param.action}">
+                            <c:if test="${param.rebook == '1'}">
+                                <input type="hidden" name="rebook" value="1">
+                            </c:if>
+                            <button type="submit" class="btn btn-danger">Book now</button>
+                            <!--                            </form>-->
 
                         </div>
                     </div>
@@ -417,6 +438,7 @@
         <script src="js/common_scripts.js"></script>
         <script src="js/common_functions.js"></script>
         <script src="./js/validationForm.js"></script>
+        <script src="./js/toastMessage.js"></script>                
 
         <script>
             document.addEventListener("DOMContentLoaded", function () {
@@ -523,7 +545,22 @@
                     document.getElementById("voucher-discount").textContent = voucherDiscount.toLocaleString("vi-VN") + " VND";
                     document.getElementById("final-total").textContent = finalTotal.toLocaleString("vi-VN") + " VND";
                     document.getElementById("finalTotalPrice").value = finalTotal;
+                    document.getElementById("amountToPay").value = finalTotal;
                     document.getElementById("selectedVoucherId").value = selectedVoucher ? selectedVoucher.value : "";
+
+                    const walletBalance = parseFloat("${sessionScope.wallet.balance}" || "0");
+                    const walletStatus = document.getElementById("wallet-status");
+
+                    if (finalTotal > walletBalance) {
+                        walletStatus.textContent = "❌ Insufficient wallet balance";
+                        walletStatus.style.color = "#e53935";
+                        document.querySelector('#booking-form button[type="submit"]').disabled = true;
+                    } else {
+                        walletStatus.textContent = "✓ Sufficient balance";
+                        walletStatus.style.color = "#4caf50";
+                        document.querySelector('#booking-form button[type="submit"]').disabled = false;
+                    }
+
                 }
 
                 // Attach input event
@@ -596,104 +633,7 @@
                 }, 3000);
             }
         </script>
-
         <div id="toast-message" class="toast hidden">Thông báo mẫu</div>
-
-        <!-- Submit logic script -->
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                const form = document.getElementById("booking-form");
-
-                form.addEventListener("submit", function (e) {
-                    e.preventDefault();
-
-                    const formData = new FormData(form);
-                    const params = new URLSearchParams();
-                    formData.forEach((value, key) => {
-                        params.append(key, value);
-                    });
-
-                    fetch("booking", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded"
-                        },
-                        body: params
-                    })
-                            .then(res => res.json())
-                            .then(data => {
-                                console.log(data);
-                                if (data.status === "success") {
-                                    var amountToPay = document.getElementById('finalTotalPrice').value;
-                                    var bookingId = data.bookingId; // Lấy từ response
-
-                                    var form = document.createElement('form');
-                                    form.method = 'POST';
-                                    form.action = 'vnpayajax';
-
-                                    var input1 = document.createElement('input');
-                                    input1.type = 'hidden';
-                                    input1.name = 'amountToPay';
-                                    input1.value = amountToPay;
-                                    form.appendChild(input1);
-
-                                    var input2 = document.createElement('input');
-                                    input2.type = 'hidden';
-                                    input2.name = 'bookingId';
-                                    input2.value = bookingId;
-                                    form.appendChild(input2);
-
-                                    document.body.appendChild(form);
-                                    form.submit();
-                                } else if (data.status === "error" && data.message) {
-                                    showToast("❌ " + data.message, "#e53935");
-                                } else {
-                                    showToast("❌ Booking failed!", "#e53935");
-                                }
-                            })
-                            .catch(error => {
-                                console.error("Error:", error);
-                                showToast("❌ Error occurred", "#e53935");
-                            });
-                });
-            });
-        </script>
-        <script>
-            document.getElementById('booking-form').addEventListener('submit', function (e) {
-                e.preventDefault();
-
-                var formData = new FormData(this);
-
-                // ✅ THÊM: Kiểm tra nếu là rebook thì thêm parameter
-                var urlParams = new URLSearchParams(window.location.search);
-                var isRebook = urlParams.get('rebook');
-                if (isRebook === '1') {
-                    formData.append('rebook', '1');
-                    formData.append('action', 'book'); // ✅ Đảm bảo có action
-                    console.log('Rebook mode - added action=book');
-                } else {
-                    // ✅ THÊM: Logic cho booking bình thường
-                    formData.append('action', 'manyRoom'); // hoặc 'oneRoom' tùy case
-                }
-
-                // Debug: In ra formData
-                for (let pair of formData.entries()) {
-                    console.log(pair[0] + ': ' + pair[1]);
-                }
-
-                fetch('booking', {
-                    method: 'POST',
-                    body: formData
-                })
-                        .then(res => res.json())
-                        .then(data => {
-                            console.log('Response:', data);
-                            if (data.status === "success") {
-                                // VNPay redirect logic
-                            }
-                        });
-            });
-        </script>
     </body>
 </html>
 

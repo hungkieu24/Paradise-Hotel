@@ -10,6 +10,7 @@
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<fmt:setLocale value="vi_VN" />
 
 <html lang="en">
 
@@ -192,7 +193,7 @@
                                             <fmt:formatDate value="${b.checkOut}" pattern="dd/MM/yyyy" />
                                         </p>
                                         <p class="card-text mb-1">RoomType: ${b.roomTypeName}</p>
-                                        <p class="card-text mb-1">Total Price: <fmt:formatNumber value="${b.totalPrice}" type="currency" currencySymbol="₫"/></p>
+                                        <p class="card-text mb-1">Total Price: <fmt:formatNumber value="${b.totalPrice}" type="currency"/></p>
                                         <p class="card-text mt-2" style="font-weight: bold; color:
                                            <c:choose>
                                                <c:when test="${b.status eq 'Completed'}">green</c:when>
@@ -223,18 +224,21 @@
                         </c:forEach>
                     </div>
                     <!-- Pagination -->
-                    <c:if test="${currentPage > 1}">
-                        <a href="bookingHistory?page=${currentPage - 1}&branchName=${param.branchName}&roomTypeName=${param.roomTypeName}&status=${param.status}" class="prev">Previous</a>
-                    </c:if>
+                    <div class="pagination">
 
-                    <c:forEach var="i" begin="1" end="${totalPages}">
-                        <a href="bookingHistory?page=${i}&branchName=${param.branchName}&roomTypeName=${param.roomTypeName}&status=${param.status}"
-                           class="${i == currentPage ? 'active' : ''}">${i}</a>
-                    </c:forEach>
+                        <c:if test="${currentPage > 1}">
+                            <a href="bookingHistory?page=${currentPage - 1}&branchName=${param.branchName}&roomTypeName=${param.roomTypeName}&status=${param.status}" class="prev">Previous</a>
+                        </c:if>
 
-                    <c:if test="${currentPage < totalPages}">
-                        <a href="bookingHistory?page=${currentPage + 1}&branchName=${param.branchName}&roomTypeName=${param.roomTypeName}&status=${param.status}" class="next">Next</a>
-                    </c:if>
+                        <c:forEach var="i" begin="1" end="${totalPages}">
+                            <a href="bookingHistory?page=${i}&branchName=${param.branchName}&roomTypeName=${param.roomTypeName}&status=${param.status}"
+                               class="${i == currentPage ? 'active' : ''}">${i}</a>
+                        </c:forEach>
+
+                        <c:if test="${currentPage < totalPages}">
+                            <a href="bookingHistory?page=${currentPage + 1}&branchName=${param.branchName}&roomTypeName=${param.roomTypeName}&status=${param.status}" class="next">Next</a>
+                        </c:if>
+                    </div>
 
 
                 </div>
