@@ -52,10 +52,25 @@
     </head>
 
     <body> 
+        <c:if test="${not empty sessionScope.message}">
+            <div id="toastMessage" class="toast-message ${sessionScope.messageType}">
+                <c:choose>
+                    <c:when test="${sessionScope.messageType == 'success'}">
+                        <i class="fa fa-check-circle"></i>
+                    </c:when>
+                    <c:when test="${sessionScope.messageType == 'error'}">
+                        <i class="fa fa-times-circle"></i>
+                    </c:when>
+                </c:choose>
+                ${sessionScope.message}
+            </div>
 
-        <div id="preloader">
-            <div data-loader="circle-side"></div>
-        </div><!-- /Page Preload -->
+            <c:remove var="message" scope="session" />
+            <c:remove var="messageType" scope="session" />
+        </c:if>
+        <!--        <div id="preloader">
+                    <div data-loader="circle-side"></div>
+                </div> /Page Preload -->
 
         <div class="layer"></div><!-- Opacity Mask -->
 
@@ -139,12 +154,7 @@
 
             <div class="checkout-container">
                 <form action="booking" method="post" id="booking-form">
-                    <input type="hidden" name="roomTypeId" value="${empty param.roomTypeId ? '' : param.roomTypeId}">
-                    <input type="hidden" name="action" value="${param.action}">
-                    <c:if test="${param.rebook == '1'}">
-                        <input type="hidden" name="rebook" value="1">
-                        <input type="hidden" name="action" value="book">
-                    </c:if>
+
                     <div class="left-column">
 
                         <!-- Customer info -->
@@ -166,10 +176,10 @@
 
                         <div class="booking-details">
                             <label for="checkIn">Check-in:</label>
-                            <input type="datetime-local" id="checkIn" name="checkIn" required>
+                            <input type="date" id="checkIn" name="checkIn" required>
 
                             <label for="checkOut">Check-out:</label>
-                            <input type="datetime-local" id="checkOut" name="checkOut" required>          
+                            <input type="date" id="checkOut" name="checkOut" required>
                         </div>
 
                         <!-- Services -->
@@ -188,7 +198,7 @@
                                             data-name="${s.name}"
                                             data-price="${s.price}"
                                             min="0" 
-                                            max="${totalRoomQuantity}" 
+                                            max="999" 
                                             value="<c:out value='${selectedServiceMap[s.id] != null ? selectedServiceMap[s.id] : 0}' />"
                                             style="width: 60px; margin-left: 10px"
                                             />
@@ -246,7 +256,10 @@
                                     </li>
                                 </ul>
                             </strong>
-
+                            <hr>
+                            <div class="nights-info" style="margin-top: 10px;">
+                                <strong>Number of nights: <span id="nights-count">1</span></strong>
+                            </div>
                             <hr>
 
                             <div class="selected-services-summary">
@@ -257,13 +270,10 @@
                             <div class="service-total" style="margin-top: 10px;">
                                 <strong>Total service cost: <span id="service-total">0 VND</span></strong>
                             </div>
-                            
-                            <hr>
-                            <div class="nights-info" style="margin-top: 10px;">
-                                <strong>Number of nights: <span id="nights-count">1</span></strong>
-                            </div>
 
-                       
+
+
+
                             <hr>
 
                             <div class="rank">
@@ -282,11 +292,15 @@
                                         <c:forEach var="voucher" items="${availableVouchers}">
                                             <div class="voucher-item" style="margin: 5px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                                                 <label style="display: flex; align-items: center; cursor: pointer;">
-                                                    <input type="radio" name="selectedVoucher" value="${voucher.id}"
+                                                    <input type="radio"
+                                                           name="selectedVoucher"
+                                                           value="${voucher.id}"
                                                            data-discount-percent="${voucher.discount_percent}"
                                                            data-discount-amount="${voucher.discount_amount}"
                                                            data-min-price="${voucher.min_price}"
+                                                           title="Áp dụng với đơn từ ${voucher.min_price} VNĐ trở lên"
                                                            style="margin-right: 8px;">
+
                                                     <div>
                                                         <strong>${voucher.code}</strong><br>
                                                         <small>${voucher.description}</small><br>
@@ -316,11 +330,11 @@
                                         <p style="color: #666; font-style: italic;">No vouchers available</p>
                                     </c:otherwise>
                                 </c:choose>
-                                         <hr>
+                                <hr>
                                 <p>Voucher discount: <span id="voucher-discount">0 VND</span></p>
                             </div>
 
-                            
+
 
                             <div class="total">
                                 <strong>Total after all discounts:
@@ -328,11 +342,22 @@
                                 </strong>
                             </div>
 
-                            <!-- Submit Button inside summary -->
-                            <form id="payment-form" action="vnpayajax" method="post">
-                                <input type="hidden" name="bookingId" id="bookingId" value="">
-                                <button type="submit" class="btn btn-danger">Book now</button>
-                            </form>
+                            <div class="wallet-info" style="margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                                <h4>Wallet Balance:</h4>
+                                <p><strong><span id="wallet-balance">${sessionScope.wallet.balance} VND</span></strong></p>
+                                <p id="wallet-status" style="color: green;">✓ Sufficient balance</p>
+                            </div>
+
+
+                            <input type="hidden" name="bookingId" id="bookingId" value="">
+                            <input type="hidden" name="amountToPay" id="amountToPay" value="">
+                            <input type="hidden" name="roomTypeId" value="${empty param.roomTypeId ? '' : param.roomTypeId}">
+                            <input type="hidden" name="action" value="${param.action}">
+                            <c:if test="${param.rebook == '1'}">
+                                <input type="hidden" name="rebook" value="1">
+                            </c:if>
+                            <button type="submit" class="btn btn-danger">Book now</button>
+                            <!--                            </form>-->
 
                         </div>
                     </div>
@@ -413,6 +438,7 @@
         <script src="js/common_scripts.js"></script>
         <script src="js/common_functions.js"></script>
         <script src="./js/validationForm.js"></script>
+        <script src="./js/toastMessage.js"></script>                
 
         <script>
             document.addEventListener("DOMContentLoaded", function () {
@@ -430,6 +456,22 @@
                     selectedServicesList.innerHTML = "";
 
                     const maxQuantity = parseInt(document.getElementById("totalRoomQuantity")?.value || "1");
+
+                    // Tính số đêm một lần duy nhất ở đầu hàm
+                    let numberOfNights = 1;
+                    const checkInInput = document.getElementById("checkIn");
+                    const checkOutInput = document.getElementById("checkOut");
+                    if (checkInInput.value && checkOutInput.value) {
+                        const checkInDate = new Date(checkInInput.value);
+                        const checkOutDate = new Date(checkOutInput.value);
+                        const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+                        numberOfNights = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)));
+                    }
+
+                    // Cập nhật hiển thị số đêm ngay lập tức
+                    document.getElementById("nights-count").textContent = numberOfNights;
+
+                    const maxQuantityService = maxQuantity * numberOfNights;
                     hasServiceQtyError = false;
 
                     inputs.forEach(input => {
@@ -439,14 +481,14 @@
                         const price = parseFloat(input.dataset.price || "0");
 
                         // Validate
-                        if (qty < 0 || qty > maxQuantity) {
+                        if (qty < 0 || qty > maxQuantityService) {
                             input.style.border = "2px solid red";
                             hasServiceQtyError = true;
                         } else {
                             input.style.border = "";
                         }
 
-                        if (qty > 0 && qty <= maxQuantity) {
+                        if (qty > 0 && qty <= maxQuantityService) {
                             const cost = qty * price;
                             total += cost;
                             selectedServices.push(id + ":" + qty);
@@ -458,66 +500,67 @@
                     });
 
                     if (hasServiceQtyError) {
-                        showToast("⚠ Please input number of service from 0 to " + maxQuantity, "#e53935");
+                        showToast("⚠ Please input number of service from 0 to " + maxQuantityService, "#e53935");
                     }
 
                     totalCostDisplay.textContent = total.toLocaleString("vi-VN") + " VND";
                     selectedServiceIdsInput.value = selectedServices.join(",");
                     totalServiceCostInput.value = total;
 
-                    // Calculate number of nights
-                    const checkInInput = document.getElementById("checkIn");
-                    const checkOutInput = document.getElementById("checkOut");
-                    let numberOfNights = 1; // Default to 1 night
-
-                    if (checkInInput.value && checkOutInput.value) {
-                        const checkInDate = new Date(checkInInput.value);
-                        const checkOutDate = new Date(checkOutInput.value);
-                        const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
-                        numberOfNights = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24))); // At least 1 night
-                    }
-
-                    // Discount and Final total (per night)
+                    // Xóa phần tính numberOfNights thứ 2 (đã tính ở trên)
+                    // Discount and Final total calculation
+                    // Discount and Final total calculation
                     const totalRoomCost = parseFloat(document.getElementById("totalRoom").value || "0");
                     const discountPercent = parseFloat(document.getElementById("discountPercent").value || "0");
 
-                    const totalPerNight = totalRoomCost + total;
+// Tính tổng tiền phòng theo số đêm
+                    const totalRoomCostForAllNights = totalRoomCost * numberOfNights;
+                    const totalPerNight = totalRoomCost + total; // total là service cost
                     const discountAmountPerNight = Math.round(totalPerNight * discountPercent / 100);
-                    const totalAfterDiscountPerNight = totalPerNight - discountAmountPerNight;
 
-                    // Calculate total before voucher = (Total after rank discount per night) * number of nights
-                    let totalBeforeVoucher = totalAfterDiscountPerNight * numberOfNights;
+// Tổng tiền sau discount rank (chưa tính voucher)
+                    let totalBeforeVoucher = (totalRoomCostForAllNights + total) - (discountAmountPerNight * numberOfNights);
 
-                    // Apply voucher discount
+// Apply voucher discount
                     let voucherDiscount = 0;
                     const selectedVoucher = document.querySelector('input[name="selectedVoucher"]:checked');
                     if (selectedVoucher && selectedVoucher.value) {
-                        const discountPercent = parseFloat(selectedVoucher.dataset.discountPercent || "0");
-                        const discountAmount = parseFloat(selectedVoucher.dataset.discountAmount || "0");
+                        const voucherDiscountPercent = parseFloat(selectedVoucher.dataset.discountPercent || "0");
+                        const voucherDiscountAmount = parseFloat(selectedVoucher.dataset.discountAmount || "0");
                         const minPrice = parseFloat(selectedVoucher.dataset.minPrice || "0");
 
-                        // Check if total meets minimum price requirement
                         if (totalBeforeVoucher >= minPrice) {
-                            if (discountPercent > 0) {
-                                // Percentage discount
-                                voucherDiscount = Math.round(totalBeforeVoucher * discountPercent / 100);
-                            } else if (discountAmount > 0) {
-                                // Fixed amount discount
-                                voucherDiscount = Math.min(discountAmount, totalBeforeVoucher);
+                            if (voucherDiscountPercent > 0) {
+                                voucherDiscount = Math.round(totalBeforeVoucher * voucherDiscountPercent / 100);
+                            } else if (voucherDiscountAmount > 0) {
+                                voucherDiscount = Math.min(voucherDiscountAmount, totalBeforeVoucher);
                             }
                         }
                     }
 
-                    // Final total after all discounts
                     const finalTotal = totalBeforeVoucher - voucherDiscount;
 
-                    // Update display
-                    document.getElementById("nights-count").textContent = numberOfNights;
+// Update display
                     document.getElementById("discount-applied").textContent = (discountAmountPerNight * numberOfNights).toLocaleString("vi-VN") + " VND";
                     document.getElementById("voucher-discount").textContent = voucherDiscount.toLocaleString("vi-VN") + " VND";
                     document.getElementById("final-total").textContent = finalTotal.toLocaleString("vi-VN") + " VND";
                     document.getElementById("finalTotalPrice").value = finalTotal;
+                    document.getElementById("amountToPay").value = finalTotal;
                     document.getElementById("selectedVoucherId").value = selectedVoucher ? selectedVoucher.value : "";
+
+                    const walletBalance = parseFloat("${sessionScope.wallet.balance}" || "0");
+                    const walletStatus = document.getElementById("wallet-status");
+
+                    if (finalTotal > walletBalance) {
+                        walletStatus.textContent = "❌ Insufficient wallet balance";
+                        walletStatus.style.color = "#e53935";
+                        document.querySelector('#booking-form button[type="submit"]').disabled = true;
+                    } else {
+                        walletStatus.textContent = "✓ Sufficient balance";
+                        walletStatus.style.color = "#4caf50";
+                        document.querySelector('#booking-form button[type="submit"]').disabled = false;
+                    }
+
                 }
 
                 // Attach input event
@@ -534,8 +577,36 @@
                 // Attach event listeners to voucher radio buttons
                 const voucherRadios = document.querySelectorAll('input[name="selectedVoucher"]');
                 voucherRadios.forEach(radio => {
-                    radio.addEventListener("change", updateSelectedServices);
+                    radio.addEventListener("change", function () {
+                        const totalRoomCost = parseFloat(document.getElementById("totalRoom").value || "0");
+                        const totalServiceCost = parseFloat(document.getElementById("totalServiceCost").value || "0");
+                        const discountPercent = parseFloat(document.getElementById("discountPercent").value || "0");
+
+                        const checkInDate = new Date(document.getElementById("checkIn").value);
+                        const checkOutDate = new Date(document.getElementById("checkOut").value);
+                        const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+                        const nights = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)));
+
+                        const totalPerNight = totalRoomCost + totalServiceCost;
+                        const rankDiscount = Math.round(totalPerNight * discountPercent / 100);
+                        const totalAfterRankDiscount = (totalPerNight - rankDiscount) * nights;
+
+                        const minPrice = parseFloat(radio.dataset.minPrice || "0");
+
+                        if (totalAfterRankDiscount < minPrice) {
+                            showToast("❌ Order is not eligible for this voucher", "#e53935");
+                            radio.checked = false;
+                            document.getElementById("selectedVoucherId").value = "";
+                            updateSelectedServices();
+                            return;
+                        }
+
+                        document.getElementById("selectedVoucherId").value = radio.value;
+                        updateSelectedServices();
+                    });
                 });
+
+
 
                 updateSelectedServices();
 
@@ -562,104 +633,7 @@
                 }, 3000);
             }
         </script>
-
         <div id="toast-message" class="toast hidden">Thông báo mẫu</div>
-
-        <!-- Submit logic script -->
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                const form = document.getElementById("booking-form");
-
-                form.addEventListener("submit", function (e) {
-                    e.preventDefault();
-
-                    const formData = new FormData(form);
-                    const params = new URLSearchParams();
-                    formData.forEach((value, key) => {
-                        params.append(key, value);
-                    });
-
-                    fetch("booking", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded"
-                        },
-                        body: params
-                    })
-                            .then(res => res.json())
-                            .then(data => {
-                                console.log(data);
-                                if (data.status === "success") {
-                                    var amountToPay = document.getElementById('finalTotalPrice').value;
-                                    var bookingId = data.bookingId; // Lấy từ response
-
-                                    var form = document.createElement('form');
-                                    form.method = 'POST';
-                                    form.action = 'vnpayajax';
-
-                                    var input1 = document.createElement('input');
-                                    input1.type = 'hidden';
-                                    input1.name = 'amountToPay';
-                                    input1.value = amountToPay;
-                                    form.appendChild(input1);
-
-                                    var input2 = document.createElement('input');
-                                    input2.type = 'hidden';
-                                    input2.name = 'bookingId';
-                                    input2.value = bookingId;
-                                    form.appendChild(input2);
-
-                                    document.body.appendChild(form);
-                                    form.submit();
-                                } else if (data.status === "error" && data.message) {
-                                    showToast("❌ " + data.message, "#e53935");
-                                } else {
-                                    showToast("❌ Booking failed!", "#e53935");
-                                }
-                            })
-                            .catch(error => {
-                                console.error("Error:", error);
-                                showToast("❌ Error occurred", "#e53935");
-                            });
-                });
-            });
-        </script>
-        <script>
-            document.getElementById('booking-form').addEventListener('submit', function (e) {
-                e.preventDefault();
-
-                var formData = new FormData(this);
-
-                // ✅ THÊM: Kiểm tra nếu là rebook thì thêm parameter
-                var urlParams = new URLSearchParams(window.location.search);
-                var isRebook = urlParams.get('rebook');
-                if (isRebook === '1') {
-                    formData.append('rebook', '1');
-                    formData.append('action', 'book'); // ✅ Đảm bảo có action
-                    console.log('Rebook mode - added action=book');
-                } else {
-                    // ✅ THÊM: Logic cho booking bình thường
-                    formData.append('action', 'manyRoom'); // hoặc 'oneRoom' tùy case
-                }
-
-                // Debug: In ra formData
-                for (let pair of formData.entries()) {
-                    console.log(pair[0] + ': ' + pair[1]);
-                }
-
-                fetch('booking', {
-                    method: 'POST',
-                    body: formData
-                })
-                        .then(res => res.json())
-                        .then(data => {
-                            console.log('Response:', data);
-                            if (data.status === "success") {
-                                // VNPay redirect logic
-                            }
-                        });
-            });
-        </script>
     </body>
 </html>
 

@@ -58,7 +58,7 @@
                                                                     </ul>
                                                                 </li>-->
                             <li><a href="viewServiceList">View Service List</a></li>
-                            <li><a href="contacts.html">Contacts</a></li>
+                            <li><a href="about.jsp">About</a></li>
                             <c:if test="${sessionScope.user == null}">
                                 <li><a href="login.jsp">Login</a></li>
                                 <li><a href="register.jsp" class="btn_1">Register</a></li>

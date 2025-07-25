@@ -10,6 +10,7 @@
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<fmt:setLocale value="vi_VN" />
 
 <html lang="en">
 
@@ -123,6 +124,7 @@
                         <li><a href="editProfile">Personal Info</a></li>
                         <li><a href="bookingHistory">Booking History</a></li>
                         <li><a href="myBooking">My Booking</a></li>
+                        <li><a href="myWallet">My Wallet</a></li>
                         <li><a href="redeemVoucher">Loyalty Status</a> </li>
                         <li><a href="changePassword.jsp">Change Password</a></li>
                         <li><a href="./homepage?action=logout">Log out</a></li>
@@ -132,6 +134,41 @@
 
                 <div class="form-wrapper">
                     <h3 class="mb-4">My Booking</h3>
+                    <form method="get" action="myBooking" class="mb-4">
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <select name="branchName" class="form-select">
+                                    <option value="">All Branches</option>
+                                    <c:forEach var="b" items="${branchNames}">
+                                        <option value="${b}" ${param.branchName == b ? 'selected' : ''}>${b}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+
+                            <!-- Room Type -->
+                            <div class="col-md-3">
+                                <select name="roomTypeName" class="form-select">
+                                    <option value="">All Room Types</option>
+                                    <c:forEach var="r" items="${roomTypeNames}">
+                                        <option value="${r}" ${param.roomTypeName == r ? 'selected' : ''}>${r}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="status" class="form-select">
+                                    <option value="">All Status</option>
+                                    <option value="Completed" ${param.status == 'Completed' ? 'selected' : ''}>Completed</option>
+                                    <option value="Cancelled" ${param.status == 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                    <option value="NoShow" ${param.status == 'NoShow' ? 'selected' : ''}>No Show</option>
+                                    <option value="CheckedIn" ${param.status == 'CheckedIn' ? 'selected' : ''}>Checked In</option>
+                                    <option value="CheckedOut" ${param.status == 'CheckedOut' ? 'selected' : ''}>Checked Out</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                            </div>
+                        </div>
+                    </form>
                     <div class="row">
                         <form action="myBooking" method="post">
                             <c:forEach var="b" items="${bookings}">
@@ -156,7 +193,7 @@
                                                 <fmt:formatDate value="${b.checkOut}" pattern="dd/MM/yyyy" />
                                             </p>
                                             <p class="card-text mb-1">RoomType: ${b.roomTypeName}</p>
-                                            <p class="card-text mb-1">Total Price: <fmt:formatNumber value="${b.totalPrice}" type="currency" currencySymbol="₫"/></p>
+                                            <p class="card-text mb-1">Total Price: <fmt:formatNumber value="${b.totalPrice}" type="currency"/></p>
 
                                             <c:if test="${b.paymentStatus == 'Refunded'}">
                                                 <div class="refund-info" style="background: #e8f5e8; padding: 10px; border-radius: 5px; margin-top: 10px;">
@@ -328,20 +365,21 @@
     }
                     %>
                     <!-- Pagination -->
-                    <div class="pagination d-flex justify-content-center mt-4"> 
-                        <c:if test="${currentPage > 1}">
-                            <a href="myBooking?page=${currentPage - 1}" class="prev">Previous</a>
-                        </c:if>
+                    <div class="pagination">
+                        <div class="pagination d-flex justify-content-center mt-4"> 
+                            <c:if test="${currentPage > 1}">
+                                <a href="myBooking?page=${currentPage - 1}" class="prev">Previous</a>
+                            </c:if>
 
-                        <c:forEach var="i" begin="1" end="${totalPages}">
-                            <a href="myBooking?page=${i}" class="${i == currentPage ? 'active' : ''}">${i}</a>
-                        </c:forEach>
+                            <c:forEach var="i" begin="1" end="${totalPages}">
+                                <a href="myBooking?page=${i}" class="${i == currentPage ? 'active' : ''}">${i}</a>
+                            </c:forEach>
 
-                        <c:if test="${currentPage < totalPages}">
-                            <a href="myBooking?page=${currentPage + 1}" class="next">Next</a>
-                        </c:if>
+                            <c:if test="${currentPage < totalPages}">
+                                <a href="myBooking?page=${currentPage + 1}" class="next">Next</a>
+                            </c:if>
+                        </div>
                     </div>
-
                 </div>
             </div>
             <!-- Modal -->

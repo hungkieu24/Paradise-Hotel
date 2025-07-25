@@ -387,7 +387,9 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.status === "success") {
-                                showToast("✅ Added to cart!");
+                                showToast("✅ " + data.message);
+                            } else if (data.status === "exists") {
+                                showToast("ℹ️ " + data.message, "#ff9800");
                             } else {
                                 showToast("❌ Cannot add to cart", "#e53935");
                             }

@@ -66,7 +66,7 @@
         <div class="nav_panel">
             <a href="#" class="closebt open_close_nav_panel"><i class="bi bi-x"></i></a>
             <div class="logo_panel"><img src="img/logo_sticky.png" width="135" height="45" alt=""></div>
-            
+
         </div>
         <!-- /nav_panel -->
 
@@ -92,6 +92,7 @@
                         <li><a href="editProfile">Personal Info</a></li>
                         <li><a href="bookingHistory">Booking History</a></li>
                         <li><a href="#">My Booking</a></li>
+                        <li><a href="myWallet">My Wallet</a></li>
                         <li><a href="redeemVoucher">Loyalty Status</a> </li>
                         <li><a href="changePassword.jsp">Change Password</a></li>
                         <li><a href="./homepage?action=logout">Log out</a></li>
@@ -111,8 +112,8 @@
                                     <i class="bi bi-eye-slash toggle-password" toggle="#currentPassword"></i>
                                 </div>
                                 <!--<p class="form_error"></p>-->
-<!--                                <c:if test="${not empty currentPasswordError}">
-                                    <p class="form_error">${currentPasswordError}</p>
+                                <!--                                <c:if test="${not empty currentPasswordError}">
+                                                                    <p class="form_error">${currentPasswordError}</p>
                                 </c:if> -->
                             </div> 
 

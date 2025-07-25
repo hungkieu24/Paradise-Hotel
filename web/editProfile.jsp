@@ -56,7 +56,7 @@
         </div><!-- /Page Preload -->
 
         <div class="layer"></div><!-- Opacity Mask -->
-        
+
         <div class="nav_panel">
             <a href="#" class="closebt open_close_nav_panel"><i class="bi bi-x"></i></a>
             <div class="logo_panel"><img src="img/logo_sticky.png" width="135" height="45" alt=""></div>
@@ -85,6 +85,7 @@
                         <li><a href="editProfile">Personal Info</a></li>
                         <li><a href="bookingHistory">Booking History</a></li>
                         <li><a href="myBooking">My Booking</a></li>
+                        <li><a href="myWallet">My Wallet</a></li>
                         <li><a href="redeemVoucher">Loyalty Status</a> </li>
                         <li><a href="changePassword.jsp">Change Password</a></li>
                         <li><a href="./homepage?action=logout">Log out</a></li>

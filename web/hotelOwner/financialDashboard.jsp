@@ -40,6 +40,10 @@
                         <i class="fa-solid fa-dollar-sign"></i>
                         <span>Investment</span>
                     </a>
+                    <a href="./withdraw" class="nav-item" data-page="upload">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                        <span>Withdraw</span>
+                    </a>
                     <a href="./manageBranch" class="nav-item " data-page="upload">
                         <i class="fa-solid fa-hotel"></i>
                         <span>Manage Branch</span>

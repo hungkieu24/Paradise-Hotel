@@ -213,6 +213,33 @@
                 color: #6c757d;
                 font-weight: 500;
             }
+            .pagination-bar {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 0.5rem;
+                margin: 1.5rem 0 0.5rem 0;
+            }
+            .pagination-bar a, .pagination-bar span {
+                padding: 0.4rem 0.85rem;
+                border-radius: 5px;
+                font-size: 1rem;
+                background: #f3f4f7;
+                color: #007bff;
+                border: 1px solid #e9ecef;
+                text-decoration: none;
+                transition: background 0.1s, color 0.1s;
+            }
+            .pagination-bar a:hover {
+                background: #007bff;
+                color: #fff;
+            }
+            .pagination-bar .current-page {
+                background: #007bff;
+                color: #fff;
+                font-weight: bold;
+                border: 1px solid #007bff;
+            }
         </style>
     </head>
 
@@ -222,7 +249,10 @@
             <nav class="sidebar" id="sidebar">
                 <div class="sidebar-header">
                     <button class="sidebar-toggle" id="sidebarToggle">
-                        <div class="brand"><i class="fas fa-building"></i><span class="brand-text">${branchname}</span></div>
+                        <div class="brand">
+                            <i class="fas fa-building"></i>
+                            <span class="brand-text">${branchname}</span>
+                        </div>
                     </button>
                 </div>
                 <div class="sidebar-menu">
@@ -250,11 +280,11 @@
                         <i class="fas fa-concierge-bell"></i>
                         <span class="menu-text">Manage service</span>
                     </a>
-                    <a href="promotions" class="menu-item">
+                    <a href="promotions" class="menu-item active">
                         <i class="fas fa-tags"></i>
                         <span class="menu-text">Manage promotion</span>
                     </a>
-                    <a href="manager-membership" class="menu-item active">
+                    <a href="manager-membership" class="menu-item">
                         <i class="fas fa-users"></i>
                         <span class="menu-text">Manage membership</span>
                     </a>
@@ -264,7 +294,6 @@
                     </a>
                 </div>
             </nav>
-
             <!-- Main Content -->
             <main class="main-content">
                 <header class="content-header">
@@ -286,14 +315,14 @@
                             <i class="fas fa-search"></i> Customer Search & Management
                         </div>
                         <div class="card-body">
-                            <form action="manager-membership" method="post" class="search-form">
+                            <form action="manager-membership" method="get" class="search-form" id="searchForm">
                                 <input type="hidden" name="action" value="search">
                                 <div class="form-group">
                                     <label for="searchTerm">Search by Name, Email, or Phone</label>
                                     <input type="text" id="searchTerm" name="searchTerm" value="${searchTerm}" 
                                            class="form-control" placeholder="Enter customer name, email, or phone...">
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="max-width:180px;">
                                     <label for="rankFilter">Filter by Rank</label>
                                     <select id="rankFilter" name="rankFilter" class="form-control">
                                         <option value="">-- All Ranks --</option>
@@ -301,6 +330,15 @@
                                         <option value="Silver" ${rankFilter == 'Silver' ? 'selected' : ''}>Silver</option>
                                         <option value="Gold" ${rankFilter == 'Gold' ? 'selected' : ''}>Gold</option>
                                         <option value="VIP" ${rankFilter == 'VIP' ? 'selected' : ''}>VIP</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="max-width:150px;">
+                                    <label for="itemsPerPage">Items per page</label>
+                                    <select id="itemsPerPage" name="itemsPerPage" class="form-control"
+                                            onchange="document.getElementById('searchForm').submit()">
+                                        <option value="5" ${itemsPerPage==5 ? 'selected' : ''}>5</option>
+                                        <option value="10" ${itemsPerPage==10 ? 'selected' : ''}>10</option>
+                                        <option value="15" ${itemsPerPage==15 ? 'selected' : ''}>15</option>
                                     </select>
                                 </div>
                                 <button type="submit" class="btn btn-primary">
@@ -311,7 +349,7 @@
                     </div>
 
                     <c:set var="customers" value="${not empty searchResults ? searchResults : allCustomers}" />
-                    <c:set var="totalCustomer" value="${fn:length(customers)}" />
+                    <c:set var="totalCustomer" value="${totalCustomer}" />
                     <c:set var="memberCount" value="0" />
                     <c:set var="silverCount" value="0" />
                     <c:set var="goldCount" value="0" />
@@ -390,23 +428,30 @@
                                             <tr>
                                                 <td>
                                                     <div class="customer-info">
-                                                        <img src="${pageContext.request.contextPath}/${not empty customer.avatar_url ? customer.avatar_url : 'img/default-avatar.png'}"
+                                                        <img src="<c:choose>
+                                                                 <c:when test='${not empty customer.avatar_url}'>
+                                                                     ${pageContext.request.contextPath}/${customer.avatar_url}
+                                                                 </c:when>
+                                                                 <c:otherwise>
+                                                                     ${pageContext.request.contextPath}/img/default-avatar.png
+                                                                 </c:otherwise>
+                                                             </c:choose>"
                                                              alt="Avatar" class="customer-avatar">
                                                         <div class="customer-details">
-                                                            <h6>${customer.fullname}</h6>
-                                                            <small>@${customer.username}</small>
+                                                            <h6><c:out value="${customer.fullname}" /></h6>
+                                                            <small>@<c:out value="${customer.username}" /></small>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div class="contact-info">
-                                                        <div><i class="fas fa-envelope"></i> ${customer.email}</div>
-                                                        <div><i class="fas fa-phone"></i> ${customer.phonenumber}</div>
+                                                        <div><i class="fas fa-envelope"></i> <c:out value="${customer.email}" /></div>
+                                                        <div><i class="fas fa-phone"></i> <c:out value="${customer.phonenumber}" /></div>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <span class="tier-badge tier-${customer.loyaltyPoint.level}">
-                                                        ${customer.loyaltyPoint.level}
+                                                        <c:out value="${customer.loyaltyPoint.level}" />
                                                     </span>
                                                 </td>
                                                 <td>
@@ -430,6 +475,42 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <!-- Pagination -->
+                            <c:if test="${totalPages > 1}">
+                                <div class="pagination-bar">
+                                    <c:if test="${currentPage > 1}">
+                                        <a href="manager-membership?action=search
+                                           <c:if test='${not empty searchTerm}'> &amp;searchTerm=${fn:escapeXml(searchTerm)} </c:if>
+                                           <c:if test='${not empty rankFilter}'> &amp;rankFilter=${fn:escapeXml(rankFilter)} </c:if>
+                                           &amp;itemsPerPage=${itemsPerPage}&amp;page=${currentPage - 1}">
+                                            &laquo; Prev
+                                        </a>
+                                    </c:if>
+                                    <c:forEach var="i" begin="1" end="${totalPages}">
+                                        <c:choose>
+                                            <c:when test="${i == currentPage}">
+                                                <span class="current-page">${i}</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <a href="manager-membership?action=search
+                                                   <c:if test='${not empty searchTerm}'> &amp;searchTerm=${fn:escapeXml(searchTerm)} </c:if>
+                                                   <c:if test='${not empty rankFilter}'> &amp;rankFilter=${fn:escapeXml(rankFilter)} </c:if>
+                                                   &amp;itemsPerPage=${itemsPerPage}&amp;page=${i}">
+                                                    ${i}
+                                                </a>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </c:forEach>
+                                    <c:if test="${currentPage < totalPages}">
+                                        <a href="manager-membership?action=search
+                                           <c:if test='${not empty searchTerm}'> &amp;searchTerm=${fn:escapeXml(searchTerm)} </c:if>
+                                           <c:if test='${not empty rankFilter}'> &amp;rankFilter=${fn:escapeXml(rankFilter)} </c:if>
+                                           &amp;itemsPerPage=${itemsPerPage}&amp;page=${currentPage + 1}">
+                                            Next &raquo;
+                                        </a>
+                                    </c:if>
+                                </div>
+                            </c:if>
                         </div>
                     </c:if>
 
@@ -449,27 +530,27 @@
 
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
-            // Handle success/error messages
-            var errorMsg = "<c:out value='${sessionScope.error}'/>";
-            var successMsg = "<c:out value='${sessionScope.success}'/>";
+                                                // Handle success/error messages
+                                                var errorMsg = "<c:out value='${sessionScope.error}'/>";
+                                                var successMsg = "<c:out value='${sessionScope.success}'/>";
 
-            if (errorMsg && errorMsg.trim() !== "") {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errorMsg,
-                    confirmButtonColor: '#dc3545'
-                });
+                                                if (errorMsg && errorMsg.trim() !== "") {
+                                                    Swal.fire({
+                                                        icon: 'error',
+                                                        title: 'Error',
+                                                        text: errorMsg,
+                                                        confirmButtonColor: '#dc3545'
+                                                    });
             <% session.removeAttribute("error"); %>
-            } else if (successMsg && successMsg.trim() !== "") {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: successMsg,
-                    confirmButtonColor: '#28a745'
-                });
+                                                } else if (successMsg && successMsg.trim() !== "") {
+                                                    Swal.fire({
+                                                        icon: 'success',
+                                                        title: 'Success',
+                                                        text: successMsg,
+                                                        confirmButtonColor: '#28a745'
+                                                    });
             <% session.removeAttribute("success"); %>
-            }
+                                                }
         </script>
     </body>
 </html>

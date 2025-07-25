@@ -30,6 +30,40 @@
         <link rel="stylesheet" href="css/send_feedback.css">
         <!-- YOUR CUSTOM CSS -->
         <link href="css/custom.css" rel="stylesheet">
+
+        <style>
+            .form__error {
+                background-color: #ffebee;
+                border: 1px solid #f44336;
+                border-radius: 4px;
+                padding: 8px 12px;
+                margin-top: 8px;
+                font-size: 14px;
+                color: #d32f2f;
+                display: none;
+                animation: fadeIn 0.3s ease-in;
+            }
+
+            .form__error:not(:empty) {
+                display: block;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            #imageInput:invalid {
+                border-color: #f44336;
+            }
+
+            .text-muted {
+                color: #6c757d;
+                font-size: 12px;
+                margin-top: 4px;
+                display: block;
+            }
+        </style>
     </head>
 
     <body> 
@@ -159,7 +193,7 @@
                             <div class="form-group">
                                 <label>Detailed Comments</label><!--
                                 <textarea id="comment" name="comment" rows="5" cols="50" required></textarea>-->
-                                <textarea class="form-control" placeholder="Message" id="comment" name="comment" required></textarea>
+                                <textarea class="form-control" placeholder="Message" id="comment" name="comment"></textarea>
                                 <p class="form_error"></p>
                             </div>
 
@@ -176,9 +210,10 @@
                     <div class="col-xl-4 col-lg-5 order-lg-2">
 
                         <div class="form-group">
-                            <label>Upload Images (Optional)</label>
+                            <label>Upload Images (Optional - Max 5 images) <span id="fileCount" style="color: #666; font-weight: normal;"></span></label>
                             <input type="file" id="imageInput" name="images" multiple accept="image/*" class="form-control-file">
-                            <p class="form__error" id="image_error"></p>
+                            <p class="form__error" id="image_error" style="color: red; font-size: 14px; margin-top: 5px;"></p>
+                            <small class="text-muted">You can upload up to 5 images (JPG, PNG, GIF, WEBP)</small>
                         </div>
                         <div class="wrapper-images" id="imagePreviewWrapper">
                             <div class="images">
@@ -296,16 +331,86 @@
                 });
             });
             
+            // Custom validation for image upload
+            let isValidForm = true;
+
+            function validateImageUpload() {
+                const imageInput = document.getElementById('imageInput');
+                const errorElement = document.getElementById('image_error');
+                const fileCountElement = document.getElementById('fileCount');
+                const files = imageInput.files;
+
+                // Clear previous error
+                errorElement.textContent = '';
+                errorElement.style.display = 'none';
+                imageInput.style.borderColor = '';
+                isValidForm = true;
+
+               
+
+                if (files.length > 5) {
+                    errorElement.textContent = '❌ You can only upload maximum 5 images. Currently selected: ' + files.length + ' images. Please remove ' + (files.length - 5) + ' image(s).';
+                    errorElement.style.display = 'block';
+                    imageInput.style.borderColor = '#f44336';
+                    isValidForm = false;
+                    return false;
+                }
+
+                // Validate file types
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                for (let i = 0; i < files.length; i++) {
+                    if (!validTypes.includes(files[i].type.toLowerCase())) {
+                        errorElement.textContent = '❌ File "' + files[i].name + '" is not a valid image format. Please use JPG, PNG, GIF, or WEBP.';
+                        errorElement.style.display = 'block';
+                        imageInput.style.borderColor = '#f44336';
+                        isValidForm = false;
+                        return false;
+                    }
+                }
+
+                // Show success message
+                if (files.length > 0) {
+                    errorElement.textContent = '✅ ' + files.length + ' image(s) selected successfully.';
+                    errorElement.style.display = 'block';
+                    errorElement.style.color = '#4caf50';
+                    errorElement.style.backgroundColor = '#e8f5e8';
+                    errorElement.style.borderColor = '#4caf50';
+                    imageInput.style.borderColor = '#4caf50';
+                }
+
+                return true;
+            }
+
+            // Add event listener for file input change
+            document.getElementById('imageInput').addEventListener('change', validateImageUpload);
+
+            // Add form submit validation
+            document.getElementById('sendFeedback').addEventListener('submit', function(e) {
+                if (!validateImageUpload()) {
+                    e.preventDefault();
+                    // Scroll to error message
+                    document.getElementById('image_error').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    // Show toast notification
+                    if (typeof showToast === 'function') {
+                        showToast('Please fix the image upload errors before submitting.', 'error');
+                    }
+
+                    return false;
+                }
+            });
+
             Validator({
                 form: '#sendFeedback',
                 formGroupSelector: '.form__group',
                 errorSelector: '.form__error',
                 rules: [
-                    Validator.isImageFile('#imageInput', 'File must be an image (.jpg, .png, .gif, .webp)'),
-                    Validator.maxFileCount('#imageInput', 5),
+                    // Remove the old validation rules as we handle them manually above
                 ],
                 onsubmit: function (formValue) {
-                    document.querySelector('#sendFeedback').submit();
+                    if (isValidForm) {
+                        document.querySelector('#sendFeedback').submit();
+                    }
                 }
             })
         </script>

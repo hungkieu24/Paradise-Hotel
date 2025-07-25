@@ -40,7 +40,7 @@
     <p><strong>Branch:</strong> ${booking.branchName}</p>
     <p><strong>Check-in:</strong> <fmt:formatDate value="${booking.checkIn}" pattern="dd/MM/yyyy"/></p>
     <p><strong>Check-out:</strong> <fmt:formatDate value="${booking.checkOut}" pattern="dd/MM/yyyy"/></p>
-
+    <p><strong>Number of nights:</strong> ${nights}</p>
     <h5>Rooms:</h5>
     <ul>
         <c:forEach var="r" items="${roomList}">
