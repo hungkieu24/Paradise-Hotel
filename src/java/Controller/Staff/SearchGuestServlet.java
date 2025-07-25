@@ -48,13 +48,14 @@ public class SearchGuestServlet extends HttpServlet {
         Integer branchId = (staff != null) ? staff.getBranchId() : null;
         System.out.println("Branch ID: " + branchId);
 
-        // Lấy check-in và check-out dates từ parameters
+        // Lấy check-in và check-out dates từ parameters (chỉ ngày)
         String checkInStr = request.getParameter("checkInDate");
         String checkOutStr = request.getParameter("checkOutDate");
         Date checkInDate = null;
         Date checkOutDate = null;
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
+        // Thay đổi format để chỉ parse ngày
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         try {
             if (checkInStr != null && !checkInStr.isEmpty()) {
                 checkInDate = dateFormat.parse(checkInStr);
@@ -95,8 +96,8 @@ public class SearchGuestServlet extends HttpServlet {
                         bookedQuantity = roomDAO.getBookedQuantityByRoomTypeAndDateRange(
                             branchId, 
                             roomTypeId, 
-                            new java.sql.Timestamp(checkInDate.getTime()), 
-                            new java.sql.Timestamp(checkOutDate.getTime())
+                            new java.sql.Date(checkInDate.getTime()), 
+                            new java.sql.Date(checkOutDate.getTime())
                         );
                     } else {
                         // Nếu không có dates thì lấy tất cả bookings đang active (CheckedIn)
@@ -114,8 +115,8 @@ public class SearchGuestServlet extends HttpServlet {
                         availableRooms = roomDAO.getAvailableRoomsByBranchRoomTypeAndDateRange(
                             branchId, 
                             roomTypeId, 
-                            new java.sql.Timestamp(checkInDate.getTime()), 
-                            new java.sql.Timestamp(checkOutDate.getTime())
+                            new java.sql.Date(checkInDate.getTime()), 
+                            new java.sql.Date(checkOutDate.getTime())
                         );
                     } else {
                         availableRooms = roomDAO.getAvailableRoomsByBranchAndRoomType(branchId, roomTypeId);
@@ -271,7 +272,7 @@ public class SearchGuestServlet extends HttpServlet {
         }
     }
 
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+    // Thay đổi cách parse ngày tháng - chỉ parse ngày, sau đó thêm giờ default
     if (userIdStr == null || checkIn == null || checkOut == null || roomIds == null || roomIds.length == 0) {
         response.sendRedirect("searchGuest?error=missing-booking-info");
         return;
@@ -279,14 +280,20 @@ public class SearchGuestServlet extends HttpServlet {
 
     UserAccount staff = (UserAccount) request.getSession().getAttribute("user");
     Integer branchId = (staff != null) ? staff.getBranchId() : null;
-    LocalDateTime checkInLdt = LocalDateTime.parse(checkIn, formatter);
-    LocalDateTime checkOutLdt = LocalDateTime.parse(checkOut, formatter);
+    
+    // Parse ngày và thêm giờ default
+    LocalDate checkInDate = LocalDate.parse(checkIn);
+    LocalDate checkOutDate = LocalDate.parse(checkOut);
+    
+    // Thêm giờ default: check-in lúc 07:00, check-out lúc 14:00
+    LocalDateTime checkInLdt = checkInDate.atTime(7, 0); // 7:00 AM
+    LocalDateTime checkOutLdt = checkOutDate.atTime(14, 0); // 2:00 PM
 
     Timestamp checkInTimestamp = Timestamp.valueOf(checkInLdt);
     Timestamp checkOutTimestamp = Timestamp.valueOf(checkOutLdt);
 
-    // Tính số đêm
-    long numberOfNights = calculateNumberOfNights(checkInLdt, checkOutLdt);
+    // Tính số đêm - sử dụng ngày thay vì LocalDateTime
+    long numberOfNights = calculateNumberOfNights(checkInDate, checkOutDate);
 
     // Khởi tạo DAO
     RoomDAO roomDAO = new RoomDAO();
@@ -398,25 +405,13 @@ public class SearchGuestServlet extends HttpServlet {
 
     response.sendRedirect("searchGuest?success=booking-created");
 }
-    // Phương thức tính số đêm
-    private long calculateNumberOfNights(LocalDateTime checkIn, LocalDateTime checkOut) {
-        final int STANDARD_CHECKIN_HOUR = 7;  // 7:00 AM
-        final int STANDARD_CHECKOUT_HOUR = 14; // 2:00 PM
-        
-        LocalDate checkInDate = checkIn.toLocalDate();
-        LocalDate checkOutDate = checkOut.toLocalDate();
-        
+    
+    // Phương thức tính số đêm - cập nhật để sử dụng LocalDate
+    private long calculateNumberOfNights(LocalDate checkInDate, LocalDate checkOutDate) {
         long daysBetween = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
         
-        if (daysBetween == 0) {
-            return 1;
-        } else if (daysBetween == 1) {
-            if (checkOut.getHour() < STANDARD_CHECKOUT_HOUR) {
-                long totalHours = ChronoUnit.HOURS.between(checkIn, checkOut);
-                if (totalHours < 12) {
-                    return 1;
-                }
-            }
+        // Nếu cùng ngày hoặc chỉ 1 ngày thì tính là 1 đêm
+        if (daysBetween <= 0) {
             return 1;
         } else {
             return daysBetween;

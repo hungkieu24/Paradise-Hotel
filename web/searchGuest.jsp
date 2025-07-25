@@ -375,45 +375,44 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Check-in Date & Time:</label>
-                                        <input type="datetime-local" class="form-control" name="checkIn" required>
+                                        <label class="form-label">Check-in Date:</label>
+                                        <input type="date" class="form-control" name="checkIn" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Check-out Date & Time:</label>
-                                        <input type="datetime-local" class="form-control" name="checkOut" required>
+                                        <label class="form-label">Check-out Date:</label>
+                                        <input type="date" class="form-control" name="checkOut" required>
                                     </div>
                                 </div>
                             </div>
-
-                           <!-- Room Type Selection -->
-<div class="mb-4">
-    <label class="form-label">Select Room Types:</label>
-    <div class="row">
-        <c:forEach var="roomType" items="${roomTypes}">
-            <div class="col-md-4 mb-2">
-                <div class="form-check">
-                    <input class="form-check-input room-type-checkbox" type="checkbox" 
-                           value="${roomType.roomTypeID}" id="roomType${roomType.roomTypeID}"
-                           onchange="toggleRoomTypeSelection(${roomType.roomTypeID});fetchBookedQuantity(${roomType.roomTypeID});">
-                    <label class="form-check-label" for="roomType${roomType.roomTypeID}">
-                        ${roomType.name}
-                        - <i class="bi bi-people-fill"></i> ${roomType.capacity_adult} Adults, 
-                        <i class="bi bi-person-fill"></i> ${roomType.capacity_child} Children, 
-                        <i class="bi bi-currency-dollar"></i> 
-                        <br/>
-                        <span>
-                            <fmt:formatNumber value="${roomType.base_price} " pattern="#,##0" />
-                        </span>
-                        <br/>
-                        <span>Booked: <span id="bookedQty${roomType.roomTypeID}"></span></span>
-                    </label>
-                </div>
-            </div>
-        </c:forEach>
-    </div>
-</div>
+                            <!-- Room Type Selection -->
+                            <div class="mb-4">
+                                <label class="form-label">Select Room Types:</label>
+                                <div class="row">
+                                    <c:forEach var="roomType" items="${roomTypes}">
+                                        <div class="col-md-4 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input room-type-checkbox" type="checkbox" 
+                                                       value="${roomType.roomTypeID}" id="roomType${roomType.roomTypeID}"
+                                                       onchange="toggleRoomTypeSelection(${roomType.roomTypeID}); fetchBookedQuantity(${roomType.roomTypeID});">
+                                                <label class="form-check-label" for="roomType${roomType.roomTypeID}">
+                                                    ${roomType.name}
+                                                    - <i class="bi bi-people-fill"></i> ${roomType.capacity_adult} Adults, 
+                                                    <i class="bi bi-person-fill"></i> ${roomType.capacity_child} Children, 
+                                                    <i class="bi bi-currency-dollar"></i> 
+                                                    <br/>
+                                                    <span>
+                                                        <fmt:formatNumber value="${roomType.base_price} " pattern="#,##0" />
+                                                    </span>
+                                                    <br/>
+                                                    <span>Booked: <span id="bookedQty${roomType.roomTypeID}"></span></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </c:forEach>
+                                </div>
+                            </div>
 
                             <!-- Selected Rooms Display -->
                             <div class="mb-4" id="selectedRoomsDisplay" style="display: none;">
