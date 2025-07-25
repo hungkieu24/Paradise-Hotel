@@ -4,7 +4,9 @@
  */
 package Controller;
 
+import Dal.HotelBranchDAO;
 import Dal.RoomTypeDAO;
+import Model.HotelBranch;
 import Model.RoomType;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -38,6 +40,8 @@ public class SearchRoomServlet_Home extends HttpServlet {
         String adults = request.getParameter("adults");
         String childs = request.getParameter("childs");
         String dates = request.getParameter("dates");
+        String branchIDRaw = request.getParameter("branchID");
+         int branchId = Integer.parseInt(branchIDRaw);
 
         if (adults == null || childs == null || dates == null || dates.isEmpty()) {
             setSessionMessage(session, "Please fill in all information to search!", "error");
@@ -71,10 +75,12 @@ public class SearchRoomServlet_Home extends HttpServlet {
         }
 
         int totalPeople = childsNum + adultsNum;
+        HotelBranchDAO hotelBranch = new HotelBranchDAO();
+        List<HotelBranch> branches = hotelBranch.getAllHotelBranchesSimple();
 
         RoomTypeDAO roomTypeDAO = new RoomTypeDAO();
-        List<RoomType> availableRoomTypes = roomTypeDAO.searchAvailableRoomTypes(checkIn, checkOut, totalPeople);
-
+        List<RoomType> availableRoomTypes = roomTypeDAO.searchAvailableRoomTypesV2(checkIn, checkOut, totalPeople,branchId);
+        request.setAttribute("branchList", branches);
         request.setAttribute("availableRoomTypes", availableRoomTypes);
         request.getRequestDispatcher("./searchRoomResult.jsp").forward(request, response);
     }

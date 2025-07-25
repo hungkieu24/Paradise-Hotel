@@ -77,16 +77,18 @@
                             <small class="slide-animated one">Luxury Hotel Experience</small>
                             <h3 class="slide-animated two">A unique Experience<br>where to stay</h3>
                             <div class="row justify-content-center slide-animated three">
-                                <div class="col-xl-10">
+                                <div class="col-xl-12">
                                     <form action="searchroom">
                                         <div class="row g-0 booking_form">
+                                            <!--date-->
                                             <div class="col-lg-3 ">
                                                 <div class="form-group">
                                                     <input class="form-control" type="text" name="dates" placeholder="Check in / Check out" readonly="readonly" required>
                                                     <i class="bi bi-calendar2"></i>
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3 col-sm-6 pe-lg-0 pe-sm-1">
+                                            <!--Adults-->
+                                            <div class="col-lg-2 col-sm-6 pe-lg-0 pe-sm-1">
                                                 <div class="qty-buttons">
                                                     <label>Adults</label>
                                                     <input type="button" value="+" class="qtyplus" name="adults" >
@@ -94,7 +96,8 @@
                                                     <input type="button" value="-" class="qtyminus" name="adults">
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3 col-sm-6 ps-lg-0 ps-sm-1">
+                                            <!--Childs-->
+                                            <div class="col-lg-2 col-sm-6 ps-lg-0 ps-sm-1">
                                                 <div class="qty-buttons">
                                                     <label>Childs</label>
                                                     <input type="button" value="+" class="qtyplus" name="childs" >
@@ -102,7 +105,27 @@
                                                     <input type="button" value="-" class="qtyminus" name="childs">
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3">
+                                            <!--branch-->
+                                            <div class="col-lg-3 col-sm-6 ps-lg-0 ps-sm-1">
+                                                <div class="custom_select">
+                                                    <select class="wide" name="branchID" style="position: absolute; left: -9999px; display: block">
+                                                        <option value=""></option>
+                                                        <c:forEach items="${branchList}" var="b">
+                                                            <option value="${b.getId()}">${b.getAddress()}</option>
+                                                        </c:forEach>
+                                                    </select>
+                                                    <div class="nice-select wide" tabindex="0">
+                                                        <span class="current">Select Branch</span>
+                                                        <ul class="list">
+                                                            <c:forEach items="${branchList}" var="b">
+                                                                <li data-value="${b.getId()}" class="option">${b.getAddress()}</li>
+                                                                </c:forEach>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-lg-2">
                                                 <input type="submit" class="btn_search" value="Search">
                                             </div>
                                         </div>
