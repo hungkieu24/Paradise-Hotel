@@ -238,8 +238,6 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
 
                     boolean isOlderThanOneDay = (currentTime - paymentTime) > oneDayInMillis;
 
-
-
                     return isOlderThanOneDay;
                 }
             }
@@ -247,6 +245,111 @@ public class VNPayPaymentDAO extends DBcontext.DBContext {
             e.printStackTrace();
         }
         return false; // Default to false if no payment found or error
+    }
+
+    /**
+     * Calculate refund amount based on payment timing using WalletTransaction.created_at
+     * @param bookingId
+     * @param originalAmount
+     * @return RefundCalculationResult with refund amount and percentage
+     */
+    public RefundCalculationResult calculateRefundAmount(int bookingId, double originalAmount) {
+        try {
+            // Lấy thời gian thanh toán thực tế từ WalletTransaction dựa trên BookingID
+            String sql = "SELECT TOP 1 CreatedAt, TransactionType, Amount, Description " +
+                        "FROM WalletTransaction " +
+                        "WHERE BookingID = ? AND TransactionType IN ('Payment', 'Deposit') " +
+                        "AND Amount > 0 " +
+                        "ORDER BY CreatedAt DESC";
+
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, bookingId);
+            ResultSet rs = ps.executeQuery();
+
+
+            if (rs.next()) {
+                Timestamp paymentTime = rs.getTimestamp("CreatedAt");
+                String transactionType = rs.getString("TransactionType");
+                double amount = rs.getDouble("Amount");
+                String description = rs.getString("Description");
+
+
+                if (paymentTime != null) {
+                    long currentTime = System.currentTimeMillis();
+                    long paymentTimeMillis = paymentTime.getTime();
+                    long timeDifferenceHours = (currentTime - paymentTimeMillis) / (1000 * 60 * 60); // Convert to hours
+
+
+
+                    if (timeDifferenceHours < 24) {
+                        // Refund dưới 24h: hoàn 100%
+                        return new RefundCalculationResult(originalAmount, 100, "within 24 hours");
+                    } else if (timeDifferenceHours < 48) {
+                        // Refund dưới 2 ngày (48h): hoàn 75%
+                        double refundAmount = originalAmount * 0.75;
+                        return new RefundCalculationResult(refundAmount, 75, "within 2 days");
+                    } else {
+                        // Refund trên 2 ngày: không hoàn
+                        return new RefundCalculationResult(0, 0, "after 2 days");
+                    }
+                }
+            } else {
+                // Nếu không tìm thấy WalletTransaction, fallback về VNPayPayment
+                return calculateRefundAmountFromVNPay(bookingId, originalAmount);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error calculating refund amount: " + e.getMessage());
+        }
+        // Default: không hoàn tiền nếu có lỗi
+        return new RefundCalculationResult(0, 0, "unknown");
+    }
+
+    /**
+     * Fallback method to calculate refund from VNPayPayment if WalletTransaction not found
+     */
+    private RefundCalculationResult calculateRefundAmountFromVNPay(int bookingId, double originalAmount) {
+        try {
+            String sql = "SELECT paid_at FROM VNPayPayment WHERE booking_id = ? AND status = 'Completed'";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, bookingId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                Timestamp paidAt = rs.getTimestamp("paid_at");
+                if (paidAt != null) {
+                    long currentTime = System.currentTimeMillis();
+                    long paymentTime = paidAt.getTime();
+                    long timeDifferenceHours = (currentTime - paymentTime) / (1000 * 60 * 60);
+
+
+                    if (timeDifferenceHours < 24) {
+                        return new RefundCalculationResult(originalAmount, 100, "within 24 hours");
+                    } else if (timeDifferenceHours < 48) {
+                        double refundAmount = originalAmount * 0.75;
+                        return new RefundCalculationResult(refundAmount, 75, "within 2 days");
+                    } else {
+                        return new RefundCalculationResult(0, 0, "after 2 days");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new RefundCalculationResult(0, 0, "unknown");
+    }
+
+    // Helper class để lưu kết quả tính toán refund
+    public static class RefundCalculationResult {
+        public double refundAmount;
+        public int refundPercentage;
+        public String timeInfo;
+
+        public RefundCalculationResult(double refundAmount, int refundPercentage, String timeInfo) {
+            this.refundAmount = refundAmount;
+            this.refundPercentage = refundPercentage;
+            this.timeInfo = timeInfo;
+        }
     }
 
 // Inner class for transaction info

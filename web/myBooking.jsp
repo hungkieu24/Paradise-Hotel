@@ -280,16 +280,29 @@
                                 <input type="hidden" name="amount" id="refundAmount">
 
                                 <p><strong>Booking ID:</strong> <span id="refundBookingIdDisplay"></span></p>
-                                <p><strong>The amount will be refunded to the wallet.:</strong> <span id="refundAmountDisplay"></span> VND</p>
+                                <p><strong>Original Amount:</strong> <span id="refundAmountDisplay"></span> VND</p>
+
+                                <!-- Refund Policy Information -->
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #007bff;">
+                                    <h4 style="margin: 0 0 10px 0; color: #007bff;">📋 Refund Policy</h4>
+                                    <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                                        <li><strong>Within 24 hours:</strong> 100% refund</li>
+                                        <li><strong>Within 2 days:</strong> 75% refund</li>
+                                        <li><strong>After 2 days:</strong> No refund</li>
+                                    </ul>
+                                    <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">
+                                        * Refund amount will be calculated based on payment time
+                                    </p>
+                                </div>
 
                                 <label for="refundReason">Refund Reason: <span style="color: red;">*</span></label>
-                                <textarea name="refundReason" id="refundReason" rows="4" 
-                                          placeholder="Please enter refund reason (required)" 
+                                <textarea name="refundReason" id="refundReason" rows="4"
+                                          placeholder="Please enter refund reason (required)"
                                           required minlength="10"></textarea>
 
                                 <div style="margin-top: 15px;">
                                     <button type="submit" class="btn_1">Refund Confirmation</button>
-                                    <button type="button" class="btn_1" onclick="closeRefundForm()">Hủy</button>
+                                    <button type="button" class="btn_1" onclick="closeRefundForm()">Cancel</button>
                                 </div>
                             </form>
                         </div>
@@ -312,7 +325,7 @@
                                 </h2>
                                 <div style="text-align: left; line-height: 1.6; margin-bottom: 20px;">
                                     <p><strong>⚠️Important Notice:</strong></p>
-                                    <p>It's been more than 1 day since payment, you will <strong style="color: red;">NO refunds</strong>.</p>
+                                    <p>It's been more than 2 days since payment, you will <strong style="color: red;">NO refunds</strong>.</p>
                                     <p>Are you sure you want to cancel this booking?</p>
                                     <p><strong>Booking ID:</strong> <%= lateCancelBookingId %></p>
                                     <p><strong>Amount:</strong> <%= String.format("%,.0f", lateCancelAmount) %> VND</p>
@@ -539,8 +552,8 @@
                     refundForm.addEventListener('submit', function (e) {
                         const submitBtn = this.querySelector('button[type="submit"]');
 
-                        // Show VNPay processing steps
-                        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang xử lý hoàn tiền vào ví...';
+                        // Show processing steps
+                        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing refund to wallet...';
                         submitBtn.disabled = true;
 
                         // Thêm progress indicator
@@ -548,8 +561,9 @@
                         progressDiv.id = 'refund-progress';
                         progressDiv.innerHTML = `
                 <div style="margin-top: 10px; padding: 10px; background: #f0f8ff; border-radius: 5px;">
-                    <p>🔄 Processing refund via e-wallet...</p>
-                    <p>⏳ Please wait a moment</p>
+                    <p>🔄 Processing refund to e-wallet...</p>
+                    <p>⏳ Calculating refund amount based on timing...</p>
+                    <p>💳 Please wait a moment</p>
                 </div>
             `;
                         this.appendChild(progressDiv);

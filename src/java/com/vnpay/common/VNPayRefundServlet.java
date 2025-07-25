@@ -3,6 +3,7 @@ package com.vnpay.common;
 import Dal.BookingDAO;
 import Dal.LoyaltyPointDAO;
 import Dal.VNPayPaymentDAO;
+import Dal.VNPayPaymentDAO.RefundCalculationResult;
 import Dal.WalletDAO;
 import Dal.WalletTransactionDAO;
 import Model.Booking;
@@ -43,7 +44,7 @@ public class VNPayRefundServlet extends HttpServlet {
             String bookingIdStr = request.getParameter("bookingId");
             String amountStr = request.getParameter("amount");
             String refundReason = request.getParameter("refundReason");
-            String confirmLateCancel = request.getParameter("confirmLateCancel"); // New parameter for late cancellation confirmation
+            String confirmLateCancel = request.getParameter("confirmLateCancel");
 
             if (bookingIdStr == null || amountStr == null) {
                 session.setAttribute("refundMsg", "Missing necessary information!");
@@ -52,7 +53,7 @@ public class VNPayRefundServlet extends HttpServlet {
             }
 
             int bookingId = Integer.parseInt(bookingIdStr);
-            double amount = Double.parseDouble(amountStr);
+            double originalAmount = Double.parseDouble(amountStr);
 
             // 1. Kiểm tra booking có thể refund không
             BookingDAO bookingDAO = new BookingDAO();
@@ -70,26 +71,26 @@ public class VNPayRefundServlet extends HttpServlet {
                 return;
             }
 
-            // 3. Kiểm tra thời gian thanh toán (1 ngày)
-            boolean isPaymentOlderThanOneDay = paymentDAO.isPaymentOlderThanOneDay(bookingId);
+            // 3. Tính toán refund amount dựa trên thời gian
+            RefundCalculationResult refundResult = paymentDAO.calculateRefundAmount(bookingId, originalAmount);
 
-            if (isPaymentOlderThanOneDay && !"true".equals(confirmLateCancel)) {
-                // Nếu đã quá 1 ngày và chưa confirm, redirect về trang với thông báo xác nhận
+            if (refundResult.refundPercentage == 0 && !"true".equals(confirmLateCancel)) {
+                // Nếu không được hoàn tiền và chưa confirm, hiển thị modal xác nhận
                 session.setAttribute("lateCancelBookingId", bookingId);
-                session.setAttribute("lateCancelAmount", amount);
+                session.setAttribute("lateCancelAmount", originalAmount);
                 session.setAttribute("lateCancelReason", refundReason);
                 session.setAttribute("refundMsg", "LATE_CANCEL_CONFIRM");
                 response.sendRedirect("myBooking");
                 return;
             }
 
-            if (isPaymentOlderThanOneDay && "true".equals(confirmLateCancel)) {
+            if (refundResult.refundPercentage == 0 && "true".equals(confirmLateCancel)) {
                 // User confirmed late cancellation - cancel without refund
                 boolean cancelled = bookingDAO.cancelBookingWithoutRefund(bookingId,
-                        "Cancelled after 1-day refund period: " + (refundReason != null ? refundReason : "No reason provided"));
+                        "Cancelled after 2-day refund period: " + (refundReason != null ? refundReason : "No reason provided"));
 
                 if (cancelled) {
-                    session.setAttribute("refundMsg", "Booking has been successfully canceled. Because it has been more than 1 day since payment, no refund is available..");
+                    session.setAttribute("refundMsg", "Booking has been successfully canceled. Because it has been more than 2 days since payment, no refund is available.");
                 } else {
                     session.setAttribute("refundMsg", "Error when canceling booking!");
                 }
@@ -97,8 +98,9 @@ public class VNPayRefundServlet extends HttpServlet {
                 return;
             }
 
-            // 5. Process VNPay refund (normal refund within 1 day)
-            processWalletRefund(bookingId, amount, refundReason, user, session);
+            // 4. Process wallet refund với amount đã tính toán
+            processWalletRefund(bookingId, refundResult.refundAmount, refundResult.refundPercentage,
+                              originalAmount, refundReason, user, session);
 
         } catch (Exception e) {
             System.err.println("Error processing refund: " + e.getMessage());
@@ -109,12 +111,15 @@ public class VNPayRefundServlet extends HttpServlet {
         response.sendRedirect("myBooking");
     }
 
-    // Thay thế phần VNPay refund bằng wallet refund
-    private void processWalletRefund(int bookingId, double amount, String refundReason, UserAccount user, HttpSession session) {
+
+
+    // Thay thế phần VNPay refund bằng wallet refund với tính toán phần trăm
+    private void processWalletRefund(int bookingId, double refundAmount, int refundPercentage,
+                                   double originalAmount, String refundReason, UserAccount user, HttpSession session) {
         try {
             // 1. Cập nhật wallet balance
             WalletDAO walletDAO = new WalletDAO();
-            boolean walletUpdated = walletDAO.updateWalletBalance(user.getId(), amount);
+            boolean walletUpdated = walletDAO.updateWalletBalance(user.getId(), refundAmount);
 
             if (walletUpdated) {
                 // 2. Tạo transaction record
@@ -124,8 +129,8 @@ public class VNPayRefundServlet extends HttpServlet {
                 WalletTransaction transaction = new WalletTransaction();
                 transaction.setWalletID(wallet.getWalletID());
                 transaction.setTransactionType("Refund");
-                transaction.setAmount(amount);
-                transaction.setDescription("Booking refund #" + bookingId + " - " + refundReason);
+                transaction.setAmount(refundAmount);
+                transaction.setDescription("Booking refund #" + bookingId + " (" + refundPercentage + "% of original) - " + refundReason);
                 transaction.setStatus("Success");
                 transaction.setBookingID(bookingId);
                 transaction.setBankAccountID(0);
@@ -133,20 +138,32 @@ public class VNPayRefundServlet extends HttpServlet {
 
                 transactionDAO.addWalletTransaction(transaction);
 
-                // 3. Cập nhật booking status và lấy số điểm bị trừ
-                int pointsDeducted = updateRefundStatus(bookingId, amount, refundReason);
+                // 3. Cập nhật VNPayPayment status thành Refunded
+                VNPayPaymentDAO paymentDAO = new VNPayPaymentDAO();
+                paymentDAO.updatePaymentStatus(bookingId, "Refunded");
 
-                // 4. Thông báo thành công với số điểm bị trừ
+                // 4. Cập nhật booking status và lấy số điểm bị trừ
+                int pointsDeducted = updateRefundStatus(bookingId, refundAmount, refundReason);
+
+                // 5. Thông báo thành công với thông tin chi tiết
                 DecimalFormat formatter = new DecimalFormat("#,###");
-                String formattedAmount = formatter.format(amount);
+                String formattedRefundAmount = formatter.format(refundAmount);
+                String formattedOriginalAmount = formatter.format(originalAmount);
 
-                session.setAttribute("refundMsg",
-                        "✅ REFUND SUCCESSFULLY INTO WALLET<br><br>"
-                        + "💰 Amount: " + formattedAmount + " VND<br><br>"
+                String refundMessage = "✅ REFUND SUCCESSFULLY INTO WALLET<br><br>"
+                        + "💰 Original Amount: " + formattedOriginalAmount + " VND<br>"
+                        + "💰 Refund Amount: " + formattedRefundAmount + " VND (" + refundPercentage + "%)<br><br>"
                         + "📅 Time: " + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + "<br><br>"
                         + "💳 Money has been added to your wallet<br><br>"
-                        + "⭐ Points deducted: " + pointsDeducted + " points<br><br>"
-                        + "THANK YOU FOR USING OUR SERVICE!!!");
+                        + "⭐ Points deducted: " + pointsDeducted + " points<br><br>";
+
+                if (refundPercentage < 100) {
+                    refundMessage += "ℹ️ Refund rate: " + refundPercentage + "% due to cancellation timing<br><br>";
+                }
+
+                refundMessage += "THANK YOU FOR USING OUR SERVICE!!!";
+
+                session.setAttribute("refundMsg", refundMessage);
             } else {
                 session.setAttribute("refundMsg", "❌ Error when depositing money into wallet!");
             }
@@ -158,26 +175,26 @@ public class VNPayRefundServlet extends HttpServlet {
         }
     }
 
-    // Thêm log để debug
-    private int updateRefundStatus(int bookingId, double amount, String reason) {
+    // Cập nhật trạng thái refund và trừ điểm loyalty
+    private int updateRefundStatus(int bookingId, double refundAmount, String reason) {
         int pointsDeducted = 0;
         try {
             BookingDAO bookingDAO = new BookingDAO();
             LoyaltyPointDAO loyaltyPointDAO = new LoyaltyPointDAO();
 
             // Update payment and booking status with refund amount
-            boolean bookingUpdated = bookingDAO.updateBookingForRefund(bookingId, "Cancelled", "Unpaid", reason, amount);
+            boolean bookingUpdated = bookingDAO.updateBookingForRefund(bookingId, "Cancelled", "Refunded", reason, refundAmount);
 
-            // Get booking info and subtract points
+            // Get booking info and subtract points based on original amount
             Booking booking = bookingDAO.getBookingById(bookingId);
             if (booking != null && booking.getUserId() != null) {
-
-                // Tính số điểm sẽ bị trừ
-                pointsDeducted = (int) (amount / 100000);
+                // Tính số điểm sẽ bị trừ dựa trên số tiền gốc (không phải refund amount)
+                double originalAmount = booking.getTotalPrice();
+                pointsDeducted = (int) (originalAmount / 100000);
 
                 boolean pointsDeductedSuccess = loyaltyPointDAO.subtractPointsForRefund(
                         booking.getUserId(),
-                        amount,
+                        originalAmount, // Trừ điểm dựa trên số tiền gốc
                         "Points deducted for refund - Booking #" + bookingId
                 );
 

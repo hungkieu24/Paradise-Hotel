@@ -120,7 +120,7 @@ public class WalletTransactionDAO extends DBcontext.DBContext {
     public boolean addWalletTransaction(WalletTransaction wt) {
         String sql = "INSERT INTO WalletTransaction "
                 + "(WalletID, Amount, TransactionType, Description, BookingID, BranchID, CreatedBy, Status, CreatedAt, BankAccountID) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
@@ -144,10 +144,17 @@ public class WalletTransactionDAO extends DBcontext.DBContext {
             ps.setString(7, wt.getCreatedBy());
             ps.setString(8, wt.getStatus());
 
-            if (wt.getBankAccountID() != 0) {
-                ps.setInt(9, wt.getBankAccountID());
+            // Sử dụng CreatedAt được set hoặc GETDATE() nếu null
+            if (wt.getCreatedAt() != null) {
+                ps.setTimestamp(9, wt.getCreatedAt());
             } else {
-                ps.setNull(9, java.sql.Types.INTEGER);
+                ps.setTimestamp(9, new java.sql.Timestamp(System.currentTimeMillis()));
+            }
+
+            if (wt.getBankAccountID() != 0) {
+                ps.setInt(10, wt.getBankAccountID());
+            } else {
+                ps.setNull(10, java.sql.Types.INTEGER);
             }
 
             int rows = ps.executeUpdate();
