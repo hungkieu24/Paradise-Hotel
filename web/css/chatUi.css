@@ -10,9 +10,9 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     position: fixed;
     bottom: 24px;
     right: 74px;
-/*    background: #fff;*/
+    /*    background: #fff;*/
     border-radius: 50%;
-/*    box-shadow: 0 2px 8px rgba(0,0,0,0.12);*/
+    /*    box-shadow: 0 2px 8px rgba(0,0,0,0.12);*/
     cursor: pointer;
     z-index: 9999;
     display: flex;
@@ -28,21 +28,23 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     position: fixed;
     bottom: 93px;
     right: 80px;
-    width: 350px;
-    max-height: 480px;
+    width: 450px;
+    height: 600px;
+    max-height: 600px;
     background: #fff;
     border-radius: 16px;
     box-shadow: 0 4px 32px rgba(0,0,0,0.16);
-    display: none;
+    display: none; /* ✅ Quan trọng */
     flex-direction: column;
     z-index: 10000;
     overflow: hidden;
 }
 
+
 .chat-icon__img {
-    width: 60px; 
-    height: 60px; 
-    border-radius: 50%; 
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
     object-fit: contain;
 }
 
@@ -63,14 +65,17 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
 }
 .chat-history-list {
     background: #f3f3f8;
-    max-height: 60px;
-    overflow-x: auto;
+    /* Changed from max-height: 60px to a reasonable height */
+    height: 60px; /* Fixed height, adjust as needed */
+    overflow-x: auto; /* Horizontal scroll if needed */
+    overflow-y: hidden; /* No vertical scroll here */
     display: flex;
     gap: 8px;
     align-items: center;
     padding: 6px 8px;
     font-size: 13px;
     border-bottom: 1px solid #eee;
+    flex-shrink: 0; /* Prevent shrinking */
 }
 .chat-history-list div {
     cursor: pointer;
@@ -84,13 +89,16 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     font-weight: bold;
 }
 .chat-body {
-    flex: 1;
+    flex: 1; /* Takes remaining space */
     padding: 14px;
-    overflow-y: auto;
+    overflow-y: auto; /* Scrollable when content exceeds */
     display: flex;
     flex-direction: column;
     gap: 10px;
     background: #fcfcfe;
+}
+.chat-body {
+    min-height: 200px; /* Adjust as needed */
 }
 .msg {
     max-width: 75%;
@@ -112,6 +120,46 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css
     color: #333;
     align-self: flex-start;
     border-bottom-left-radius: 4px;
+}
+/* Bọc thời gian + nội dung chung */
+.msg.user.message-content {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+}
+.msg.ai.message-content {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+/* Thời gian mặc định */
+.message-time {
+    font-size: 11px;
+    color: #888;
+    white-space: nowrap;
+}
+
+/* Nếu là user, thời gian nằm trái */
+.msg.user .message-content {
+    flex-direction: row-reverse;
+    text-align: right;
+}
+
+/* Nếu là AI, thời gian nằm phải */
+.msg.ai .message-content {
+    flex-direction: row;
+    text-align: left;
+}
+
+/* Nội dung text vẫn giữ style đẹp */
+.message-text {
+    flex: 1;
+    font-size: 15px;
+    line-height: 1.5;
+    word-break: break-word;
 }
 .chat-footer {
     padding: 10px 14px;

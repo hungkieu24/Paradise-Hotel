@@ -166,8 +166,7 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label>Check in / Check out</label>
-                                        <input class="form-control" type="text" name="dates" value="${param.dates}" placeholder="YYYY-MM-DD - YYYY-MM-DD" readonly="readonly" required>
-
+                                        <input class="form-control" type="text" id="dates" name="dates" value="${param.dates}" placeholder="YYYY-MM-DD - YYYY-MM-DD" readonly="readonly" required>
                                     </div>
                                 </div>  
                                 <div class="col-md-3">
@@ -216,7 +215,7 @@
                                     <div class="box_item_info" data-jarallax-element="-25">
                                         <small>From 
                                             <fmt:formatNumber value="${r.getBase_price()}" type="currency"/>
-                                             /night</small>
+                                            /night</small>
                                         <h2>${r.getName()}</h2>
                                         <h2>${r.branch.name}</h2>
                                         <p>${r.getDescription()}</p>
@@ -231,15 +230,19 @@
                                             </ul>
                                         </div>
                                         <div class="box_item_footer d-flex align-items-center justify-content-between">
-                                            <a href="booking?roomTypeId=${r.getRoomTypeID()}&action=oneRoom" class="btn_4 learn-more">
+                                            <a href="booking?roomTypeId=${r.getRoomTypeID()}&action=oneRoom" 
+                                               onclick="return validateDates(event);" 
+                                               class="btn_4 learn-more">
+
 
                                                 <span class="circle">
                                                     <span class="icon arrow"></span>
                                                 </span>
                                                 <span class="button-text">Book Now</span>
                                             </a>
-                                            <a href="javascript:void(0);" onclick="addToCart(${r.getRoomTypeID()})" class="btn_4 learn-more">
-                                                <span class="circle"><span class="icon arrow"></span></span>
+                                            <a href="javascript:void(0);" 
+                                               onclick="validateDates(event, ${r.getRoomTypeID()})" 
+                                               class="btn_4 learn-more">                                                <span class="circle"><span class="icon arrow"></span></span>
                                                 <span class="button-text">Add Cart</span>
                                             </a>
                                             <a href="./viewRoomTypeDetail?roomTypeId=${r.getRoomTypeID()}" class="animated_link">
@@ -381,17 +384,17 @@
         <script src="./js/validationForm.js"></script>
         <script src="./js/toastMessage.js"></script>
         <script>
-                                                Validator({
-                                                    form: '#search',
-                                                    formGroupSelector: '.form-group',
-                                                    errorSelector: '.form_error',
-                                                    rules: [
-                                                        Validator.minLessThanMax('#minPrice', '#maxPrice', 'Maximum price must be more than or equal to minimum price')
-                                                    ],
-                                                    onsubmit: function (formValue) {
-                                                        document.querySelector('#search').submit();
-                                                    }
-                                                })
+                                                   Validator({
+                                                       form: '#search',
+                                                       formGroupSelector: '.form-group',
+                                                       errorSelector: '.form_error',
+                                                       rules: [
+                                                           Validator.minLessThanMax('#minPrice', '#maxPrice', 'Maximum price must be more than or equal to minimum price')
+                                                       ],
+                                                       onsubmit: function (formValue) {
+                                                           document.querySelector('#search').submit();
+                                                       }
+                                                   })
         </script>
         <script>
             function addToCart(roomTypeId) {
@@ -427,5 +430,22 @@
                 }, 3000);
             }
         </script>
+        <script>
+            function validateDates(event, roomTypeId = null) {
+                const dates = document.getElementById("dates").value.trim();
+
+                if (!dates || dates.indexOf(" - ") === -1) {
+                    showToast("Please select Check-in and Check-out dates first.", color = "#ff0000");
+                    event.preventDefault(); // chặn hành động mặc định
+                    return false;
+                }
+
+                // Nếu là addToCart
+                if (roomTypeId !== null) {
+                    addToCart(roomTypeId);
+            }
+            }
+        </script>
+
     </body>
 </html>
