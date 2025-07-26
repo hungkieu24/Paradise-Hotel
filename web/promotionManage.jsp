@@ -6,6 +6,8 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<fmt:setLocale value="vi_VN" />
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -177,10 +179,12 @@
                         <h1 class="page-title">Manager Promotion</h1>
                     </div>
                     <div class="header-right">
-                        <div class="user-info">
-                            <i class="fas fa-user-circle"></i>
-                            <span>${username}</span>
-                        </div>
+                        <a href="./editProfile" style="text-decoration: none"> 
+                            <div class="user-info"> <!-- thể hiện user info -->
+                                <i class="fas fa-user-circle"></i>
+                                <span>${sessionScope.user.getFullname()}</span>
+                            </div>
+                        </a>
                     </div>
                 </header>
                 <div class="content-body">
@@ -238,7 +242,7 @@
                                                 <td>${promotion.name}</td>
                                                 <td>${promotion.description}</td>
                                                 <td>${promotion.discount_percent}%</td>
-                                                <td>${promotion.discount_amount}VND</td>
+                                                <td><fmt:formatNumber value="${promotion.discount_amount}" type="currency"/></td>
                                                 <td>${promotion.startDate}</td>
                                                 <td>${promotion.endDate}</td>
                                                 <td><span class="status-badge status-${promotion.status.toLowerCase()}">${promotion.status}</span></td>

@@ -7,6 +7,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<fmt:setLocale value="vi_VN" />
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -155,10 +156,12 @@
                             <i class="fas fa-moon"></i>
                         </button> -->
                         <!-- Có thể thêm một số icon như thông báo hay light or dark -->
-                        <div class="user-info"> <!-- thể hiện user info -->
-                            <i class="fas fa-user-circle"></i>
-                            <span>${username}</span>
-                        </div>
+                        <a href="./editProfile" style="text-decoration: none"> 
+                            <div class="user-info"> <!-- thể hiện user info -->
+                                <i class="fas fa-user-circle"></i>
+                                <span>${sessionScope.user.getFullname()}</span>
+                            </div>
+                        </a>
                     </div>
                 </header>
                 <div class="content-body">
@@ -233,7 +236,7 @@
                                             <td><strong>${room.roomNumber}</strong></td>
                                             <td>${room.roomType.name}</td>
                                             <td><span class="status-badge status-${room.status.toLowerCase()}">${room.status}</span></td>
-                                            <td>${room.roomType.base_price} VND</td>
+                                            <td><fmt:formatNumber value="${room.roomType.base_price}" type="currency"/></td>
                                             <td>${room.roomType.capacity_adult} pax</td>
                                             <td>${room.roomType.capacity_child} pax</td>
                                             <td>

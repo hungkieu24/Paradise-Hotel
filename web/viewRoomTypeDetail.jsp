@@ -6,7 +6,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<fmt:setLocale value="en" />
+<fmt:setLocale value="vi_VN" />
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
@@ -160,8 +160,8 @@
                                 <h1 class="slide-animated two">${roomType.getName()}</h1>
                                 <p class="slide-animated three">
                                     From 
-                                    <fmt:formatNumber value="${roomType.getBase_price()}" type="number" groupingUsed="true" maxFractionDigits="0" />
-                                    VND /night
+                                    <fmt:formatNumber value="${roomType.getBase_price()}" type="currency"/>
+                                    /night
                                 </p>
                             </div>
                         </div>
@@ -253,8 +253,8 @@
                                             <div class="info">
                                                 <small>
                                                     From 
-                                                    <fmt:formatNumber value="${r.getBase_price()}" type="number" groupingUsed="true" maxFractionDigits="0" />
-                                                    VND /night
+                                                    <fmt:formatNumber value="${r.getBase_price()}" type="currency"/>
+                                                    /night
                                                 </small>
                                                 <h3>${r.getName()}</h3>
                                                 <span>Read more</span>

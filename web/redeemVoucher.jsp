@@ -6,7 +6,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<fmt:setLocale value="en" />
+<fmt:setLocale value="vi_VN" />
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!DOCTYPE html>
@@ -102,7 +102,7 @@
                                             ${voucher.discount_percent}% OFF
                                         </c:when>
                                         <c:otherwise>
-                                            ${voucher.discount_amount} VND OFF
+                                            <fmt:formatNumber value="${voucher.discount_amount}" type="currency"/> OFF
                                         </c:otherwise>
                                     </c:choose>
 

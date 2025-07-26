@@ -6,7 +6,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<fmt:setLocale value="en" />
+<fmt:setLocale value="vi_VN" />
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!DOCTYPE html>
 <html lang="en">
@@ -215,8 +215,8 @@
                                 <div class="col-xl-4 ${status.index % 2 != 0 ? 'order-xl-1' : ''}">
                                     <div class="box_item_info" data-jarallax-element="-25">
                                         <small>From 
-                                            <fmt:formatNumber value="${r.getBase_price()}" type="number" groupingUsed="true" maxFractionDigits="0" />
-                                            VND /night</small>
+                                            <fmt:formatNumber value="${r.getBase_price()}" type="currency"/>
+                                             /night</small>
                                         <h2>${r.getName()}</h2>
                                         <h2>${r.branch.name}</h2>
                                         <p>${r.getDescription()}</p>

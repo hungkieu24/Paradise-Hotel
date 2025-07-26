@@ -301,10 +301,12 @@
                         <h1 class="page-title">Manage Membership</h1>
                     </div>
                     <div class="header-right">
-                        <div class="user-info">
-                            <i class="fas fa-user-circle"></i>
-                            <span>${username}</span>
-                        </div>
+                        <a href="./editProfile" style="text-decoration: none"> 
+                            <div class="user-info"> <!-- thể hiện user info -->
+                                <i class="fas fa-user-circle"></i>
+                                <span>${sessionScope.user.getFullname()}</span>
+                            </div>
+                        </a>
                     </div>
                 </header>
 
