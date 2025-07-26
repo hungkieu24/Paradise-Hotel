@@ -6,7 +6,8 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<fmt:setLocale value="vi_VN" />
 <!DOCTYPE html>
 <html>
     <head>
@@ -138,7 +139,6 @@
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
                                         <th>Name</th>
                                         <th>Base Price</th>
                                         <th>Description</th>
@@ -150,9 +150,8 @@
                                 <tbody>
                                     <c:forEach items="${roomTypeList}" var="r" >
                                         <tr>
-                                            <td>${r.getRoomTypeID()}</td>
                                             <td>${r.getName()}</td>
-                                            <td>${r.getBase_price()} VND</td>
+                                            <td><fmt:formatNumber value="${r.getBase_price()}" type="currency"/></td>
                                             <td>${r.getDescription()}</td>
                                             <td>${r.getCapacity_adult()} pax</td>
                                             <td>${r.getCapacity_child()} pax</td>

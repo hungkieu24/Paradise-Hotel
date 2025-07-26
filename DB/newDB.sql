@@ -195,27 +195,6 @@ CREATE TABLE Feedback (
 );
 
 -- 8. PAYMENT, INVOICE, EXPENSE
-CREATE TABLE VNPayPayment (
-    id INT PRIMARY KEY IDENTITY(1, 1),
-    booking_id INT NOT NULL,
-    amount DECIMAL(18,2),
-    status VARCHAR(10) CHECK (status IN ('Pending', 'Completed', 'Failed', 'Refunded')) DEFAULT 'Pending',
-    paid_at DATETIME DEFAULT GETDATE()
-);
-
-CREATE TABLE VNPayTransaction (
-    id INT PRIMARY KEY IDENTITY(1, 1),
-    payment_id INT NOT NULL,
-    vnp_TxnRef VARCHAR(100),
-    vnp_TransactionNo VARCHAR(100),
-    vnp_ResponseCode VARCHAR(10),
-    vnp_Amount DECIMAL(18,2),
-    vnp_BankCode VARCHAR(50),
-    vnp_CardType VARCHAR(50),
-    vnp_SecureHash VARCHAR(255),
-    is_refunded BIT,
-    created_at DATETIME DEFAULT GETDATE()
-);
 
 CREATE TABLE Invoice (
     id INT PRIMARY KEY IDENTITY(1, 1),
@@ -302,31 +281,7 @@ CREATE TABLE BackupHistory (
     is_deleted BIT DEFAULT 0
 );
 
--- 11. PERMISSION, NOTIFICATION, CART
-CREATE TABLE Permission (
-    id INT PRIMARY KEY IDENTITY(1, 1),
-    role VARCHAR(20) CHECK (role IN ('Customer', 'Staff', 'Manager', 'Admin', 'HotelOwner')) NOT NULL,
-    resource VARCHAR(100) NOT NULL,
-    action VARCHAR(10) CHECK (action IN ('Create', 'Read', 'Update', 'Delete')) NOT NULL,
-    allowed BIT
-);
-
-CREATE TABLE Notification (
-    id INT PRIMARY KEY IDENTITY(1, 1),
-    user_id VARCHAR(10),
-    title VARCHAR(255),
-    message NVARCHAR(MAX),
-    type VARCHAR(20) CHECK (type IN (
-        'System', 'Promotion', 'Booking', 'Payment',
-        'Feedback', 'Chat', 'LoyaltyPoint', 'TierUpgrade'
-    )) DEFAULT 'System',
-    status VARCHAR(10) CHECK (status IN ('Unread', 'Read')) DEFAULT 'Unread',
-    created_at DATETIME DEFAULT GETDATE(),
-    read_at DATETIME,
-    related_booking_id INT,
-    related_point_transaction_id INT,
-    related_member_tier_history_id INT
-);
+-- 11. CART
 
 CREATE TABLE CartRoomType (
     id INT PRIMARY KEY IDENTITY(1, 1),
@@ -424,8 +379,6 @@ ALTER TABLE BookingService ADD CONSTRAINT FK_BookingService_Booking FOREIGN KEY 
 ALTER TABLE BookingService ADD CONSTRAINT FK_BookingService_Service FOREIGN KEY (service_id) REFERENCES Service (id);
 ALTER TABLE Feedback ADD CONSTRAINT FK_Feedback_User FOREIGN KEY (user_id) REFERENCES UserAccount (id);
 ALTER TABLE Feedback ADD CONSTRAINT FK_Feedback_Booking FOREIGN KEY (booking_id) REFERENCES Booking (id);
-ALTER TABLE VNPayPayment ADD CONSTRAINT FK_VNPayPayment_Booking FOREIGN KEY (booking_id) REFERENCES Booking (id);
-ALTER TABLE VNPayTransaction ADD CONSTRAINT FK_VNPayTransaction_Payment FOREIGN KEY (payment_id) REFERENCES VNPayPayment (id);
 ALTER TABLE Invoice ADD CONSTRAINT FK_Invoice_Booking FOREIGN KEY (booking_id) REFERENCES Booking (id);
 ALTER TABLE Expense ADD CONSTRAINT FK_Expense_Branch FOREIGN KEY (branch_id) REFERENCES HotelBranch (id);
 ALTER TABLE LoyaltyPoint ADD CONSTRAINT FK_LoyaltyPoint_User FOREIGN KEY (user_id) REFERENCES UserAccount (id);
@@ -434,10 +387,6 @@ ALTER TABLE PointRedeemVoucher ADD CONSTRAINT FK_PointRedeemVoucher_User FOREIGN
 ALTER TABLE PointRedeemVoucher ADD CONSTRAINT FK_PointRedeemVoucher_Voucher FOREIGN KEY (voucher_id) REFERENCES Voucher (id);
 ALTER TABLE ChatAIHistory ADD CONSTRAINT FK_ChatAIHistory_User FOREIGN KEY (user_id) REFERENCES UserAccount (id);
 ALTER TABLE MemberTierHistory ADD CONSTRAINT FK_MemberTierHistory_User FOREIGN KEY (user_id) REFERENCES UserAccount (id);
-ALTER TABLE Notification ADD CONSTRAINT FK_Notification_User FOREIGN KEY (user_id) REFERENCES UserAccount (id);
-ALTER TABLE Notification ADD CONSTRAINT FK_Notification_Booking FOREIGN KEY (related_booking_id) REFERENCES Booking (id);
-ALTER TABLE Notification ADD CONSTRAINT FK_Notification_PointTransaction FOREIGN KEY (related_point_transaction_id) REFERENCES PointTransaction (id);
-ALTER TABLE Notification ADD CONSTRAINT FK_Notification_MemberTierHistory FOREIGN KEY (related_member_tier_history_id) REFERENCES MemberTierHistory (id);
 ALTER TABLE CartRoomType ADD CONSTRAINT FK_CartRoomType_User FOREIGN KEY (user_id) REFERENCES UserAccount (id);
 ALTER TABLE CartRoomType ADD CONSTRAINT FK_CartRoomType_RoomType FOREIGN KEY (room_type_id) REFERENCES RoomType (id);
 ALTER TABLE Voucher ADD CONSTRAINT FK_Voucher_Branch FOREIGN KEY (branch_id) REFERENCES HotelBranch (id);
@@ -448,7 +397,6 @@ ALTER TABLE InitialInvestment ADD CONSTRAINT FK_InitialInvestment_Branch FOREIGN
 ALTER TABLE Revenue ADD CONSTRAINT FK_Revenue_Branch FOREIGN KEY (branch_id) REFERENCES HotelBranch(id);
 ALTER TABLE Booking ADD exported_to_revenue BIT DEFAULT 0;
 ALTER TABLE BenefitRank ADD CONSTRAINT FK_BenefitRank_TierRule FOREIGN KEY (level) REFERENCES MemberTierRule(level);
-ALTER TABLE VNPayTransaction ADD vnp_PayDate VARCHAR(20);
 ALTER TABLE ChatAIHistory ADD response NVARCHAR(MAX);
 GO
 
@@ -460,24 +408,24 @@ INSERT INTO UserAccount (
 ) VALUES
 -- Active users with recent login times
 ('U001', 'john_doe', 'hashed_password1', N'John Doe', 'john.doe@email.com', 'Local', 
- 'https://example.com/avatar1.jpg', 'Customer', 'Active', DATEADD(HOUR, -2, GETDATE()), '1234567890', NULL, 0, GETDATE()), -- Logged in 2 hours ago
+ 'img/avatar/avatar.jpg', 'Customer', 'Active', DATEADD(HOUR, -2, GETDATE()), '1234567890', NULL, 0, GETDATE()), -- Logged in 2 hours ago
 ('U002', 'jane_smith', 'hashed_password2', N'Jane Smith', 'jane.smith@email.com', 'Local', 
- 'https://example.com/avatar2.jpg', 'Staff', 'Active', DATEADD(DAY, -1, GETDATE()), '0987654321', NULL, 0, GETDATE()), -- Logged in 1 day ago
+ 'img/avatar/avatar.jpg', 'Staff', 'Active', DATEADD(DAY, -1, GETDATE()), '0987654321', NULL, 0, GETDATE()), -- Logged in 1 day ago
 ('U003', 'mike_manager', 'hashed_password3', N'Mike Johnson', 'mike.johnson@email.com', 'Local', 
- 'https://example.com/avatar3.jpg', 'Manager', 'Active', DATEADD(HOUR, -5, GETDATE()), '5551234567', NULL, 0, GETDATE()), -- Logged in 5 hours ago
+ 'img/avatar/avatar.jpg', 'Manager', 'Active', DATEADD(HOUR, -5, GETDATE()), '5551234567', NULL, 0, GETDATE()), -- Logged in 5 hours ago
 ('U004', 'anna_owner', 'hashed_password4', N'Anna Brown', 'anna.brown@email.com', 'Local', 
- 'https://example.com/avatar4.jpg', 'HotelOwner', 'Active', DATEADD(DAY, -2, GETDATE()), '5559876543', NULL, 0, GETDATE()), -- Logged in 2 days ago
+ 'img/avatar/avatar.jpg', 'HotelOwner', 'Active', DATEADD(DAY, -2, GETDATE()), '5559876543', NULL, 0, GETDATE()), -- Logged in 2 days ago
 ('U005', 'admin_user', 'hashed_password5', N'Admin User', 'admin@email.com', 'Local', 
- 'https://example.com/avatar5.jpg', 'Admin', 'Active', DATEADD(HOUR, -1, GETDATE()), '5551112222', NULL, 0, GETDATE()), -- Logged in 1 hour ago
+ 'img/avatar/avatar.jpg', 'Admin', 'Active', DATEADD(HOUR, -1, GETDATE()), '5551112222', NULL, 0, GETDATE()), -- Logged in 1 hour ago
 -- Inactive user, no recent login
 ('U006', 'truongminhquan', 'pass123', N'Trương Minh Quân', 'quan.truong@example.com', 
- 'Local', NULL, 'Customer', 'Inactive', GETDATE(), '0901000001', NULL, 0, GETDATE()),
+ 'Local', 'img/avatar/avatar.jpg', 'Customer', 'Inactive', GETDATE(), '0901000001', NULL, 0, GETDATE()),
 -- Banned user, no recent login
 ('U007', 'nguyenthuytrang', 'pass456', N'Nguyễn Thùy Trang', 'trang.nguyen@example.com', 
- 'Local', NULL, 'Customer', 'Banned', GETDATE(), '0902000002', NULL, 0, GETDATE()),
+ 'Local', 'img/avatar/avatar.jpg', 'Customer', 'Banned', GETDATE(), '0902000002', NULL, 0, GETDATE()),
 -- Soft-deleted user, no recent login (status changed to 'Active' to satisfy CHECK constraint)
 ('U008', 'phamducthinh', 'pass789', N'Phạm Đức Thịnh', 'thinh.pham@example.com', 
- 'Local', NULL, 'Customer', 'Active', GETDATE(), '0903000003', NULL, 1, GETDATE());
+ 'Local', 'img/avatar/avatar.jpg', 'Customer', 'Active', GETDATE(), '0903000003', NULL, 1, GETDATE());
 GO
 -- 2. HotelBranch
 INSERT INTO HotelBranch (name, address, phone, email, image_url, owner_id, manager_id, created_at, is_deleted) VALUES
@@ -489,14 +437,34 @@ INSERT INTO HotelBranch (name, address, phone, email, image_url, owner_id, manag
 
 -- Update UserAccount to set branch_id
 UPDATE UserAccount SET branch_id = 1 WHERE id IN ('U002', 'U004');
--- RoomType (5 rows)
-INSERT INTO RoomType (name, description, base_price, capacity_adult, capacity_child, branch_id, image_url)
-VALUES 
+-- RoomType
+INSERT INTO RoomType (name, description, base_price, capacity_adult, capacity_child, branch_id, image_url) VALUES
 ('Standard', 'Cozy room with basic amenities', 500000.00, 2, 1, 1, 'img/room1.jpg'),
 ('Deluxe', 'Spacious room with sea view', 1000000.00, 3, 2, 2, 'img/room2.jpg'),
 ('Suite', 'Luxury suite with balcony', 2000000.00, 4, 2, 3, 'img/room3.jpg'),
 ('Family', 'Large room for families', 1500000.00, 4, 3, 4, 'img/room4.jpg'),
-('Single', 'Compact room for solo travelers', 400000.00, 1, 0, 5, 'img/room5.jpg');
+('Single', 'Compact room for solo travelers', 400000.00, 1, 0, 5, 'img/room5.jpg'),
+('Deluxe', 'Spacious room with sea view', 1000000.00, 3, 2, 1, 'img/room2.jpg'),
+('Suite', 'Luxury suite with balcony', 2000000.00, 4, 2, 1, 'img/room3.jpg'),
+('Family', 'Large room for families', 1500000.00, 4, 3, 1, 'img/room4.jpg'),
+('Single', 'Compact room for solo travelers', 400000.00, 1, 0, 1, 'img/room5.jpg'),
+('Standard', 'Cozy room with basic amenities', 500000.00, 2, 1, 2, 'img/room1.jpg'),
+('Suite', 'Luxury suite with balcony', 2000000.00, 4, 2, 2, 'img/room3.jpg'),
+('Family', 'Large room for families', 1500000.00, 4, 3, 2, 'img/room4.jpg'),
+('Single', 'Compact room for solo travelers', 400000.00, 1, 0, 2, 'img/room5.jpg'),
+('Standard', 'Cozy room with basic amenities', 500000.00, 2, 1, 3, 'img/room1.jpg'),
+('Deluxe', 'Spacious room with sea view', 1000000.00, 3, 2, 3, 'img/room2.jpg'),
+('Family', 'Large room for families', 1500000.00, 4, 3, 3, 'img/room4.jpg'),
+('Single', 'Compact room for solo travelers', 400000.00, 1, 0, 3, 'img/room5.jpg'),
+('Standard', 'Cozy room with basic amenities', 500000.00, 2, 1, 4, 'img/room1.jpg'),
+('Deluxe', 'Spacious room with sea view', 1000000.00, 3, 2, 4, 'img/room2.jpg'),
+('Suite', 'Luxury suite with balcony', 2000000.00, 4, 2, 4, 'img/room3.jpg'),
+('Single', 'Compact room for solo travelers', 400000.00, 1, 0, 4, 'img/room5.jpg'),
+('Standard', 'Cozy room with basic amenities', 500000.00, 2, 1, 5, 'img/room1.jpg'),
+('Deluxe', 'Spacious room with sea view', 1000000.00, 3, 2, 5, 'img/room2.jpg'),
+('Suite', 'Luxury suite with balcony', 2000000.00, 4, 2, 5, 'img/room3.jpg'),
+('Family', 'Large room for families', 1500000.00, 4, 3, 5, 'img/room4.jpg');
+
 
 -- Room (5 rows)
 -- Thêm phòng cho RoomType 1 (Standard) tại chi nhánh 1 (Hanoi)
@@ -520,6 +488,166 @@ INSERT INTO Room (room_number, branch_id, room_type_id, status, image_url) VALUE
 ('401', 5, 5, 'Maintenance', 'room401.jpg');
 Go
 
+-- room_type_id = 6 (Deluxe - branch 1)
+INSERT INTO Room (room_number, branch_id, room_type_id, status, image_url) VALUES
+('301', 1, 6, 'Available', 'room301.jpg'),
+('302', 1, 6, 'Available', 'room302.jpg'),
+('303', 1, 6, 'Available', 'room303.jpg'),
+('304', 1, 6, 'Available', 'room304.jpg'),
+('305', 1, 6, 'Available', 'room305.jpg');
+
+-- room_type_id = 7 (Suite - branch 1)
+INSERT INTO Room (room_number, branch_id, room_type_id, status, image_url) VALUES
+('306', 1, 7, 'Available', 'room306.jpg'),
+('307', 1, 7, 'Available', 'room307.jpg'),
+('308', 1, 7, 'Available', 'room308.jpg'),
+('309', 1, 7, 'Available', 'room309.jpg'),
+('310', 1, 7, 'Available', 'room310.jpg');
+
+-- room_type_id = 8 (Family - branch 1)
+INSERT INTO Room (room_number, branch_id, room_type_id, status, image_url) VALUES
+('311', 1, 8, 'Available', 'room311.jpg'),
+('312', 1, 8, 'Available', 'room312.jpg'),
+('313', 1, 8, 'Available', 'room313.jpg'),
+('314', 1, 8, 'Available', 'room314.jpg'),
+('315', 1, 8, 'Available', 'room315.jpg');
+
+-- room_type_id = 9 (Single - branch 1)
+INSERT INTO Room (room_number, branch_id, room_type_id, status, image_url) VALUES
+('316', 1, 9, 'Available', 'room316.jpg'),
+('317', 1, 9, 'Available', 'room317.jpg'),
+('318', 1, 9, 'Available', 'room318.jpg'),
+('319', 1, 9, 'Available', 'room319.jpg'),
+('320', 1, 9, 'Available', 'room320.jpg');
+
+-- Branch 2
+INSERT INTO Room (room_number, branch_id, room_type_id, status, image_url) VALUES
+('401', 2, 2, 'Available', 'room401.jpg'),
+('402', 2, 2, 'Available', 'room402.jpg'),
+('403', 2, 2, 'Available', 'room403.jpg'),
+('404', 2, 2, 'Available', 'room404.jpg'),
+('405', 2, 2, 'Available', 'room405.jpg'),
+
+('406', 2, 10, 'Available', 'room406.jpg'),
+('407', 2, 10, 'Available', 'room407.jpg'),
+('408', 2, 10, 'Available', 'room408.jpg'),
+('409', 2, 10, 'Available', 'room409.jpg'),
+('410', 2, 10, 'Available', 'room410.jpg'),
+
+('411', 2, 11, 'Available', 'room411.jpg'),
+('412', 2, 11, 'Available', 'room412.jpg'),
+('413', 2, 11, 'Available', 'room413.jpg'),
+('414', 2, 11, 'Available', 'room414.jpg'),
+('415', 2, 11, 'Available', 'room415.jpg'),
+
+('416', 2, 12, 'Available', 'room416.jpg'),
+('417', 2, 12, 'Available', 'room417.jpg'),
+('418', 2, 12, 'Available', 'room418.jpg'),
+('419', 2, 12, 'Available', 'room419.jpg'),
+('420', 2, 12, 'Available', 'room420.jpg'),
+
+('421', 2, 13, 'Available', 'room421.jpg'),
+('422', 2, 13, 'Available', 'room422.jpg'),
+('423', 2, 13, 'Available', 'room423.jpg'),
+('424', 2, 13, 'Available', 'room424.jpg'),
+('425', 2, 13, 'Available', 'room425.jpg');
+
+-- Branch 3
+INSERT INTO Room (room_number, branch_id, room_type_id, status, image_url) VALUES
+('501', 3, 3, 'Available', 'room501.jpg'),
+('502', 3, 3, 'Available', 'room502.jpg'),
+('503', 3, 3, 'Available', 'room503.jpg'),
+('504', 3, 3, 'Available', 'room504.jpg'),
+('505', 3, 3, 'Available', 'room505.jpg'),
+
+('506', 3, 14, 'Available', 'room506.jpg'),
+('507', 3, 14, 'Available', 'room507.jpg'),
+('508', 3, 14, 'Available', 'room508.jpg'),
+('509', 3, 14, 'Available', 'room509.jpg'),
+('510', 3, 14, 'Available', 'room510.jpg'),
+
+('511', 3, 15, 'Available', 'room511.jpg'),
+('512', 3, 15, 'Available', 'room512.jpg'),
+('513', 3, 15, 'Available', 'room513.jpg'),
+('514', 3, 15, 'Available', 'room514.jpg'),
+('515', 3, 15, 'Available', 'room515.jpg'),
+
+('516', 3, 16, 'Available', 'room516.jpg'),
+('517', 3, 16, 'Available', 'room517.jpg'),
+('518', 3, 16, 'Available', 'room518.jpg'),
+('519', 3, 16, 'Available', 'room519.jpg'),
+('520', 3, 16, 'Available', 'room520.jpg'),
+
+('521', 3, 17, 'Available', 'room521.jpg'),
+('522', 3, 17, 'Available', 'room522.jpg'),
+('523', 3, 17, 'Available', 'room523.jpg'),
+('524', 3, 17, 'Available', 'room524.jpg'),
+('525', 3, 17, 'Available', 'room525.jpg');
+
+-- Branch 4
+INSERT INTO Room (room_number, branch_id, room_type_id, status, image_url) VALUES
+('601', 4, 4, 'Available', 'room601.jpg'),
+('602', 4, 4, 'Available', 'room602.jpg'),
+('603', 4, 4, 'Available', 'room603.jpg'),
+('604', 4, 4, 'Available', 'room604.jpg'),
+('605', 4, 4, 'Available', 'room605.jpg'),
+
+('606', 4, 18, 'Available', 'room606.jpg'),
+('607', 4, 18, 'Available', 'room607.jpg'),
+('608', 4, 18, 'Available', 'room608.jpg'),
+('609', 4, 18, 'Available', 'room609.jpg'),
+('610', 4, 18, 'Available', 'room610.jpg'),
+
+('611', 4, 19, 'Available', 'room611.jpg'),
+('612', 4, 19, 'Available', 'room612.jpg'),
+('613', 4, 19, 'Available', 'room613.jpg'),
+('614', 4, 19, 'Available', 'room614.jpg'),
+('615', 4, 19, 'Available', 'room615.jpg'),
+
+('616', 4, 20, 'Available', 'room616.jpg'),
+('617', 4, 20, 'Available', 'room617.jpg'),
+('618', 4, 20, 'Available', 'room618.jpg'),
+('619', 4, 20, 'Available', 'room619.jpg'),
+('620', 4, 20, 'Available', 'room620.jpg'),
+
+('621', 4, 21, 'Available', 'room621.jpg'),
+('622', 4, 21, 'Available', 'room622.jpg'),
+('623', 4, 21, 'Available', 'room623.jpg'),
+('624', 4, 21, 'Available', 'room624.jpg'),
+('625', 4, 21, 'Available', 'room625.jpg');
+
+-- Branch 5
+INSERT INTO Room (room_number, branch_id, room_type_id, status, image_url) VALUES
+('701', 5, 5, 'Available', 'room701.jpg'),
+('702', 5, 5, 'Available', 'room702.jpg'),
+('703', 5, 5, 'Available', 'room703.jpg'),
+('704', 5, 5, 'Available', 'room704.jpg'),
+('705', 5, 5, 'Available', 'room705.jpg'),
+
+('706', 5, 22, 'Available', 'room706.jpg'),
+('707', 5, 22, 'Available', 'room707.jpg'),
+('708', 5, 22, 'Available', 'room708.jpg'),
+('709', 5, 22, 'Available', 'room709.jpg'),
+('710', 5, 22, 'Available', 'room710.jpg'),
+
+('711', 5, 23, 'Available', 'room711.jpg'),
+('712', 5, 23, 'Available', 'room712.jpg'),
+('713', 5, 23, 'Available', 'room713.jpg'),
+('714', 5, 23, 'Available', 'room714.jpg'),
+('715', 5, 23, 'Available', 'room715.jpg'),
+
+('716', 5, 24, 'Available', 'room716.jpg'),
+('717', 5, 24, 'Available', 'room717.jpg'),
+('718', 5, 24, 'Available', 'room718.jpg'),
+('719', 5, 24, 'Available', 'room719.jpg'),
+('720', 5, 24, 'Available', 'room720.jpg'),
+
+('721', 5, 25, 'Available', 'room721.jpg'),
+('722', 5, 25, 'Available', 'room722.jpg'),
+('723', 5, 25, 'Available', 'room723.jpg'),
+('724', 5, 25, 'Available', 'room724.jpg'),
+('725', 5, 25, 'Available', 'room725.jpg');
+
 -- Amenity (5 rows)
 INSERT INTO Amenity (name, description, branch_id)
 VALUES 
@@ -529,10 +657,83 @@ VALUES
 ('TV', 'Flat-screen television', 1),
 ('Safe', 'In-room safety deposit box', 1);
 
--- RoomAmenity (5 rows)
-INSERT INTO RoomAmenity (room_type_id, amenity_id)
-VALUES 
-(1, 1), (1, 2), (2, 3), (3, 4), (4, 5);
+-- Amenities for branch 2
+INSERT INTO Amenity (name, description, branch_id) VALUES
+('WiFi', 'High-speed internet access', 2),
+('Air Conditioning', 'Climate control unit', 2),
+('Mini Bar', 'Refrigerated mini bar', 2),
+('TV', 'Flat-screen television', 2),
+('Safe', 'In-room safety deposit box', 2),
+('Hair Dryer', 'Electric hair dryer', 2);
+
+-- Amenities for branch 3
+INSERT INTO Amenity (name, description, branch_id) VALUES
+('WiFi', 'High-speed internet access', 3),
+('Air Conditioning', 'Climate control unit', 3),
+('Mini Bar', 'Refrigerated mini bar', 3),
+('TV', 'Flat-screen television', 3),
+('Safe', 'In-room safety deposit box', 3),
+('Jacuzzi', 'Private jacuzzi tub', 3);
+
+-- Amenities for branch 4
+INSERT INTO Amenity (name, description, branch_id) VALUES
+('WiFi', 'High-speed internet access', 4),
+('Air Conditioning', 'Climate control unit', 4),
+('Mini Bar', 'Refrigerated mini bar', 4),
+('TV', 'Flat-screen television', 4),
+('Safe', 'In-room safety deposit box', 4),
+('Balcony', 'Private room balcony', 4);
+
+-- Amenities for branch 5
+INSERT INTO Amenity (name, description, branch_id) VALUES
+('WiFi', 'High-speed internet access', 5),
+('Air Conditioning', 'Climate control unit', 5),
+('Mini Bar', 'Refrigerated mini bar', 5),
+('TV', 'Flat-screen television', 5),
+('Safe', 'In-room safety deposit box', 5),
+('Bathtub', 'Luxury bathtub', 5);
+
+
+-- Branch 1 (room_type_id: 1, 6, 7, 8, 9), amenities 1–5
+INSERT INTO RoomAmenity (room_type_id, amenity_id) VALUES
+(1, 1), (1, 2), (1, 4),
+(6, 1), (6, 2), (6, 3), (6, 4), (6, 5),
+(7, 1), (7, 2), (7, 3), (7, 4), (7, 5),
+(8, 1), (8, 2), (8, 4), (8, 5),
+(9, 1), (9, 2), (9, 3);
+
+-- Branch 2 (room_type_id: 2, 10, 11, 12, 13), amenities 6–11
+INSERT INTO RoomAmenity (room_type_id, amenity_id) VALUES
+(2, 6), (2, 7), (2, 8),
+(10, 6), (10, 7), (10, 8), (10, 9),
+(11, 6), (11, 7), (11, 9), (11, 11),
+(12, 6), (12, 7), (12, 8), (12, 10), (12, 11),
+(13, 6), (13, 7), (13, 10);
+
+-- Branch 3 (room_type_id: 3, 14, 15, 16, 17), amenities 12–17
+INSERT INTO RoomAmenity (room_type_id, amenity_id) VALUES
+(3, 12), (3, 13), (3, 14),
+(14, 12), (14, 13), (14, 14), (14, 15),
+(15, 12), (15, 13), (15, 15), (15, 17),
+(16, 12), (16, 13), (16, 14), (16, 16), (16, 17),
+(17, 12), (17, 13), (17, 16);
+
+-- Branch 4 (room_type_id: 4, 18, 19, 20, 21), amenities 18–23
+INSERT INTO RoomAmenity (room_type_id, amenity_id) VALUES
+(4, 18), (4, 19), (4, 20),
+(18, 18), (18, 19), (18, 20), (18, 21),
+(19, 18), (19, 19), (19, 21), (19, 23),
+(20, 18), (20, 19), (20, 20), (20, 22), (20, 23),
+(21, 18), (21, 19), (21, 22);
+
+-- Branch 5 (room_type_id: 5, 22, 23, 24, 25), amenities 24–29
+INSERT INTO RoomAmenity (room_type_id, amenity_id) VALUES
+(5, 24), (5, 25), (5, 26),
+(22, 24), (22, 25), (22, 26), (22, 27),
+(23, 24), (23, 25), (23, 27), (23, 29),
+(24, 24), (24, 25), (24, 26), (24, 28), (24, 29),
+(25, 24), (25, 25), (25, 28);
+
 
 -- Service (5 rows)
 INSERT INTO Service (name, description, price, branch_id, status, image_url)
@@ -562,26 +763,26 @@ VALUES
 -- Bảng Booking (đã sửa)
 INSERT INTO Booking (user_id, created_by, booking_time, check_in, check_out, status, total_price, payment_status, branch_id, note, cancel_time)
 VALUES 
-('U001', NULL, '2025-06-28 10:00:00', '2025-07-01 14:00:00', '2025-07-03 12:00:00', 'NoShow', 100.00, 'Unpaid', 1, 'Early check-in requested', NULL),
-('U001', 'U002', '2025-07-02 09:00:00', '2025-07-05 14:00:00', '2025-07-07 12:00:00', 'Completed', 200.00, 'Paid', 1, NULL, NULL),
-('U001', NULL, '2025-07-07 10:00:00', '2025-07-10 14:00:00', '2025-07-12 12:00:00', 'Completed', 150.00, 'Paid', 2, 'Extra pillows', NULL),
-('U001', NULL, '2025-07-12 11:00:00', '2025-07-15 14:00:00', '2025-07-17 12:00:00', 'Completed', 300.00, 'Paid', 2, NULL, NULL),
-('U001', 'U002', '2025-07-18 14:00:00', '2025-07-20 14:00:00', '2025-07-22 12:00:00', 'CheckedIn', 120.00, 'Paid', 3, 'Late checkout', NULL),
-('U001', NULL, '2025-07-20 10:00:00', '2025-07-25 14:00:00', '2025-07-27 12:00:00', 'Cancelled', 80.00, 'Unpaid', 3, 'Cancelled due to schedule change', '2025-07-20 12:00:00'),
-('U001', NULL, '2025-07-20 11:00:00', '2025-08-01 14:00:00', '2025-08-03 12:00:00', 'Pending', 90.00, 'Unpaid', 4, NULL, NULL),
-('U001', 'U002', '2025-07-20 12:00:00', '2025-08-05 14:00:00', '2025-08-07 12:00:00', 'Pending', 110.00, 'Unpaid', 4, 'Payment pending', NULL),
-('U001', NULL, '2025-07-20 13:00:00', '2025-08-10 14:00:00', '2025-08-12 12:00:00', 'Paid', 130.00, 'Paid', 1, 'Special request for view', NULL),
-('U001', NULL, '2025-07-20 14:00:00', '2025-08-15 14:00:00', '2025-08-17 12:00:00', 'Paid', 250.00, 'Paid', 2, NULL, NULL),
-('U003', NULL, '2025-07-15 10:00:00', '2025-07-18 14:00:00', '2025-07-20 12:00:00', 'Completed', 300.00, 'Paid', 1, 'Already checked in', NULL),
-('U004', NULL, '2025-07-16 10:00:00', '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'CheckedIn', 400.00, 'Paid', 1, 'Paid but not assigned room yet', NULL),
-('U005', NULL, '2025-07-16 11:00:00', '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'Cancelled', 250.00, 'Unpaid', 1, 'Waiting for payment', '2025-07-20 15:48:00'),
-('U006', NULL, '2025-07-16 12:00:00', '2025-07-19 14:00:00', '2025-07-20 12:00:00', 'Completed', 600.00, 'Paid', 1, 'Booked multiple rooms', NULL),
-('U007', NULL, '2025-07-16 13:00:00', '2025-07-19 12:00:00', '2025-07-21 12:00:00', 'CheckedIn', 350.00, 'Paid', 1, 'Checked in early', NULL),
-('U008', NULL, '2025-07-16 14:00:00', '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'CheckedIn', 500.00, 'Paid', 1, 'Staying from yesterday', NULL),
-('U007', NULL, '2025-07-18 10:00:00', '2025-07-20 14:00:00', '2025-07-22 12:00:00', 'CheckedIn', 700.00, 'Paid', 1, 'Booking paid today', NULL),
-('U006', NULL, '2025-07-18 11:00:00', '2025-07-20 14:00:00', '2025-07-21 12:00:00', 'CheckedIn', 900.00, 'Paid', 1, 'Booked multiple room types', NULL),
-('U005', NULL, '2025-07-18 12:00:00', '2025-07-20 10:00:00', '2025-07-21 12:00:00', 'CheckedIn', 600.00, 'Paid', 1, 'Checked in this morning', NULL),
-('U004', NULL, '2025-07-18 13:00:00', '2025-07-20 14:00:00', '2025-07-21 12:00:00', 'Cancelled', 300.00, 'Unpaid', 1, 'Waiting for payment', '2025-07-20 15:48:00');
+('U001', NULL, '2025-06-28 10:00:00', '2025-07-01 14:00:00', '2025-07-03 12:00:00', 'NoShow', 1000000.00, 'Unpaid', 1, 'Early check-in requested', NULL),
+('U001', 'U002', '2025-07-02 09:00:00', '2025-07-05 14:00:00', '2025-07-07 12:00:00', 'Completed', 2000000.00, 'Paid', 1, NULL, NULL),
+('U001', NULL, '2025-07-07 10:00:00', '2025-07-10 14:00:00', '2025-07-12 12:00:00', 'Completed', 1500000.00, 'Paid', 2, 'Extra pillows', NULL),
+('U001', NULL, '2025-07-12 11:00:00', '2025-07-15 14:00:00', '2025-07-17 12:00:00', 'Completed', 3000000.00, 'Paid', 2, NULL, NULL),
+('U001', 'U002', '2025-07-18 14:00:00', '2025-07-20 14:00:00', '2025-07-22 12:00:00', 'CheckedIn', 1200000.00, 'Paid', 3, 'Late checkout', NULL),
+('U001', NULL, '2025-07-20 10:00:00', '2025-07-25 14:00:00', '2025-07-27 12:00:00', 'Cancelled', 800000.00, 'Unpaid', 3, 'Cancelled due to schedule change', '2025-07-20 12:00:00'),
+('U001', NULL, '2025-07-20 11:00:00', '2025-08-01 14:00:00', '2025-08-03 12:00:00', 'Pending', 900000.00, 'Unpaid', 4, NULL, NULL),
+('U001', 'U002', '2025-07-20 12:00:00', '2025-08-05 14:00:00', '2025-08-07 12:00:00', 'Pending', 1100000.00, 'Unpaid', 4, 'Payment pending', NULL),
+('U001', NULL, '2025-07-20 13:00:00', '2025-08-10 14:00:00', '2025-08-12 12:00:00', 'Paid', 1300000.00, 'Paid', 1, 'Special request for view', NULL),
+('U001', NULL, '2025-07-20 14:00:00', '2025-08-15 14:00:00', '2025-08-17 12:00:00', 'Paid', 2500000.00, 'Paid', 2, NULL, NULL),
+('U003', NULL, '2025-07-15 10:00:00', '2025-07-18 14:00:00', '2025-07-20 12:00:00', 'Completed', 3000000.00, 'Paid', 1, 'Already checked in', NULL),
+('U004', NULL, '2025-07-16 10:00:00', '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'CheckedIn', 4000000.00, 'Paid', 1, 'Paid but not assigned room yet', NULL),
+('U005', NULL, '2025-07-16 11:00:00', '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'Cancelled', 2500000.00, 'Unpaid', 1, 'Waiting for payment', '2025-07-20 15:48:00'),
+('U006', NULL, '2025-07-16 12:00:00', '2025-07-19 14:00:00', '2025-07-20 12:00:00', 'Completed', 6000000.00, 'Paid', 1, 'Booked multiple rooms', NULL),
+('U007', NULL, '2025-07-16 13:00:00', '2025-07-19 12:00:00', '2025-07-21 12:00:00', 'CheckedIn', 3500000.00, 'Paid', 1, 'Checked in early', NULL),
+('U008', NULL, '2025-07-16 14:00:00', '2025-07-19 14:00:00', '2025-07-21 12:00:00', 'CheckedIn', 5000000.00, 'Paid', 1, 'Staying from yesterday', NULL),
+('U007', NULL, '2025-07-18 10:00:00', '2025-07-20 14:00:00', '2025-07-22 12:00:00', 'CheckedIn', 7000000.00, 'Paid', 1, 'Booking paid today', NULL),
+('U006', NULL, '2025-07-18 11:00:00', '2025-07-20 14:00:00', '2025-07-21 12:00:00', 'CheckedIn', 9000000.00, 'Paid', 1, 'Booked multiple room types', NULL),
+('U005', NULL, '2025-07-18 12:00:00', '2025-07-20 10:00:00', '2025-07-21 12:00:00', 'CheckedIn', 6000000.00, 'Paid', 1, 'Checked in this morning', NULL),
+('U004', NULL, '2025-07-18 13:00:00', '2025-07-20 14:00:00', '2025-07-21 12:00:00', 'Cancelled', 3000000.00, 'Unpaid', 1, 'Waiting for payment', '2025-07-20 15:48:00');
 
 -- Bảng BookingRoomType (giữ nguyên)
 INSERT INTO BookingRoomType (booking_id, room_type_id, quantity, price_per_room)
@@ -670,24 +871,6 @@ VALUES
 ('U001', 4, 4, 'Good experience overall', 'feedback4.jpg', 'Hidden'),
 ('U001', 5, 5, 'Perfect family vacation', 'feedback5.jpg', 'Visible');
 
--- VNPayPayment (5 rows)
-INSERT INTO VNPayPayment (booking_id, amount, status, paid_at)
-VALUES 
-(1, 1000000.00, 'Pending', '2025-07-01 10:00:00'),
-(2, 2000000.00, 'Completed', '2025-07-05 10:00:00'),
-(3, 1500000.00, 'Completed', '2025-07-10 10:00:00'),
-(4, 3000000.00, 'Completed', '2025-07-15 10:00:00'),
-(5, 1200000.00, 'Refunded', '2025-07-20 10:00:00');
-
--- VNPayTransaction (5 rows)
-INSERT INTO VNPayTransaction (payment_id, vnp_TxnRef, vnp_TransactionNo, vnp_ResponseCode, vnp_Amount, vnp_BankCode, vnp_CardType, vnp_SecureHash, is_refunded)
-VALUES 
-(1, 'TXN001', '123456', '00', 1000000.00, 'NCB', 'VISA', 'hash1', 0),
-(2, 'TXN002', '123457', '00', 2000000.00, 'VCB', 'MASTER', 'hash2', 0),
-(3, 'TXN003', '123458', '00', 1500000.00, 'TPB', 'VISA', 'hash3', 0),
-(4, 'TXN004', '123459', '00', 3000000.00, 'MBB', 'MASTER', 'hash4', 0),
-(5, 'TXN005', '123460', '07', 1200000.00, 'ACB', 'VISA', 'hash5', 1);
-
 -- Invoice (5 rows)
 INSERT INTO Invoice (booking_id, total_amount, issued_at, pdf_url)
 VALUES 
@@ -750,24 +933,6 @@ VALUES
 ('U003', 'Silver', 'Gold', '2025-06-25', 'Frequent bookings'),
 ('U004', 'Gold', 'VIP', '2025-06-25', 'High spending'),
 ('U005', 'Member', 'Silver', '2025-06-25', 'Referral program');
-
--- Permission (5 rows)
-INSERT INTO Permission (role, resource, action, allowed)
-VALUES 
-('Customer', 'Booking', 'Create', 1),
-('Staff', 'Booking', 'Read', 1),
-('Manager', 'Booking', 'Update', 1),
-('Admin', 'UserAccount', 'Delete', 1),
-('HotelOwner', 'HotelBranch', 'Update', 1);
-
--- Notification (5 rows)
-INSERT INTO Notification (user_id, title, message, type, related_booking_id, status)
-VALUES 
-('U001', 'Booking Confirmed', 'Your booking is confirmed', 'Booking', 1, 'Unread'),
-('U002', 'New Promotion', 'Summer sale now live!', 'Promotion', NULL, 'Read'),
-('U003', 'Payment Received', 'Payment for booking completed', 'Payment', 2, 'Unread'),
-('U004', 'Feedback Requested', 'Please review your experience', 'Feedback', 3, 'Unread'),
-('U005', 'Tier Upgraded', 'Congratulations on Silver status!', 'TierUpgrade', NULL, 'Read');
 
 -- CartRoomType (5 rows)
 INSERT INTO CartRoomType (user_id, room_type_id, quantity, added_at)
@@ -906,7 +1071,7 @@ CREATE TABLE Wallet (
 -- 🌟 Dữ liệu mẫu:
 INSERT INTO Wallet (UserID, Balance)
 VALUES 
-('U001', 1000000),  -- Khách A có sẵn 2 triệu
+('U001', 100000000),  -- Khách A có sẵn 2 triệu
 ('U002', 0),         -- Khách B chưa nạp tiền
 ('U003', 500000);    -- Khách C có 500k
 
@@ -963,16 +1128,16 @@ INSERT INTO WalletTransaction
 (WalletID, Amount, TransactionType, Description, BookingID, BranchID,BankAccountID, CreatedBy, Status)
 VALUES
 -- U001: Nạp tiền vào ví
-(1, 1000000, 'Deposit', N'Nạp 1 triệu vào ví', NULL, NULL,1, 'U001', 'Success'),
+(1, 1000000, 'Deposit', N'Deposit From PayOS', NULL, NULL,NULL, 'U001', 'Success'),
 
 -- U001: Thanh toán đơn đặt phòng (BookingID = 2, branch_id = 1)
-(1, 800000, 'Payment', N'Thanh toán đơn đặt phòng #2', 2, 1,1, 'U001', 'Success'),
+(1, 800000, 'Payment', N'Booking payment #2', 2, 1,NULL, 'U001', 'Success'),
 
 -- U001: Hoàn tiền đơn đã hủy (BookingID = 6, branch_id = 3)
-(1, 800000, 'Refund', N'Hoàn tiền do hủy đơn phòng #2', 6, 3,1, 'U003', 'Success'),
+(1, 800000, 'Refund', N'Refund', 6, 3,1, 'U003', 'Success'),
 
 -- U002: Yêu cầu rút tiền
-(2, 300000, 'Withdraw', N'Yêu cầu rút tiền về tài khoản ngân hàng', NULL, NULL,3, 'U002', 'Pending'),
+(2, 300000, 'Withdraw', N'Withdraw to bank account', NULL, NULL,3, 'U002', 'Pending'),
 
 -- U003: Thanh toán thất bại (BookingID = 11, branch_id = 1)
-(3, 1000000, 'Payment', N'Thanh toán đơn đặt phòng #11 không thành công', 11, 1,4, 'U003', 'Failed');
+(3, 1000000, 'Payment', N'Failed', 11, 1,NULL, 'U003', 'Failed');
