@@ -15,7 +15,7 @@
     </head>
     <body>
         
-        <input type="hidden" id="userID" value="${user.id}">
+        <input type="hidden" id="userId" value="${user.id}">
         <!--Chat icon-->
         <div id="chat-icon" onclick="toggleChatWindow()">
             <img class="chat-icon__img" src="./img/robo.gif">
