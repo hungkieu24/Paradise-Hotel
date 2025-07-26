@@ -20,7 +20,6 @@ import java.util.Map;
 public class ChatAIService {
 
     //phải hidden
-    private final String OPENAI_API_KEY = "";
     private final String OPENAI_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
     // schema mô phỏng để AI hiểu về database  cần được sửa lại cho chính xác
     private final String DB_SCHEMA_CONTEXT = """
@@ -42,6 +41,7 @@ public class ChatAIService {
     - MemberTierRule(id, level, min_spending, description)
     - VoucherRedemptionRule(id, voucher_id, required_points, requied_tier, is_active)
     - HotelBranch(id, name, address, phone, email, image_url, owner_id, manager_id, created_at, is_deleted)
+    - Wallet(UserID, Balance, WalletID, UpdatedAt)
 
     Người dùng có thể hỏi các yêu cầu như:
     - Gợi ý phòng theo số người, giá tiền, tiện nghi
@@ -85,7 +85,7 @@ public class ChatAIService {
         String lowerMessage = userMessage.toLowerCase();
         Map<String, String> templates = new HashMap<>();
         templates.put("chào|hi|hello", "Chào bạn! Rất vui được hỗ trợ. Bạn muốn tìm hiểu về phòng, dịch vụ, hay điều gì thú vị ở khách sạn của chúng tôi?");
-        templates.put("khách sạn có gì|có gì thú vị", "Khách sạn chúng tôi có hồ bơi, spa, và nhà hàng 5 sao. Bạn muốn biết thêm về dịch vụ nào?");
+        templates.put("khách sạn có gì|có gì thú vị", "Khách sạn chúng tôi có hồ bơi, spa, và nhà hàng 5 sao. Bạn muốn biết thêm về dịch vụ nào? <a href=\"http://localhost:8080/ParadiseHotel/viewServiceList\">Service</a>");
         templates.put("cảm ơn|thanks", "Không có gì, rất vui được giúp bạn! Có điều gì thú vị nữa không?");
 
         for (Map.Entry<String, String> entry : templates.entrySet()) {
@@ -127,7 +127,7 @@ public class ChatAIService {
                 .put("role", "user")
                 .put("content", userMessage));
 
-        requestBody.put("model", "mistralai/mistral-7b-instruct");
+        requestBody.put("model", "qwen/qwen3-coder:free");
         requestBody.put("messages", messages);
         requestBody.put("temperature", 0.2);
 
@@ -281,7 +281,11 @@ public class ChatAIService {
             messages.put(new JSONObject()
                     .put("role", "system")
                     .put("content", "Bạn là trợ lý AI thân thiện của khách sạn 5 sao. Trả lời ngắn gọn, tự nhiên, và không tiết lộ thông tin nhạy cảm. "
-                            + "Nếu câu hỏi không liên quan đến khách sạn, trả lời lịch sự và gợi ý quay lại chủ đề khách sạn."));
+                            + "Nếu câu hỏi không liên quan đến khách sạn, trả lời lịch sự và gợi ý quay lại chủ đề khách sạn."
+                            + "Bạn có thể gửi thêm các đường link sau và dựa vào đáp án của bạn[ <a href=\"http://localhost:8080/ParadiseHotel/viewServiceList\">Service</a>]"
+                            + "[ <a href=\"http://localhost:8080/ParadiseHotel/viewRoomTypeDetail?roomTypeId=\">suggest room</a>]"
+                            + "[ <a href=\"http://localhost:8080/ParadiseHotel/myWallet\">wallet</a>]"
+                            + "[<a href=\"http://localhost:8080/ParadiseHotel/bookingHistory\">Booking History</a>]"));
 
             messages.put(new JSONObject()
                     .put("role", "user")

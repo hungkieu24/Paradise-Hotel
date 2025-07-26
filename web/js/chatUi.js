@@ -16,10 +16,13 @@ function toggleChatWindow() {
         scrollChatToBottom();
     }
 }
+window.onload = function () {
+    loadHistoryList();
+};
 
 function sendMessage() {
     const input = document.getElementById("chat-input");
-    const userId = document.getElementById("userId").value;
+    const userId = document.getElementById("userID").value;
     const text = input.value.trim();
     if (!text)
         return;
@@ -72,8 +75,8 @@ function renderChat() {
         const div = document.createElement("div");
         div.className = "msg " + (msg.role === "user" ? "user" : "ai");
         const time = new Date(msg.timestamp).toLocaleTimeString();
-        div.innerHTML = `<span>${msg.text}</span>
-                        <small> ${time}</small>`;
+        div.innerHTML = `<div class="message-content"><div class="message-text">${msg.text}</div><div class="message-time">${time}</div></div>`;
+
         chatBody.appendChild(div);
     });
 }
@@ -93,13 +96,13 @@ function newConversation() {
 }
 
 function loadHistoryList() {
-    const userId = document.getElementById("userId").value;
+    const userId = document.getElementById("userID").value;
     if (!userId) {
         document.getElementById("chat-history-list").innerHTML = "<div>Vui lòng đăng nhập để xem lịch sử trò chuyện.</div>";
         return;
     }
 
-    fetch(`ChatHistoryServlet?userId=${userId}`, {
+    fetch(`ChatHistoryServlet?userID=${userId}`, {
         method: "GET",
         headers: {"Content-Type": "application/json"}
     })
@@ -116,14 +119,14 @@ function loadHistoryList() {
                     const div = document.createElement("div");
                     const firstMessage = conv[0]?.text.substring(0, 20) + (conv[0]?.text.length > 20 ? "..." : "");
                     const time = conv[0]?.timestamp ? new Date(conv[0].timestamp).toLocaleString() : "";
-                    div.innerHTML = `<span>Chat ${idx + 1}: ${firstMessage}</span><small>${time}</small>`;
+                    div.innerHTML = `<span>Chat chatHistory: ${firstMessage}</span><small>${time}</small>`;
                     div.onclick = () => loadConversation(idx);
                     if (currentConversation === conv)
                         div.classList.add("active");
                     list.appendChild(div);
                 });
                 const newDiv = document.createElement("div");
-                newDiv.textContent = "+ New";
+                newDiv.textContent = "↻";
                 newDiv.onclick = newConversation;
                 list.appendChild(newDiv);
             })
