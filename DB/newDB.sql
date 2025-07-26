@@ -960,7 +960,7 @@ CREATE TABLE WalletTransaction (
 -- WalletID = 3 (UserID = 'U003')
 
 INSERT INTO WalletTransaction 
-(WalletID, Amount, TransactionType, Description, BookingID, BranchID,BankAccountNumber, CreatedBy, Status)
+(WalletID, Amount, TransactionType, Description, BookingID, BranchID,BankAccountID, CreatedBy, Status)
 VALUES
 -- U001: Nạp tiền vào ví
 (1, 1000000, 'Deposit', N'Nạp 1 triệu vào ví', NULL, NULL,1, 'U001', 'Success'),

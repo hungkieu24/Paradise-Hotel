@@ -7,7 +7,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<fmt:setLocale value="en" />
+<fmt:setLocale value="vi_VN" />
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ page import="java.util.*, model.*" %>
 <%@ page import="java.util.List" %>
@@ -344,7 +344,7 @@
 
                             <div class="wallet-info" style="margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                                 <h4>Wallet Balance:<a href="./myWallet"><h6>(Go to wallet)</h6></a></h4>
-                                <p><strong><span id="wallet-balance">${sessionScope.wallet.balance} VND</span></strong></p>
+                                <p><strong><span id="wallet-balance"><fmt:formatNumber value="${sessionScope.wallet.getBalance()}" type="currency"/></span></strong></p>
                                 <p id="wallet-status" style="color: green;">✓ Sufficient balance</p>
                             </div>
 

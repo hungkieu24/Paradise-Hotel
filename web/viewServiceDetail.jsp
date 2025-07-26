@@ -6,7 +6,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<fmt:setLocale value="en" />
+<fmt:setLocale value="vi_VN" />
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!DOCTYPE html>
 <html lang="en">
@@ -136,7 +136,7 @@
                             <p><strong>Price:</strong>
                                 <c:choose>
                                     <c:when test="${service.price != null}">
-                                        <fmt:formatNumber value="${service.price}" type="number" groupingUsed="true" /> VND
+                                        <fmt:formatNumber value="${service.price}" type="currency"/>
                                     </c:when>
                                 </c:choose>
                             </p>
@@ -165,8 +165,7 @@
                                                     <div class="info">
                                                         <small>
                                                             From 
-                                                            <fmt:formatNumber value="${r.price}" type="number" groupingUsed="true" maxFractionDigits="0" />
-                                                            VND
+                                                            <fmt:formatNumber value="${r.price}" type="currency"/>
                                                         </small>
                                                         <h3>${r.name}</h3>
                                                         <span>Read more</span>

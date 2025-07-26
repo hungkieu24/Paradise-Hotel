@@ -69,10 +69,10 @@
                                 </div>
                                 <div class="dropdown-content">
                                     <div class="dropdown-header">
-                                        <strong>${sessionScope.user.getUsername()}</strong>
+                                        <strong>${sessionScope.user.getFullname()}</strong>
                                         <small>${sessionScope.user.getEmail()}</small>
                                     </div>
-                                    <a href="#">Profile Settings</a>
+                                    <a href="../editProfile">Profile Settings</a>
                                     <hr>
                                     <a href="../login?action=logout" class="sign-out">Sign Out</a>
                                 </div>

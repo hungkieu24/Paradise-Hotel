@@ -7,6 +7,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<fmt:setLocale value="vi_VN" />
 <!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
@@ -171,10 +172,12 @@
                     <h1 class="page-title">Manage Services</h1>
                 </div>
                 <div class="header-right">
-                    <div class="user-info">
-                        <i class="fas fa-user-circle"></i>
-                        <span>${username}</span>
-                    </div>
+                    <a href="./editProfile" style="text-decoration: none"> 
+                        <div class="user-info"> <!-- thể hiện user info -->
+                            <i class="fas fa-user-circle"></i>
+                            <span>${sessionScope.user.getFullname()}</span>
+                        </div>
+                    </a>
                 </div>
             </header>
             <div class="content-body">
@@ -270,7 +273,7 @@
                                     <tr data-status="${service.status}" data-service="${service.name}" data-service-id="${service.id}">
                                         <td><strong>${service.name}</strong></td>
                                         <td><span class="status-badge status-${service.status.toLowerCase()}">${service.status}</span></td>
-                                        <td><fmt:formatNumber value="${service.price}" type="currency" currencyCode="VND" maxFractionDigits="0"/></td>
+                                        <td><fmt:formatNumber value="${service.price}" type="currency"/></td>
                                         <td>${service.description}</td>
                                         <!-- image -->
                                         <td>

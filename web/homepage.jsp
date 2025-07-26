@@ -7,7 +7,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<fmt:setLocale value="en" />
+<fmt:setLocale value="vi_VN" />
 
 
 <!DOCTYPE html>
@@ -206,8 +206,7 @@
                                                 <div class="info">
                                                     <small>
                                                         From 
-                                                        <fmt:formatNumber value="${r.getBase_price()}" type="number" groupingUsed="true" maxFractionDigits="0" />
-                                                        VND /night
+                                                        <fmt:formatNumber value="${r.getBase_price()}" type="currency"/> /night
                                                     </small>
                                                     <h3>${r.getName()}</h3>
                                                     <span>Read more</span>
