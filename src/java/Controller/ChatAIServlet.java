@@ -49,21 +49,30 @@ public class ChatAIServlet extends HttpServlet {
 
         JSONObject reqJson = new JSONObject(sb.toString());// chuyển thành đối tượng JSON
         String userMessage = reqJson.getString("message");// lấy nội dung của message
-        String userId = reqJson.getString("userId");
+        String userId = reqJson.optString("userId", "");
+        if (userId.isEmpty()) {
+            sendResponse(response, "Miss userId", HttpServletResponse.SC_BAD_REQUEST, "");
+            System.out.println("lay tu Json" + userId);
+            return;
+        }
 
         try {
-            
 
             // Step 1: Generate SQL from user message
             String sql = chatAIService.generateSQL(userMessage, userId);
 
             System.out.println(sql);
+            if (sql == null || sql.contains("too many requests") || sql.contains("You are sending too many requests")) {
+                sendResponse(response, "The system is currently overloaded. Please try again later.", 429, userId);
+                return;
+            }
 
             // Step 2: Validate SQL for safety (only SELECT allowed)
             if (!isSQLSafe(sql) && !sql.equals("RESTRICTED_QUERY")
                     && !sql.startsWith("TEMPLATE_RESPONSE:") && !sql.equals("NON_SQL_QUERY")) {
                 saveChatHistoryViolation(userId, userMessage, "Invalid SQL");
-                sendResponse(response, "Yêu cầu không hợp lệ. Chỉ các truy vấn SELECT được phép.", HttpServletResponse.SC_BAD_REQUEST);
+                sendResponse(response, "Invalid request. Only SELECT queries are allowed.", HttpServletResponse.SC_BAD_REQUEST, userId);
+                System.out.println("Is SQL :" + userId);
                 return;
             }
 
@@ -79,13 +88,13 @@ public class ChatAIServlet extends HttpServlet {
                 saveChatHistoryViolation(userId, userMessage, "Restricted query");
             }
 
-            sendResponse(response, aiAnswer, HttpServletResponse.SC_OK);
+            sendResponse(response, aiAnswer, HttpServletResponse.SC_OK, userId);
 
         } catch (Exception e) {
             try {
                 e.printStackTrace();
                 saveChatHistoryViolation(userId, userMessage, "Error: " + e.getMessage());
-                sendResponse(response, "Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau.", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                sendResponse(response, "An error occurred during processing. Please try again later.", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, userId);
             } catch (SQLException ex) {
                 Logger.getLogger(ChatAIServlet.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -107,9 +116,10 @@ public class ChatAIServlet extends HttpServlet {
                 && !lowerSql.contains("insert");
     }
 
-    private void sendResponse(HttpServletResponse response, String answer, int statusCode) throws IOException {
+    private void sendResponse(HttpServletResponse response, String answer, int statusCode, String userId) throws IOException {
         JSONObject resJson = new JSONObject();
         resJson.put("answer", answer);
+        resJson.put("userId", userId);
         response.setStatus(statusCode);
         PrintWriter out = response.getWriter();
         out.print(resJson.toString());

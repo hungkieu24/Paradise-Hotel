@@ -183,7 +183,7 @@ public class VNPayRefundServlet extends HttpServlet {
             LoyaltyPointDAO loyaltyPointDAO = new LoyaltyPointDAO();
 
             // Update payment and booking status with refund amount
-            boolean bookingUpdated = bookingDAO.updateBookingForRefund(bookingId, "Cancelled", "Refunded", reason, refundAmount);
+            boolean bookingUpdated = bookingDAO.updateBookingForRefund(bookingId, "Cancelled", "Paid", reason, refundAmount);
 
             // Get booking info and subtract points based on original amount
             Booking booking = bookingDAO.getBookingById(bookingId);

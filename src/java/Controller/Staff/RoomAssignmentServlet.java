@@ -211,11 +211,12 @@ public class RoomAssignmentServlet extends HttpServlet {
         int bookingId = Integer.parseInt(request.getParameter("bookingId"));
         int roomId = Integer.parseInt(request.getParameter("roomId"));
         RoomDAO roomDAO = new RoomDAO();
-        roomDAO.updateRoomStatus(roomId, "Occupied");
-        BookingDAO bookingDAO = new BookingDAO();
-        // Phương thức này bây giờ sẽ gán một phòng duy nhất
-        boolean success = bookingDAO.assignRoomsToBooking(bookingId, new String[]{String.valueOf(roomId)});
 
+        BookingDAO bookingDAO = new BookingDAO();
+        boolean success = bookingDAO.assignRoomsToBooking(bookingId, new String[]{String.valueOf(roomId)});
+        if (success) {
+            roomDAO.updateRoomStatus(roomId, "Occupied");
+        }
         response.sendRedirect(request.getContextPath()
                 + "/staff-room-assignment?action=assign&bookingId=" + bookingId
                 + (success ? "" : "&error=failed"));

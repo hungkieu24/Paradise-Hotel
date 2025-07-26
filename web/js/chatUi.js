@@ -22,12 +22,20 @@ window.onload = function () {
 
 function sendMessage() {
     const input = document.getElementById("chat-input");
-    const userId = document.getElementById("userID").value;
+    const userId = document.getElementById("userId").value;
     const text = input.value.trim();
-    if (!text)
+
+    console.log("User ID (JS):", userId);
+    if (text === "")
         return;
+
+    const request = {
+        message: text,
+        userId: userId     // LUÔN gửi kèm userId
+    };
+
     if (!userId) {
-        currentConversation.push({role: "ai", text: "Vui lòng đăng nhập để sử dụng ChatAI.", timestamp: new Date().toISOString()});
+        currentConversation.push({role: "ai", text: "Please log in to use ChatAI.", timestamp: new Date().toISOString()});
         renderChat();
         scrollChatToBottom();
         return;
@@ -41,14 +49,17 @@ function sendMessage() {
     fetch("ChatServlet", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({message: text, userId: userId})
+        body: JSON.stringify(request)
     })
             .then(res => {
                 if (!res.ok) {
                     if (res.status === 400) {
-                        throw new Error("Vui lòng đăng nhập để sử dụng ChatAI.");
+                        throw new Error("Please log in to use ChatAI.");
                     } else if (res.status === 403) {
-                        throw new Error("Bạn không có quyền truy cập thông tin này.");
+                        throw new Error("You do not have permission to access this information.");
+                    } 
+                    else if (res.status === 429) {
+                        throw new Error("You are sending too many requests to the system. Please try again in a few seconds.");
                     } else {
                         throw new Error("Server error");
                     }
@@ -96,19 +107,19 @@ function newConversation() {
 }
 
 function loadHistoryList() {
-    const userId = document.getElementById("userID").value;
+    const userId = document.getElementById("userId").value;
     if (!userId) {
-        document.getElementById("chat-history-list").innerHTML = "<div>Vui lòng đăng nhập để xem lịch sử trò chuyện.</div>";
+        document.getElementById("chat-history-list").innerHTML = "<div>Please log in to view your chat history.</div>";
         return;
     }
 
-    fetch(`ChatHistoryServlet?userID=${userId}`, {
+    fetch(`ChatHistoryServlet?userId=${userId}`, {
         method: "GET",
         headers: {"Content-Type": "application/json"}
     })
             .then(res => {
                 if (!res.ok)
-                    throw new Error("Không thể tải lịch sử trò chuyện.");
+                    throw new Error("Unable to load chat history.");
                 return res.json();
             })
             .then(data => {

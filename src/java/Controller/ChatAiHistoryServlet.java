@@ -27,7 +27,7 @@ public class ChatAiHistoryServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json;charset=UTF-8");
-        String userId = request.getParameter("userID");
+        String userId = request.getParameter("userId");
 
         if (userId == null || userId.isEmpty()) {
             sendErrorResponse(response, "Vui lòng cung cấp userId.");
