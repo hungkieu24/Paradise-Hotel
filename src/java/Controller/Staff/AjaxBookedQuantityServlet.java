@@ -30,8 +30,8 @@ public class AjaxBookedQuantityServlet extends HttpServlet {
             Integer branchId = ((Model.UserAccount)request.getSession().getAttribute("user")).getBranchId();
             bookedQuantity = roomDAO.getBookedQuantityByRoomTypeAndDateRange(
                 branchId, roomTypeId,
-                new Timestamp(checkInDate.getTime()),
-                new Timestamp(checkOutDate.getTime())
+                new java.sql.Date(checkInDate.getTime()),
+                new java.sql.Date(checkOutDate.getTime())
             );
         } catch (Exception e) {
             bookedQuantity = -1; // báo lỗi

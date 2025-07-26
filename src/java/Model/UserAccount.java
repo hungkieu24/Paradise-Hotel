@@ -68,6 +68,20 @@ public class UserAccount {
         this.phonenumber = phonenumber;
         this.branchId = branchId;
     }
+    // Thêm fullname
+    public UserAccount(String id, String username, String password, String fullname, String email, String avatar_url, String role, String status, String create_at, String phonenumber, Integer branchId) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.fullname = fullname;
+        this.email = email;
+        this.avatar_url = avatar_url;
+        this.role = role;
+        this.status = status;
+        this.create_at = create_at;
+        this.phonenumber = phonenumber;
+        this.branchId = branchId;
+    }
 
     //author: hung
     //Content: Constructor đầy đủ cho data mới

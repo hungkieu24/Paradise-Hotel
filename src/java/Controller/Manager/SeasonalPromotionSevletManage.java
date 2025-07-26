@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -37,8 +38,8 @@ public class SeasonalPromotionSevletManage extends HttpServlet {
             // lấy tên chi nhánh và tên manager
             String username = user.getUsername();
             String userId = user.getId();
-            
-            String branchName= r.getBranchNameById(userId);
+
+            String branchName = r.getBranchNameById(userId);
             int branchId = r.getBranchId(userId);
             // phan trang
             int page = 1;
@@ -59,12 +60,22 @@ public class SeasonalPromotionSevletManage extends HttpServlet {
             }
             // total promotion theo branch
             int totalPromotion = p.countPromotionByBranch(branchId);
-            int totalPages = (int) Math.ceil((double) totalPromotion/ pageSize);
+            int totalPages = (int) Math.ceil((double) totalPromotion / pageSize);
             // lay list promotion
             List<SeasonalPromotion> promotions = p.getPromotionsByBranchId(branchId, page, pageSize);
+            LocalDate today = LocalDate.now();
+            for (SeasonalPromotion pro : promotions) {
+                LocalDate endDa = pro.getEndDate().toLocalDate();
+
+                if (endDa.isBefore(today) && pro.getStatus().equalsIgnoreCase("Active")) {
+                    // Cập nhật trạng thái trong DB nếu đã hết hạn
+                    pro.setStatus("Inactive");
+                    p.updateStatus(pro.getId(), "Inactive");
+                }
+            }
             //set Attributes
             request.setAttribute("branchId", branchId);
-            request.setAttribute("username",username);
+            request.setAttribute("username", username);
             request.setAttribute("branchname", branchName);
             request.setAttribute("currentPage", page);
             request.setAttribute("pageSize", pageSize);

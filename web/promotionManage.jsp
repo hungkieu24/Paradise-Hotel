@@ -163,7 +163,7 @@
                         <i class="fas fa-users"></i>
                         <span class="menu-text">Manage membership</span>
                     </a>
-                    <a href="../login?action=logout" class="menu-item logout">
+                    <a href="login?action=logout" class="menu-item logout">
                         <i class="fas fa-sign-out-alt"></i>
                         <span class="menu-text">logout</span>
                     </a>
@@ -640,202 +640,202 @@
                                             <input type="date" id="edit_to_date" name="to_date" required>
                                             <span id="edit_to_date_error" class="error-message"></span>
                                         </div>
-                                        div class="form-group">
-                                        <label for="edit_status">Status *</label>
-                                        <select id="edit_status" name="status" required>
-                                            <option value="Active">Active</option>
-                                            <option value="Inactive">Inactive</option>
-                                        </select>
-                                        <span id="edit_status_error" class="error-message"></span>
+                                        <div class="form-group">
+                                            <label for="edit_status">Status *</label>
+                                            <select id="edit_status" name="status" required>
+                                                <option value="Active">Active</option>
+                                                <option value="Inactive">Inactive</option>
+                                            </select>
+                                            <span id="edit_status_error" class="error-message"></span>
+                                        </div>
                                 </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i>
+                                        Update
+                                    </button>
+                                </div>
+                                </form>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i>
-                                    Update
-                                </button>
-                            </div>
-                            </form>
                         </div>
                     </div>
                 </div>
         </div>
-    </div>
-</main>
+    </main>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-                                    // Khi load trang: tự động mở tab dựa trên URL
-                                    window.addEventListener('DOMContentLoaded', function () {
-                                        const path = window.location.pathname;
-                                        if (path.includes('/vouchers')) {
-                                            showTab('vouchers');
-                                        } else {
-                                            showTab('seasonal'); // mặc định: promotions
-                                        }
-                                    });
-                                    // Hàm CHỈ dùng để HIỂN THỊ tab UI, không load lại
-                                    function showTab(tabName) {
-                                        // Ẩn tất cả tab content
-                                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                                        // Bỏ active tất cả button
-                                        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-                                        // Hiện đúng tab
-                                        const tabContent = document.getElementById(tabName + '-tab');
-                                        if (tabContent)
-                                            tabContent.classList.add('active');
-                                        const selector = '.tab-button[data-tab="' + tabName + '"]';
-                                        // Kích hoạt nút
-                                        const tabButton = document.querySelector(selector);
-                                        if (tabButton)
-                                            tabButton.classList.add('active');
-                                    }
-
-                                    // Khi người dùng click tab → chuyển trang để gọi servlet
-                                    function handleTabClick(tabName) {
-                                        let servletUrl = '';
-                                        if (tabName === 'seasonal') {
-                                            servletUrl = '/ParadiseHotel/promotions';
-                                        } else if (tabName === 'vouchers') {
-                                            servletUrl = '/ParadiseHotel/vouchers';
-                                        } else {
-                                            servletUrl = '/ParadiseHotel/promotions';
-                                        }
-
-                                        // Chuyển trang chỉ 1 lần để gọi đúng servlet
-                                        window.location.href = servletUrl;
-                                    }
-
-                                    function openPromotionModal() {
-                                        const modal = document.getElementById('promotionModal');
-                                        modal.style.display = 'block';
-                                        modal.classList.add('show');
-                                        document.body.style.overflow = 'hidden';
-                                    }
-                                    function openVoucherModal() {
-                                        const modal = document.getElementById('voucherModal');
-                                        modal.style.display = 'block';
-                                        modal.classList.add('show');
-                                        document.body.style.overflow = 'hidden';
-                                    }
-
-
-                                    function closeModal() {
-                                        const modal = document.querySelector('.modal.show');
-                                        if (modal) {
-                                            modal.style.display = 'none';
-                                            modal.classList.remove('show');
-                                            document.body.style.overflow = '';
-                                        }
-                                    }
-                                    function closeEditModal() {
-                                        const modal = document.querySelector('.modal.show');
-                                        if (modal) {
-                                            modal.style.display = 'none';
-                                            modal.classList.remove('show');
-                                            document.body.style.overflow = '';
-                                        }
-                                    }
-
-                                    function editPromotion(btn) {
-                                        document.getElementById('edit_promotion_id').value = btn.getAttribute('data-id');
-                                        document.getElementById('edit_promotion_name').value = btn.getAttribute('data-name');
-                                        document.getElementById('edit_discount_percent').value = btn.getAttribute('data-percent');
-                                        document.getElementById('edit_discount_amount').value = btn.getAttribute('data-amount');
-                                        document.getElementById('edit_description').value = btn.getAttribute('data-description');
-                                        document.getElementById('edit_start_date').value = btn.getAttribute('data-start');
-                                        document.getElementById('edit_end_date').value = btn.getAttribute('data-end');
-                                        // hien modal
-                                        const modal = document.getElementById('editPromotionModal');
-                                        modal.style.display = 'block';
-                                        modal.classList.add('show');
-                                        document.body.style.overflow = 'hidden';
-                                    }
-
-                                    function editVoucher(btn) {
-                                        document.getElementById('edit_voucher_id').value = btn.getAttribute('data-id');
-                                        document.getElementById('edit_voucher_code').value = btn.getAttribute('data-code');
-                                        document.getElementById('edit_voucher_description').value = btn.getAttribute('data-description');
-                                        document.getElementById('edit_voucher_discount_percent').value = btn.getAttribute('data-percent');
-                                        document.getElementById('edit_voucher_discount_amount').value = btn.getAttribute('data-amount');
-                                        document.getElementById('edit_min_price').value = btn.getAttribute('data-minPrice');
-                                        document.getElementById('edit_total_quantity').value = btn.getAttribute('data-total');
-                                        document.getElementById('edit_from_date').value = btn.getAttribute('data-from');
-                                        document.getElementById('edit_to_date').value = btn.getAttribute('data-to');
-                                        const modal = document.getElementById('editVoucherModal');
-                                        modal.style.display = 'block';
-                                        modal.classList.add('show');
-                                        document.body.style.overflow = 'hidden';
-                                    }
-
-                                    function deletePromotion(promotionId) {
-                                        Swal.fire({
-                                            title: 'Are you sure?',
-                                            text: "You won't be able to revert this!",
-                                            icon: 'warning',
-                                            showCancelButton: true,
-                                            confirmButtonColor: '#3085d6',
-                                            cancelButtonColor: '#d33',
-                                            confirmButtonText: 'Yes, delete it!'
-                                        }).then((result) => {
-                                            if (result.isConfirmed) {
-                                                let form = document.createElement('form');
-                                                form.method = 'post';
-                                                form.action = 'deletePromotion';
-                                                let inputId = document.createElement('input');
-                                                inputId.type = 'hidden';
-                                                inputId.name = 'promotionId';
-                                                inputId.value = promotionId;
-                                                form.appendChild(inputId);
-                                                document.body.appendChild(form);
-                                                form.submit();
+                                        // Khi load trang: tự động mở tab dựa trên URL
+                                        window.addEventListener('DOMContentLoaded', function () {
+                                            const path = window.location.pathname;
+                                            if (path.includes('/vouchers')) {
+                                                showTab('vouchers');
+                                            } else {
+                                                showTab('seasonal'); // mặc định: promotions
                                             }
                                         });
-                                    }
+                                        // Hàm CHỈ dùng để HIỂN THỊ tab UI, không load lại
+                                        function showTab(tabName) {
+                                            // Ẩn tất cả tab content
+                                            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                                            // Bỏ active tất cả button
+                                            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                                            // Hiện đúng tab
+                                            const tabContent = document.getElementById(tabName + '-tab');
+                                            if (tabContent)
+                                                tabContent.classList.add('active');
+                                            const selector = '.tab-button[data-tab="' + tabName + '"]';
+                                            // Kích hoạt nút
+                                            const tabButton = document.querySelector(selector);
+                                            if (tabButton)
+                                                tabButton.classList.add('active');
+                                        }
 
-                                    function deleteVoucher(voucherId) {
-                                        Swal.fire({
-                                            title: 'Are you sure?',
-                                            text: "You won't be able to revert this!",
-                                            icon: 'warning',
-                                            showCancelButton: true,
-                                            confirmButtonColor: '#3085d6',
-                                            cancelButtonColor: '#d33',
-                                            confirmButtonText: 'Yes, delete it!'
-                                        }).then((result) => {
-                                            if (result.isConfirmed) {
-                                                let form = document.createElement('form');
-                                                form.method = 'post';
-                                                form.action = 'deleteVoucher';
-                                                let inputId = document.createElement('input');
-                                                inputId.type = 'hidden';
-                                                inputId.name = 'voucherId';
-                                                inputId.value = voucherId;
-                                                form.appendChild(inputId);
-                                                document.body.appendChild(form);
-                                                form.submit();
+                                        // Khi người dùng click tab → chuyển trang để gọi servlet
+                                        function handleTabClick(tabName) {
+                                            let servletUrl = '';
+                                            if (tabName === 'seasonal') {
+                                                servletUrl = '/ParadiseHotel/promotions';
+                                            } else if (tabName === 'vouchers') {
+                                                servletUrl = '/ParadiseHotel/vouchers';
+                                            } else {
+                                                servletUrl = '/ParadiseHotel/promotions';
                                             }
-                                        });
-                                    }
-                                    // chi nhap 1 trong 2 discount
-                                    function handleDiscountInput(changedField) {
-                                        const percentField = document.getElementById("discount_percent");
-                                        const amountField = document.getElementById("discount_amount");
-                                        if (changedField === "percent" && percentField.value) {
-                                            amountField.disabled = true;
-                                            amountField.value = '';
-                                        } else if (changedField === "amount" && amountField.value) {
-                                            percentField.disabled = true;
-                                            percentField.value = '';
+
+                                            // Chuyển trang chỉ 1 lần để gọi đúng servlet
+                                            window.location.href = servletUrl;
                                         }
-                                        if (!percentField.value) {
-                                            amountField.disabled = false;
+
+                                        function openPromotionModal() {
+                                            const modal = document.getElementById('promotionModal');
+                                            modal.style.display = 'block';
+                                            modal.classList.add('show');
+                                            document.body.style.overflow = 'hidden';
                                         }
-                                        if (!amountField.value) {
-                                            percentField.disabled = false;
+                                        function openVoucherModal() {
+                                            const modal = document.getElementById('voucherModal');
+                                            modal.style.display = 'block';
+                                            modal.classList.add('show');
+                                            document.body.style.overflow = 'hidden';
                                         }
-                                    }
+
+
+                                        function closeModal() {
+                                            const modal = document.querySelector('.modal.show');
+                                            if (modal) {
+                                                modal.style.display = 'none';
+                                                modal.classList.remove('show');
+                                                document.body.style.overflow = '';
+                                            }
+                                        }
+                                        function closeEditModal() {
+                                            const modal = document.querySelector('.modal.show');
+                                            if (modal) {
+                                                modal.style.display = 'none';
+                                                modal.classList.remove('show');
+                                                document.body.style.overflow = '';
+                                            }
+                                        }
+
+                                        function editPromotion(btn) {
+                                            document.getElementById('edit_promotion_id').value = btn.getAttribute('data-id');
+                                            document.getElementById('edit_promotion_name').value = btn.getAttribute('data-name');
+                                            document.getElementById('edit_discount_percent').value = btn.getAttribute('data-percent');
+                                            document.getElementById('edit_discount_amount').value = btn.getAttribute('data-amount');
+                                            document.getElementById('edit_description').value = btn.getAttribute('data-description');
+                                            document.getElementById('edit_start_date').value = btn.getAttribute('data-start');
+                                            document.getElementById('edit_end_date').value = btn.getAttribute('data-end');
+                                            // hien modal
+                                            const modal = document.getElementById('editPromotionModal');
+                                            modal.style.display = 'block';
+                                            modal.classList.add('show');
+                                            document.body.style.overflow = 'hidden';
+                                        }
+
+                                        function editVoucher(btn) {
+                                            document.getElementById('edit_voucher_id').value = btn.getAttribute('data-id');
+                                            document.getElementById('edit_voucher_code').value = btn.getAttribute('data-code');
+                                            document.getElementById('edit_voucher_description').value = btn.getAttribute('data-description');
+                                            document.getElementById('edit_voucher_discount_percent').value = btn.getAttribute('data-percent');
+                                            document.getElementById('edit_voucher_discount_amount').value = btn.getAttribute('data-amount');
+                                            document.getElementById('edit_min_price').value = btn.getAttribute('data-minPrice');
+                                            document.getElementById('edit_total_quantity').value = btn.getAttribute('data-total');
+                                            document.getElementById('edit_from_date').value = btn.getAttribute('data-from');
+                                            document.getElementById('edit_to_date').value = btn.getAttribute('data-to');
+                                            const modal = document.getElementById('editVoucherModal');
+                                            modal.style.display = 'block';
+                                            modal.classList.add('show');
+                                            document.body.style.overflow = 'hidden';
+                                        }
+
+                                        function deletePromotion(promotionId) {
+                                            Swal.fire({
+                                                title: 'Are you sure?',
+                                                text: "You won't be able to revert this!",
+                                                icon: 'warning',
+                                                showCancelButton: true,
+                                                confirmButtonColor: '#3085d6',
+                                                cancelButtonColor: '#d33',
+                                                confirmButtonText: 'Yes, delete it!'
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    let form = document.createElement('form');
+                                                    form.method = 'post';
+                                                    form.action = 'deletePromotion';
+                                                    let inputId = document.createElement('input');
+                                                    inputId.type = 'hidden';
+                                                    inputId.name = 'promotionId';
+                                                    inputId.value = promotionId;
+                                                    form.appendChild(inputId);
+                                                    document.body.appendChild(form);
+                                                    form.submit();
+                                                }
+                                            });
+                                        }
+
+                                        function deleteVoucher(voucherId) {
+                                            Swal.fire({
+                                                title: 'Are you sure?',
+                                                text: "You won't be able to revert this!",
+                                                icon: 'warning',
+                                                showCancelButton: true,
+                                                confirmButtonColor: '#3085d6',
+                                                cancelButtonColor: '#d33',
+                                                confirmButtonText: 'Yes, delete it!'
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    let form = document.createElement('form');
+                                                    form.method = 'post';
+                                                    form.action = 'deleteVoucher';
+                                                    let inputId = document.createElement('input');
+                                                    inputId.type = 'hidden';
+                                                    inputId.name = 'voucherId';
+                                                    inputId.value = voucherId;
+                                                    form.appendChild(inputId);
+                                                    document.body.appendChild(form);
+                                                    form.submit();
+                                                }
+                                            });
+                                        }
+                                        // chi nhap 1 trong 2 discount
+                                        function handleDiscountInput(changedField) {
+                                            const percentField = document.getElementById("discount_percent");
+                                            const amountField = document.getElementById("discount_amount");
+                                            if (changedField === "percent" && percentField.value) {
+                                                amountField.disabled = true;
+                                                amountField.value = '';
+                                            } else if (changedField === "amount" && amountField.value) {
+                                                percentField.disabled = true;
+                                                percentField.value = '';
+                                            }
+                                            if (!percentField.value) {
+                                                amountField.disabled = false;
+                                            }
+                                            if (!amountField.value) {
+                                                percentField.disabled = false;
+                                            }
+                                        }
 
 </script>
 <!-- validate -->
@@ -845,7 +845,7 @@
         const form = document.getElementById(formId);
         const isPromotionForm = formId === 'promotionForm' || formId === 'editPromotionForm';
         const isVoucherForm = formId === 'voucherForm' || formId === 'editVoucherForm';
-        const today = new Date().toString().split('T')[0];
+        const today = new Date().toISOString().split('T')[0];
         // Clear all error messages
         form.querySelectorAll('.error-message').forEach(el => {
             el.style.display = 'none';
@@ -1011,6 +1011,10 @@
         });
     }
 </script>
+<c:remove var="success" scope="session"/>
+<c:remove var="error" scope="session"/>
+<c:remove var="warning" scope="session"/>
+<c:remove var="returnPage" scope="session"/>
 </body>
 
 </html>

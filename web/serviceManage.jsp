@@ -157,7 +157,7 @@
                     <i class="fas fa-users"></i>
                     <span class="menu-text">Manage membership</span>
                 </a>
-                <a href="../login?action=logout" class="menu-item logout">
+                <a href="login?action=logout" class="menu-item logout">
                     <i class="fas fa-sign-out-alt"></i>
                     <span class="menu-text">logout</span>
                 </a>
@@ -634,25 +634,5 @@
             });
         }
     </script>
-    <!--    <script>
-            // View toggle logic
-            const gridView = document.getElementById('servicesGrid');
-            const tableView = document.getElementById('servicesTable');
-            const viewButtons = document.querySelectorAll('.view-btn');
-    
-            viewButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    viewButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    if (button.dataset.view === 'grid') {
-                        gridView.style.display = 'grid';
-                        tableView.style.display = 'none';
-                    } else {
-                        gridView.style.display = 'none';
-                        tableView.style.display = 'block';
-                    }
-                });
-            });
-        </script>-->
 </body>
 </html>

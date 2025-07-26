@@ -646,9 +646,8 @@ public class RoomDAO extends DBContext {
         }
 
         if (search != null && !search.isEmpty()) {
-            sql.append("AND (r.room_number LIKE ? OR LOWER(rt.name) LIKE LOWER(?) ");
+            sql.append("AND (r.room_number LIKE ? OR LOWER(rt.name) LIKE LOWER(?))");
             String like = "%" + search + "%";
-            params.add(like);
             params.add(like);
             params.add(like);
         }
@@ -2528,27 +2527,27 @@ public class RoomDAO extends DBContext {
     }
 
 // Đếm số phòng đã được đặt (booked) cho RoomType trong khoảng ngày (dùng Timestamp)
-    public int getBookedQuantityByRoomTypeAndDateRange(int branchId, int roomTypeId, java.sql.Timestamp checkInDate, java.sql.Timestamp checkOutDate) {
-        String sql = "SELECT COUNT(*) AS booked_count FROM RoomAssignment ra "
-                + "JOIN Room r ON ra.room_id = r.id "
-                + "JOIN Booking b ON ra.booking_id = b.id "
-                + "WHERE r.branch_id = ? AND r.room_type_id = ? "
-                + "AND b.status IN ('Paid', 'CheckedIn', 'CheckedOut', 'Completed') "
-                + "AND NOT (b.check_out <= ? OR b.check_in >= ?)";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, branchId);
-            ps.setInt(2, roomTypeId);
-            ps.setTimestamp(3, checkInDate);
-            ps.setTimestamp(4, checkOutDate);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("booked_count");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+   public int getBookedQuantityByRoomTypeAndDateRange(int branchId, int roomTypeId, java.sql.Date checkInDate, java.sql.Date checkOutDate) {
+    String sql = "SELECT COUNT(*) AS booked_count FROM RoomAssignment ra "
+            + "JOIN Room r ON ra.room_id = r.id "
+            + "JOIN Booking b ON ra.booking_id = b.id "
+            + "WHERE r.branch_id = ? AND r.room_type_id = ? "
+            + "AND b.status IN ('Paid', 'CheckedIn', 'CheckedOut', 'Completed') "
+            + "AND NOT (b.check_out <= ? OR b.check_in >= ?)";
+    try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        ps.setInt(1, branchId);
+        ps.setInt(2, roomTypeId);
+        ps.setDate(3, checkInDate);   // <-- chỉ truyền ngày
+        ps.setDate(4, checkOutDate);  // <-- chỉ truyền ngày
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            return rs.getInt("booked_count");
         }
-        return 0;
+    } catch (SQLException e) {
+        e.printStackTrace();
     }
+    return 0;
+}
 
 // Đếm số phòng đang trạng thái CheckedIn cho RoomType (nếu không chọn ngày)
     public int getActiveBookedQuantityByRoomType(int branchId, int roomTypeId) {
@@ -2571,41 +2570,40 @@ public class RoomDAO extends DBContext {
     }
 
 // Lấy danh sách phòng available theo branch, roomType và khoảng ngày (dùng Timestamp)
-    public List<Room> getAvailableRoomsByBranchRoomTypeAndDateRange(int branchId, int roomTypeId, java.sql.Timestamp checkInDate, java.sql.Timestamp checkOutDate) {
-        List<Room> availableRooms = new ArrayList<>();
-        String sql = "SELECT r.* FROM Room r "
-                + "WHERE r.branch_id = ? AND r.room_type_id = ? AND r.status = 'Available' AND r.is_deleted = 0 "
-                + "AND r.id NOT IN ( "
-                + "    SELECT ra.room_id FROM RoomAssignment ra "
-                + "    JOIN Booking b ON ra.booking_id = b.id "
-                + "    WHERE b.branch_id = ? "
-                + "    AND b.status IN ('Paid', 'CheckedIn', 'CheckedOut', 'Completed') "
-                + "    AND NOT (b.check_out <= ? OR b.check_in >= ?) "
-                + ")";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, branchId);
-            ps.setInt(2, roomTypeId);
-            ps.setInt(3, branchId);
-            ps.setTimestamp(4, checkInDate);
-            ps.setTimestamp(5, checkOutDate);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Room room = new Room(
-                        rs.getInt("id"),
-                        rs.getString("room_number"),
-                        rs.getInt("branch_id"),
-                        rs.getInt("room_type_id"),
-                        rs.getString("status"),
-                        rs.getString("image_url")
-                );
-                availableRooms.add(room);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+  public List<Room> getAvailableRoomsByBranchRoomTypeAndDateRange(int branchId, int roomTypeId, java.sql.Date checkInDate, java.sql.Date checkOutDate) {
+    List<Room> availableRooms = new ArrayList<>();
+    String sql = "SELECT r.* FROM Room r "
+            + "WHERE r.branch_id = ? AND r.room_type_id = ? AND r.status = 'Available' AND r.is_deleted = 0 "
+            + "AND r.id NOT IN ( "
+            + "    SELECT ra.room_id FROM RoomAssignment ra "
+            + "    JOIN Booking b ON ra.booking_id = b.id "
+            + "    WHERE b.branch_id = ? "
+            + "    AND b.status IN ('Paid', 'CheckedIn', 'CheckedOut', 'Completed') "
+            + "    AND NOT (b.check_out <= ? OR b.check_in >= ?) "
+            + ")";
+    try (PreparedStatement ps = connection.prepareStatement(sql)) {
+        ps.setInt(1, branchId);
+        ps.setInt(2, roomTypeId);
+        ps.setInt(3, branchId);
+        ps.setDate(4, checkInDate);   // chỉ truyền ngày
+        ps.setDate(5, checkOutDate);  // chỉ truyền ngày
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            Room room = new Room(
+                    rs.getInt("id"),
+                    rs.getString("room_number"),
+                    rs.getInt("branch_id"),
+                    rs.getInt("room_type_id"),
+                    rs.getString("status"),
+                    rs.getString("image_url")
+            );
+            availableRooms.add(room);
         }
-        return availableRooms;
+    } catch (SQLException e) {
+        e.printStackTrace();
     }
-
+    return availableRooms;
+}
 // Lấy danh sách phòng available theo branch & roomType (không quan tâm ngày)
     public List<Room> getAvailableRoomsByBranchAndRoomType(int branchId, int roomTypeId) {
         List<Room> list = new ArrayList<>();

@@ -79,7 +79,8 @@ public class EditProfileServlet extends HttpServlet {
 
         }
 
-        String username = request.getParameter("username");
+        String fullname = request.getParameter("fullname");
+        String username = user.getUsername();
         String email = request.getParameter("email");
         String phonenumber = request.getParameter("phonenumber");
 
@@ -90,7 +91,7 @@ public class EditProfileServlet extends HttpServlet {
         if (!email.equals(user.getEmail())) {
 
             sendVerificationCode(request, response, email);
-            session.setAttribute("username", username);
+            session.setAttribute("fullname", fullname);
             session.setAttribute("phonenumber", phonenumber);
             session.setAttribute("userId", user.getId());
             session.setAttribute("avatarUrl", avatarUrl);
@@ -98,11 +99,11 @@ public class EditProfileServlet extends HttpServlet {
             return;
         }
 
-        session.setAttribute("username", username);
+        session.setAttribute("fullname", fullname);
         session.setAttribute("email", email);
         session.setAttribute("phonenumber", phonenumber);
 
-        boolean updated = useraccountdao.updateUserInfo(user.getId(), username, email, phonenumber, avatarUrl);
+        boolean updated = useraccountdao.updateUserInfo(user.getId(), fullname, email, phonenumber, avatarUrl);
 
         if (updated) {
             UserAccount useraccount = useraccountdao.getUserById(user.getId());

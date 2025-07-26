@@ -78,13 +78,13 @@ public class DeleteRoomServlet extends HttpServlet {
         if ("delete".equals(action)) {
             String roomIdStr = request.getParameter("roomId");
             if (roomIdStr == null || roomIdStr.isEmpty()) {
-                request.setAttribute("error", "Room ID is required.");
+                session.setAttribute("error", "Room ID is required.");
                 prepareResponse(request, response, user, roomDao.getBranchId(userId), branchname, page, pageSize);
                 return;
             }
             int roomId = Integer.parseInt(roomIdStr);
             String status = roomDao.getStatusById(roomId);
-            if ("booked".equalsIgnoreCase(status) || "occupied".equalsIgnoreCase(status)) {
+            if (!"Maintenance".equalsIgnoreCase(status)) {
                 request.setAttribute("error", "Cannot delete a room that is currently booked or in use.");
                 int branchId = roomDao.getBranchId(user.getId());
                 prepareResponse(request, response, user, branchId, branchname, page, pageSize);
@@ -96,7 +96,7 @@ public class DeleteRoomServlet extends HttpServlet {
                 response.sendRedirect(redirectUrl);
                 return;
             } else {
-                request.setAttribute("error", "Failed to delete room. Please try again.");
+                session.setAttribute("error", "Failed to delete room. Please try again.");
                 prepareResponse(request, response, user, roomDao.getBranchId(userId), branchname, page, pageSize);
                 return;
             }

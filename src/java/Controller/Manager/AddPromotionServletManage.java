@@ -76,6 +76,7 @@ public class AddPromotionServletManage extends HttpServlet {
                 Date startDate = Date.valueOf(startDateStr);
                 Date endDate = Date.valueOf(endDateStr);
                 
+                
                 SeasonalPromotion promotion = new SeasonalPromotion();
                 promotion.setName(promotionName);
                 promotion.setDescription(description);

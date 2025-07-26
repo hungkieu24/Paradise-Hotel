@@ -102,7 +102,7 @@ public class ServiceSearchManageServlet extends HttpServlet {
             request.getRequestDispatcher("serviceManage.jsp").forward(request, response);
         }else{
             request.setAttribute("error", "User not logged in");
-            response.sendRedirect("login");
+            response.sendRedirect("login.jsp");
         }
     } 
 
