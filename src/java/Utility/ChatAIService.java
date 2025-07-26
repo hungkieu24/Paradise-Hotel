@@ -21,7 +21,7 @@ import org.json.JSONException;
 public class ChatAIService {
 
     //phải hidden
-    private final String OPENAI_API_KEY = "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";
+    private final String OPENAI_API_KEY = "";
     private final String OPENAI_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
     // schema mô phỏng để AI hiểu về database  cần được sửa lại cho chính xác
     private final String DB_SCHEMA_CONTEXT = """
