@@ -92,12 +92,6 @@ public class ProcessCheckoutServlet extends HttpServlet {
                     // Mark all unpaid services as paid
                     serviceDAO.markAllServicesAsPaid(bookingId);
 
-                    // Set assigned rooms back to Available status
-//                    roomDAO.updateRoomStatusAfterCheckout(bookingId, "Available");
-
-                    // Award loyalty points (1 point per 100,000 VND)
-//                    awardLoyaltyPoints(booking.getUserId(), amountToPay);
-
                     // Generate invoice
                     generateInvoice(booking, amountToPay);
           

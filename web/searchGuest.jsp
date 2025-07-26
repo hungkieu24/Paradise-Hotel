@@ -405,17 +405,16 @@
                                                     <i class="bi bi-currency-dollar"></i> 
                                                     <br/>
                                                     <span>
-                                                        <fmt:formatNumber value="${roomType.base_price} " pattern="#,##0" />
+                                                        <fmt:formatNumber value="${roomType.base_price}" pattern="#,##0" />
                                                     </span>
                                                     <br/>
-                                                    <span>Booked: <span id="bookedQty${roomType.roomTypeID}"></span></span>
+                                                    <span>Booked: <span id="bookedQty${roomType.roomTypeID}">${bookedQuantitiesByRoomType[roomType.roomTypeID]}</span></span>
                                                 </label>
                                             </div>
                                         </div>
                                     </c:forEach>
                                 </div>
                             </div>
-
                             <!-- Selected Rooms Display -->
                             <div class="mb-4" id="selectedRoomsDisplay" style="display: none;">
                                 <label class="form-label">Selected Rooms:</label>

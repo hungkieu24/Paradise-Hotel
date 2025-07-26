@@ -149,19 +149,19 @@
                 padding: 15px;
                 margin-bottom: 20px;
             }
-            
+
             /* Responsive CSS for filter section */
             @media (max-width: 992px) {
                 .filter-section form {
                     flex-direction: column !important;
                     align-items: stretch !important;
                 }
-                
+
                 .filter-section .d-flex[style*="gap"] {
                     justify-content: center;
                     margin-top: 0.5rem;
                 }
-                
+
                 .filter-section .flex-fill {
                     min-width: 100% !important;
                     margin-bottom: 0.5rem;
@@ -172,7 +172,7 @@
                 .filter-section {
                     padding: 12px 15px !important;
                 }
-                
+
                 .filter-section .btn {
                     width: 100% !important;
                     margin-bottom: 0.25rem !important;
@@ -288,14 +288,14 @@
                         <div class="filter-section" style="background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #e9ecef;">
                             <form class="d-flex align-items-center gap-3 flex-wrap" id="filter-form" method="get" action="staff-bookings-list" style="gap: 1rem;">
                                 <input type="hidden" name="pageSize" value="<%= pageSize %>">
-                                
+
                                 <!-- Search Customer -->
                                 <div class="flex-fill" style="min-width: 200px;">
                                     <input class="form-control" type="search" name="keyword" 
                                            placeholder="🔍 Search customer..." value="<%= keyword %>"
                                            style="font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 4px;">
                                 </div>
-                                
+
                                 <!-- Status -->
                                 <div style="min-width: 140px;">
                                     <select class="form-select" name="status" style="font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 4px;">
@@ -309,21 +309,21 @@
                                         <option value="NoShow" <%= "NoShow".equalsIgnoreCase(status) ? "selected" : "" %>>👻 NoShow</option>
                                     </select>
                                 </div>
-                                
+
                                 <!-- From Date -->
                                 <div style="min-width: 150px;">
                                     <input type="date" class="form-control" name="fromDate" 
                                            value="<%= fromDate %>" title="From Date"
                                            style="font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 4px;"/>
                                 </div>
-                                
+
                                 <!-- To Date -->
                                 <div style="min-width: 150px;">
                                     <input type="date" class="form-control" name="toDate" 
                                            value="<%= toDate %>" title="To Date"
                                            style="font-size: 0.875rem; padding: 0.375rem 0.75rem; border-radius: 4px;"/>
                                 </div>
-                                
+
                                 <!-- Items per page -->
                                 <div style="min-width: 80px;">
                                     <select class="form-select" id="pageSizeSelect" onchange="changePageSize(this.value)"
@@ -333,7 +333,7 @@
                                         <option value="15" <%= pageSize == 15 ? "selected" : "" %>>15</option>
                                     </select>
                                 </div>
-                                
+
                                 <!-- Action Buttons -->
                                 <div class="d-flex" style="gap: 0.5rem;">
                                     <button type="submit" class="btn btn-primary" 
@@ -439,12 +439,12 @@
                                                 </td>
                                                 <td>
                                                     <span class="badge bg-info text-dark">
-                                                        <%= b.getCheckIn() != null ? sdfDateTime.format(b.getCheckIn()) : "" %>
+                                                        <%= b.getCheckIn() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(b.getCheckIn()) + " 08:00" : "" %>
                                                     </span>
                                                 </td>
                                                 <td>
                                                     <span class="badge bg-info text-dark">
-                                                        <%= b.getCheckOut() != null ? sdfDateTime.format(b.getCheckOut()) : "" %>
+                                                        <%= b.getCheckOut() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(b.getCheckOut()) + " 14:00" : "" %>
                                                     </span>
                                                 </td>
                                                 <td>
@@ -579,33 +579,33 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="js/main.js"></script>
         <script>
-            setTimeout(function () {
-                window.location.reload();
-            }, 300000);
+                                        setTimeout(function () {
+                                            window.location.reload();
+                                        }, 300000);
 
-            document.querySelectorAll('form[action="staff-booking-action"]').forEach(form => {
-                form.addEventListener('submit', function (e) {
-                    const action = this.querySelector('input[name="action"]').value;
-                    const bookingId = this.querySelector('input[name="bookingId"]').value;
+                                        document.querySelectorAll('form[action="staff-booking-action"]').forEach(form => {
+                                            form.addEventListener('submit', function (e) {
+                                                const action = this.querySelector('input[name="action"]').value;
+                                                const bookingId = this.querySelector('input[name="bookingId"]').value;
 
-                    if (action === 'checkin') {
-                        if (!confirm(`Are you sure you want to check-in booking #${bookingId}?`)) {
-                            e.preventDefault();
-                        }
-                    } else if (action === 'checkout') {
-                        if (!confirm(`Are you sure you want to check-out booking #${bookingId}?`)) {
-                            e.preventDefault();
-                        }
-                    }
-                });
-            });
-            
-            function changePageSize(newSize) {
-                const currentUrl = new URL(window.location.href);
-                currentUrl.searchParams.set('pageSize', newSize);
-                currentUrl.searchParams.set('page', '1');
-                window.location.href = currentUrl.toString();
-            }
+                                                if (action === 'checkin') {
+                                                    if (!confirm(`Are you sure you want to check-in booking #${bookingId}?`)) {
+                                                        e.preventDefault();
+                                                    }
+                                                } else if (action === 'checkout') {
+                                                    if (!confirm(`Are you sure you want to check-out booking #${bookingId}?`)) {
+                                                        e.preventDefault();
+                                                    }
+                                                }
+                                            });
+                                        });
+
+                                        function changePageSize(newSize) {
+                                            const currentUrl = new URL(window.location.href);
+                                            currentUrl.searchParams.set('pageSize', newSize);
+                                            currentUrl.searchParams.set('page', '1');
+                                            window.location.href = currentUrl.toString();
+                                        }
         </script>
     </body>
 </html>
