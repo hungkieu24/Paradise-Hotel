@@ -7,6 +7,7 @@ package Controller.Manager;
 
 import Dal.RoomDAO;
 import Dal.VoucherDAO;
+import Model.SeasonalPromotion;
 import Model.UserAccount;
 import Model.Voucher;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -69,6 +71,16 @@ public class VoucherViewListServletManage extends HttpServlet {
             int totalPage = (int) Math.ceil((double) totalVoucher / pageSize);
 
             List<Voucher> vouchers = v.getSearchVoucherList(branchId, search, status, fromDateStr, toDateStr, page, pageSize);
+            LocalDate today = LocalDate.now();
+            for (Voucher vou : vouchers) {
+                LocalDate endDa = vou.getValid_to().toLocalDate();
+
+                if (endDa.isBefore(today) && vou.getStatus().equalsIgnoreCase("Active")) {
+                    // Cập nhật trạng thái trong DB nếu đã hết hạn
+                    vou.setStatus("Inactive");
+                    v.updateStatus(vou.getId(), "Inactive");
+                }
+            }
             // set attribute
             request.setAttribute("branchId", branchId);
             request.setAttribute("username", username);

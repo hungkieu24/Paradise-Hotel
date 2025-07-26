@@ -4,18 +4,29 @@
  */
 package Controller;
 
+import Dal.RoomTypeDAO;
+import Model.RoomType;
+import java.util.List;
+import org.apache.jasper.tagplugins.jstl.core.ForEach;
 import org.mindrot.jbcrypt.BCrypt;
 
 /**
  *
  * @author thien
  */
+
 public class Main {
+    
 
     public static void main(String[] args) {
         String hashed = "$2a$12$TSDFrHdEsG56OuqNXuQpWeZEG7yOoBWHeizccaBWI06Av84IHM1/W";
         String pass = "hashed_pass10";
         System.out.println(BCrypt.hashpw(pass, BCrypt.gensalt(12)));
+        RoomTypeDAO rt = new RoomTypeDAO();
+        List<RoomType> roomTypes = rt.getRoomTypesByBranchId(1);
+        for (RoomType roomType : roomTypes) {
+            System.out.println(roomType.getName());
+        }
         
     }
 }

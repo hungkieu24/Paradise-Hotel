@@ -168,32 +168,34 @@ public class SeasonalPromotionDAO extends DBContext {
         }
         return promotions;
     }
+
     //author: Thien
     // add promotion
-    public void addPromotion(SeasonalPromotion promotion){
+    public void addPromotion(SeasonalPromotion promotion) {
         String sql = "insert into SeasonalPromotion (name, description , discount_percent, discount_amount, start_date, end_date, branch_id, status, is_deleted)"
                 + " values (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try(PreparedStatement ps = connection.prepareStatement(sql)){
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, promotion.getName());
             ps.setString(2, promotion.getDescription());
             ps.setDouble(3, promotion.getDiscount_percent());
             ps.setDouble(4, promotion.getDiscount_amount());
             ps.setDate(5, (Date) promotion.getStartDate());
-            ps.setDate(6,(Date) promotion.getEndDate());
+            ps.setDate(6, (Date) promotion.getEndDate());
             ps.setInt(7, promotion.getBranchId());
             ps.setString(8, promotion.getStatus());
             ps.setBoolean(9, promotion.isIs_deleted());
             int rows = ps.executeUpdate();
-            
-        }catch(SQLException e){
+
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
     //author: Thien
     // upadate promotion
-    public boolean updatePromotion(SeasonalPromotion promotion){
+    public boolean updatePromotion(SeasonalPromotion promotion) {
         String sql = " update SeasonalPromotion set name = ?, description =?, discount_percent = ?, discount_amount = ?, start_date = ?, end_date = ?, branch_id = ?, status = ?, is_deleted =? where id = ?";
-        try(PreparedStatement ps = connection.prepareStatement(sql)){
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, promotion.getName());
             ps.setString(2, promotion.getDescription());
             ps.setDouble(3, promotion.getDiscount_percent());
@@ -205,36 +207,76 @@ public class SeasonalPromotionDAO extends DBContext {
             ps.setBoolean(9, promotion.isIs_deleted());
             ps.setInt(10, promotion.getId());
             return ps.executeUpdate() > 0;
-        }catch(SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
+
     //author: thien
     // soft delete promotion
-    public boolean deletePromotion(int id){
-        String sql= "Update SeasonalPromotion set is_deleted = 1 where id = ?";
-        try(PreparedStatement ps = connection.prepareStatement(sql)){
+    public boolean deletePromotion(int id) {
+        String sql = "Update SeasonalPromotion set is_deleted = 1 where id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
-        }catch(SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
+
     //author thien
-    public boolean isPromotionNameExist(String promotionName, int branchId){
-        String sql="select count(*) from SeasonalPromotion where name = ? and branch_id = ? and is_deleted = 0";
-        try(PreparedStatement ps = connection.prepareStatement(sql)){
+    public boolean isPromotionNameExist(String promotionName, int branchId) {
+        String sql = "select count(*) from SeasonalPromotion where name = ? and branch_id = ? and is_deleted = 0";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, promotionName);
             ps.setInt(2, branchId);
             ResultSet rs = ps.executeQuery();
-            if(rs.next()){
+            if (rs.next()) {
                 return rs.getInt(1) > 0;
             }
-        }catch(SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
+    }
+
+    //author: thien
+    public void updateStatus(int id, String status) {
+        String sql = "update SeasonalPromotion set status = ? when id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(id, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public SeasonalPromotion getPromotionById(int id) {
+        String sql = "Select * from SeasonalPromotion where id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    SeasonalPromotion promotion = new SeasonalPromotion();
+                    promotion.setId(rs.getInt("id"));
+                    promotion.setName(rs.getString("name"));
+                    promotion.setDescription(rs.getString("description"));
+                    promotion.setDiscount_percent(rs.getDouble("discount_percent"));
+                    promotion.setDiscount_amount(rs.getDouble("discount_amount"));
+                    promotion.setStartDate(rs.getDate("start_date"));
+                    promotion.setEndDate(rs.getDate("end_date"));
+                    promotion.setBranchId(rs.getInt("branch_id"));
+                    promotion.setStatus(rs.getString("status"));
+                    promotion.setIs_deleted(rs.getBoolean("is_deleted"));
+                    return promotion;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

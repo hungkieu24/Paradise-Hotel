@@ -253,7 +253,7 @@ CREATE TABLE LoyaltyPoint (
 CREATE TABLE PointTransaction (
     id INT PRIMARY KEY IDENTITY(1, 1),
     user_id VARCHAR(10),
-    change_type VARCHAR(20) CHECK (change_type IN ('Earn', 'Redeem', 'Adjustment')),
+    change_type VARCHAR(20) CHECK (change_type IN ('Earn', 'Redeem', 'Change' , 'Adjustment')),
     points_changed INT,
     reason NVARCHAR(MAX),
     created_at DATETIME DEFAULT GETDATE()
@@ -875,20 +875,11 @@ VALUES
 VALUES 
 (1, 'Online Booking', 2500000, '2025-07-01', 'SYSTEM', null, 'SYSTEM'),
 (2, 'Online Booking', 3200000, '2025-07-02', 'SYSTEM', null, 'SYSTEM'),
-(1, N'Tiền mặt', 800000, '2025-07-01', 'MANUAL', N'Khách vãng lai không đặt trên hệ thống', 'U003'),
-(1, N'Thu dịch vụ spa', 500000, '2025-07-01', 'MANUAL', N'Khách sử dụng dịch vụ tại quầy', 'U003'),
-(2, N'Tiền thuê hội trường', 1500000, '2025-07-02', 'MANUAL', N'Tổ chức sự kiện ngoài hệ thống', 'U003'),
 (1, N'Online Booking', 50000000, '2025-05-10', 'SYSTEM', N'Monthly summary May', 'SYSTEM'),
-(1, N'Tiền mặt',        50000000, '2025-05-20', 'MANUAL', N'Tiền mặt cuối tháng', 'U003'),
 (1, N'Online Booking', 70000000, '2025-06-05', 'SYSTEM', N'Monthly summary June', 'SYSTEM'),
-(1, N'Tiền mặt',        50000000, '2025-06-18', 'MANUAL', N'Khách thanh toán tại quầy', 'U003'),
 (2, 'Online Booking', 50000000, '2025-05-07', 'SYSTEM', N'Monthly summary May', 'SYSTEM'),
-(2, N'Thu dịch vụ spa', 30000000, '2025-05-21', 'MANUAL', N'Khách sử dụng dịch vụ spa', 'U003'),
 (2, 'Online Booking',      60000000, '2025-06-03', 'SYSTEM', N'Monthly summary June', 'SYSTEM'),
-(2, N'Tiền thuê hội trường', 35000000, '2025-06-20', 'MANUAL', N'Hội nghị doanh nghiệp', 'U003'),
-(3, N'Tiền mặt', 75000000, '2025-05-25', 'MANUAL', N'Khách vãng lai không đặt trước', 'U003'),
-(3, 'Online Booking', 60000000, '2025-06-06', 'SYSTEM', N'Monthly summary June', 'SYSTEM'),
-(3, N'Tiền mặt',        30000000, '2025-06-22', 'MANUAL', N'Thanh toán tại quầy', 'U003');
+(3, 'Online Booking', 60000000, '2025-06-06', 'SYSTEM', N'Monthly summary June', 'SYSTEM');
 
 INSERT INTO Expense (branch_id, expense_type, amount, description, expense_date, created_by) VALUES
 (1, 'Utilities', 30000000, 'Electricity, water, and internet', '2025-05-10', 'U003'),
@@ -904,3 +895,84 @@ INSERT INTO Expense (branch_id, expense_type, amount, description, expense_date,
 (3, 'Marketing', 45000000, 'Social media and event promotion', '2025-06-02', 'U003'),
 (3, 'Utilities', 40000000, 'Electricity and water', '2025-06-19', 'U003');
 
+CREATE TABLE Wallet (
+    WalletID INT PRIMARY KEY IDENTITY(1,1),
+    UserID VARCHAR(10) UNIQUE NOT NULL,
+    Balance DECIMAL(18, 2) NOT NULL DEFAULT 0.00,
+    UpdatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+    FOREIGN KEY (UserID) REFERENCES UserAccount(id)
+);
+
+-- 🌟 Dữ liệu mẫu:
+INSERT INTO Wallet (UserID, Balance)
+VALUES 
+('U001', 1000000),  -- Khách A có sẵn 2 triệu
+('U002', 0),         -- Khách B chưa nạp tiền
+('U003', 500000);    -- Khách C có 500k
+
+CREATE TABLE BankAccount (
+    BankAccountID INT PRIMARY KEY IDENTITY(1,1),
+    UserID VARCHAR(10) NOT NULL,
+    BankName NVARCHAR(255) NOT NULL,
+    AccountNumber NVARCHAR(100) NOT NULL,
+    AccountHolder NVARCHAR(255) NOT NULL,
+    IsDefault BIT NOT NULL DEFAULT 0,
+    FOREIGN KEY (UserID) REFERENCES UserAccount(id)
+);
+-- Mỗi user có 1 tài khoản mặc định:
+INSERT INTO BankAccount (UserID, BankName, AccountNumber, AccountHolder, IsDefault)
+VALUES
+('U001', N'Vietcombank', '0123456789', N'John Doe', 1),
+('U001', N'Techcombank', '9876543210', N'John Doe', 0),
+
+('U002', N'ACB', '1122334455', N'Jane Smith', 1),
+
+('U003', N'MB Bank', '5566778899', N'Mike Johnson', 1);
+
+
+CREATE TABLE WalletTransaction (
+    TransactionID BIGINT PRIMARY KEY IDENTITY(1,1),
+    WalletID INT NOT NULL,
+    Amount DECIMAL(18, 2) NOT NULL,
+    TransactionType VARCHAR(20) NOT NULL CHECK (
+        TransactionType IN ('Deposit', 'Withdraw', 'Payment', 'Refund')
+    ),
+    Description NVARCHAR(500),
+    BookingID INT NULL,
+    BranchID INT NULL,
+	BankAccountID INT NULL,
+    CreatedBy VARCHAR(10),
+    Status VARCHAR(20) NOT NULL CHECK (
+        Status IN ('Pending', 'Success', 'Failed', 'Cancelled')
+    ) DEFAULT 'Pending',
+    CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+
+    FOREIGN KEY (WalletID) REFERENCES Wallet(WalletID),
+    FOREIGN KEY (BookingID) REFERENCES Booking(id),
+    FOREIGN KEY (BranchID) REFERENCES HotelBranch(id),
+    FOREIGN KEY (CreatedBy) REFERENCES UserAccount(id),
+	FOREIGN KEY (BankAccountID) REFERENCES BankAccount(BankAccountID),
+);
+
+-- Giả sử WalletID:
+-- WalletID = 1 (UserID = 'U001')
+-- WalletID = 2 (UserID = 'U002')
+-- WalletID = 3 (UserID = 'U003')
+
+INSERT INTO WalletTransaction 
+(WalletID, Amount, TransactionType, Description, BookingID, BranchID,BankAccountID, CreatedBy, Status)
+VALUES
+-- U001: Nạp tiền vào ví
+(1, 1000000, 'Deposit', N'Nạp 1 triệu vào ví', NULL, NULL,1, 'U001', 'Success'),
+
+-- U001: Thanh toán đơn đặt phòng (BookingID = 2, branch_id = 1)
+(1, 800000, 'Payment', N'Thanh toán đơn đặt phòng #2', 2, 1,1, 'U001', 'Success'),
+
+-- U001: Hoàn tiền đơn đã hủy (BookingID = 6, branch_id = 3)
+(1, 800000, 'Refund', N'Hoàn tiền do hủy đơn phòng #2', 6, 3,1, 'U003', 'Success'),
+
+-- U002: Yêu cầu rút tiền
+(2, 300000, 'Withdraw', N'Yêu cầu rút tiền về tài khoản ngân hàng', NULL, NULL,3, 'U002', 'Pending'),
+
+-- U003: Thanh toán thất bại (BookingID = 11, branch_id = 1)
+(3, 1000000, 'Payment', N'Thanh toán đơn đặt phòng #11 không thành công', 11, 1,4, 'U003', 'Failed');

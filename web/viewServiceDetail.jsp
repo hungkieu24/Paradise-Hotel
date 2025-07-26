@@ -6,7 +6,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<fmt:setLocale value="en" />
+<fmt:setLocale value="vi_VN" />
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!DOCTYPE html>
 <html lang="en">
@@ -136,7 +136,7 @@
                             <p><strong>Price:</strong>
                                 <c:choose>
                                     <c:when test="${service.price != null}">
-                                        <fmt:formatNumber value="${service.price}" type="number" groupingUsed="true" /> VND
+                                        <fmt:formatNumber value="${service.price}" type="currency"/>
                                     </c:when>
                                 </c:choose>
                             </p>
@@ -165,8 +165,7 @@
                                                     <div class="info">
                                                         <small>
                                                             From 
-                                                            <fmt:formatNumber value="${r.price}" type="number" groupingUsed="true" maxFractionDigits="0" />
-                                                            VND
+                                                            <fmt:formatNumber value="${r.price}" type="currency"/>
                                                         </small>
                                                         <h3>${r.name}</h3>
                                                         <span>Read more</span>
@@ -191,16 +190,16 @@
         <footer class="revealed">
             <div class="footer_bg">
                 <div class="gradient_over"></div>
-                <div class="background-image" data-background="url(img/rooms/3.jpg)"></div>
+                <div class="background-image" data-background="url(img/registerbg.jpg)"></div>
             </div>
             <div class="container">
                 <div class="row move_content">
                     <div class="col-lg-4 col-md-12">
                         <h5>Contacts</h5>
                         <ul>
-                            <li>Baker Street 567, Los Angeles 11023<br>California - US<br><br></li>
-                            <li><strong><a href="#0">info@Paradisehotel.com</a></strong></li>
-                            <li><strong><a href="#0">+434 43242232</a></strong></li>
+                            <li>FPT University<br>HaNoi-VN<br><br></li>
+                            <li><strong><a href="#0">hotelparadise.work@gmail.com</a></strong></li>
+                            <li><strong><a href="#0">+84 867298400</a></strong></li>
                         </ul>
                         <div class="social">
                             <ul>
@@ -215,12 +214,8 @@
                         <h5>Explore</h5>
                         <div class="footer_links">
                             <ul>
-                                <li><a href="index.html">Home</a></li>
-                                <li><a href="about.html">About Us</a></li>
-                                <li><a href="room-list-1.html">Rooms &amp; Suites</a></li>
-                                <li><a href="news-1.html">News &amp; Events</a></li>
-                                <li><a href="contacts.html">Contacts</a></li>
-                                <li><a href="about.html">Terms and Conditions</a></li>
+                                <li><a href="homepage">Home</a></li>
+                                <li><a href="about.jsp">About Us</a></li>
                             </ul>
                         </div>
                     </div>
@@ -243,11 +238,10 @@
             <!--/container-->
             <div class="copy">
                 <div class="container">
-                    © Paradise - by <a href="#">Ansonika</a>
+                    © Paradise - by <a href="#">SE1912_Group2</a>
                 </div>
             </div>
         </footer>
-        <!-- /footer -->
 
         <div class="progress-wrap">
             <svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">

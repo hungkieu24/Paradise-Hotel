@@ -79,17 +79,45 @@
             <div class="container margin_120_95">
                 <div class="sidebar">
                     <img class="avatar" src="${sessionScope.user.getAvatar_url()}" alt="Avatar"/>
-                    <p>Rank: <a href="redeemVoucher">${sessionScope.loyaltypointlp.getLevel()}</a> </p>
-                    <p>Accumulated Points: <a href="redeemVoucher">${sessionScope.loyaltypointlp.getPoints()}</a></p>
+                    <c:if test="${sessionScope.user.role eq 'Customer'}">
+                        <p>Rank: <a href="redeemVoucher">${sessionScope.loyaltypointlp.getLevel()}</a></p>
+                        <p>Accumulated Points: <a href="redeemVoucher">${sessionScope.loyaltypointlp.getPoints()}</a></p>
+                        </c:if>
                     <ul>
-                        <li><a href="editProfile">Personal Info</a></li>
-                        <li><a href="bookingHistory">Booking History</a></li>
-                        <li><a href="myBooking">My Booking</a></li>
-                        <li><a href="myWallet">My Wallet</a></li>
-                        <li><a href="redeemVoucher">Loyalty Status</a> </li>
-                        <li><a href="changePassword.jsp">Change Password</a></li>
-                        <li><a href="./homepage?action=logout">Log out</a></li>
-                        <li><a href="homepage">Home</a></li>
+                        <c:choose>
+                            <c:when test="${user.role eq 'Customer'}">
+                                <li><a href="editProfile">Personal Info</a></li>
+                                <li><a href="bookingHistory">Booking History</a></li>
+                                <li><a href="myBooking">My Booking</a></li>
+                                <li><a href="myWallet">My Wallet</a></li>
+                                <li><a href="redeemVoucher">Loyalty Status</a> </li>
+                                <li><a href="changePassword.jsp">Change Password</a></li>
+                                <li><a href="./homepage?action=logout">Log out</a></li>
+                                <li><a href="homepage">Home</a></li>
+                                </c:when>
+
+                            <c:otherwise>
+                                <li><a href="editProfile">Personal Info</a></li>
+                                <li><a href="changePassword.jsp">Change Password</a></li>
+                                <li><a href="./homepage?action=logout">Log out</a></li>
+
+                                <c:choose>
+                                    <c:when test="${user.role eq 'HotelOwner'}">
+                                        <li><a href="./hotelOwner/financialDashboard">Dashboard</a></li>
+                                        </c:when>
+                                        <c:when test="${user.role eq 'Admin'}">
+                                        <li><a href="./admin/account">Back</a></li>
+                                        </c:when>
+                                        <c:when test="${user.role eq 'Manager'}">
+                                        <li><a href="./manager/dashboard">Dashboard</a></li>
+                                        </c:when>
+                                        <c:when test="${user.role eq 'Staff'}">
+                                        <li><a href="./staff-bookings-list">Booking List</a></li>
+                                        </c:when>
+                                    </c:choose>
+                                </c:otherwise>
+                            </c:choose>
+
                     </ul>
                 </div>
                 <div class="form-wrapper">
@@ -102,8 +130,8 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Username</label>
-                                <input id="username" type="text" value="${sessionScope.user.getUsername()}" name="username" readonly>
+                                <label>Full name</label>
+                                <input id="fullname" type="text" value="${sessionScope.user.getFullname()}" name="fullname" readonly>
                                 <!--                                    <p class="form_error"></p>-->
                             </div>
 
@@ -153,8 +181,8 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Username</label>
-                                <input id="username" type="text" value="${sessionScope.user.getUsername()}" name="username">
+                                <label>Full name</label>
+                                <input id="fullname" type="text" value="${sessionScope.user.getFullname()}" name="fullname">
                                 <p class="form_error"></p>
                             </div>
 
@@ -183,16 +211,16 @@
         <footer class="revealed">
             <div class="footer_bg">
                 <div class="gradient_over"></div>
-                <div class="background-image" data-background="url(img/rooms/3.jpg)"></div>
+                <div class="background-image" data-background="url(img/registerbg.jpg)"></div>
             </div>
             <div class="container">
                 <div class="row move_content">
                     <div class="col-lg-4 col-md-12">
                         <h5>Contacts</h5>
                         <ul>
-                            <li>Baker Street 567, Los Angeles 11023<br>California - US<br><br></li>
-                            <li><strong><a href="#0">info@Paradisehotel.com</a></strong></li>
-                            <li><strong><a href="#0">+434 43242232</a></strong></li>
+                            <li>FPT University<br>HaNoi-VN<br><br></li>
+                            <li><strong><a href="#0">hotelparadise.work@gmail.com</a></strong></li>
+                            <li><strong><a href="#0">+84 867298400</a></strong></li>
                         </ul>
                         <div class="social">
                             <ul>
@@ -208,11 +236,7 @@
                         <div class="footer_links">
                             <ul>
                                 <li><a href="homepage">Home</a></li>
-                                <li><a href="about.html">About Us</a></li>
-                                <li><a href="room-list-1.html">Rooms &amp; Suites</a></li>
-                                <li><a href="news-1.html">News &amp; Events</a></li>
-                                <li><a href="contacts.html">Contacts</a></li>
-                                <li><a href="about.html">Terms and Conditions</a></li>
+                                <li><a href="about.jsp">About Us</a></li>
                             </ul>
                         </div>
                     </div>
@@ -235,11 +259,10 @@
             <!--/container-->
             <div class="copy">
                 <div class="container">
-                    © Paradise - by <a href="#">Ansonika</a>
+                    © Paradise - by <a href="#">SE1912_Group2</a>
                 </div>
             </div>
         </footer>
-        <!-- /footer -->
 
         <div class="progress-wrap">
             <svg class="progress-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
@@ -261,8 +284,8 @@
                                         formGroupSelector: '.form-group',
                                         errorSelector: '.form_error',
                                         rules: [
-                                            Validator.isRequired('#username', 'Please enter the your username'),
-                                            Validator.lengthRange('#username', 6, 30),
+                                            Validator.isRequired('#fullname', 'Please enter the your fullname'),
+                                            Validator.lengthRange('#fullname', 6, 30),
                                             Validator.isPhoneNumber('#phonenumber', 'Please enter your phone number'),
                                             Validator.isRequired('#email', 'Please enter your email'),
                                             Validator.isEmail('#email', 'This field must be an email'),

@@ -646,9 +646,8 @@ public class RoomDAO extends DBContext {
         }
 
         if (search != null && !search.isEmpty()) {
-            sql.append("AND (r.room_number LIKE ? OR LOWER(rt.name) LIKE LOWER(?) ");
+            sql.append("AND (r.room_number LIKE ? OR LOWER(rt.name) LIKE LOWER(?))");
             String like = "%" + search + "%";
-            params.add(like);
             params.add(like);
             params.add(like);
         }

@@ -72,7 +72,7 @@ public class ViewRoomTypeListServlet extends HttpServlet {
                 double maxPrice = Double.parseDouble(maxPriceStr);
 
                 if (checkIn != null && checkOut != null) {
-                    listRoomType = roomTypeDAO.getAvailableRoomTypesByPriceAndDate(minPrice, maxPrice, checkIn, checkOut);
+                    listRoomType = roomTypeDAO.searchAvailableRoomTypesV3(minPrice, maxPrice, checkIn, checkOut);
                 } else {
                     listRoomType = roomTypeDAO.getRoomTypesByPriceRange(minPrice, maxPrice);
                 }
@@ -81,7 +81,7 @@ public class ViewRoomTypeListServlet extends HttpServlet {
             }
         } catch (NumberFormatException e) {
             if (checkIn != null && checkOut != null) {
-                listRoomType = roomTypeDAO.getAvailableRoomTypesByDate(checkIn, checkOut);
+                listRoomType = roomTypeDAO.searchAvailableRoomTypesV3(checkIn, checkOut);
             } else {
                 listRoomType = roomTypeDAO.getAllRoomType();
             }

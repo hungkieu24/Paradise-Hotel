@@ -40,6 +40,7 @@ public class UserAccountDAO extends DBContext {
                         rs.getString("id"),
                         rs.getString("username"),
                         rs.getString("password"),
+                        rs.getString("fullname"),
                         rs.getString("email"),
                         rs.getString("avatar_url"),
                         rs.getString("role"),
@@ -278,6 +279,7 @@ public class UserAccountDAO extends DBContext {
                         rs.getString("id"),
                         rs.getString("username"),
                         rs.getString("password"),
+                        rs.getString("fullname"),
                         rs.getString("email"),
                         rs.getString("avatar_url"),
                         rs.getString("role"),
@@ -293,11 +295,11 @@ public class UserAccountDAO extends DBContext {
         return null;
     }
 
-    public boolean updateUserInfo(String userId, String username, String email, String phoneNumber, String avatarUrl) {
-        String sql = "UPDATE UserAccount SET username = ?, email = ?, phonenumber = ?, avatar_url = ? WHERE id = ?";
+    public boolean updateUserInfo(String userId, String fullname, String email, String phoneNumber, String avatarUrl) {
+        String sql = "UPDATE UserAccount SET fullname = ?, email = ?, phonenumber = ?, avatar_url = ? WHERE id = ?";
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setString(1, username);
+            ps.setString(1, fullname);
             ps.setString(2, email);
             ps.setString(3, phoneNumber);
             ps.setString(4, avatarUrl);

@@ -397,5 +397,16 @@ public class VoucherDAO extends DBContext {
 
         return vouchers;
     }
+    public void updateStatus(int id, String status){
+        String sql="update Voucher set status = ? where id = ?";
+        try(PreparedStatement ps = connection.prepareStatement(sql)){
+            ps.setString(1, status);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        
+    }
 
 }

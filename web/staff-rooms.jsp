@@ -151,10 +151,12 @@
                         <h1 class="page-title">Room List</h1>
                     </div>
                     <div class="header-right">
-                        <div class="user-info">
-                            <i class="fas fa-user-circle"></i>
-                            <span><%= staffName != null && !staffName.isEmpty() ? staffName : "staff" %></span>
-                        </div>
+                        <a href="./editProfile" style="text-decoration: none"> 
+                            <div class="user-info"> <!-- thể hiện user info -->
+                                <i class="fas fa-user-circle"></i>
+                                <span>${sessionScope.user.getFullname()}</span>
+                            </div>
+                        </a>
                     </div>
                 </header>
                 <div class="content-body">

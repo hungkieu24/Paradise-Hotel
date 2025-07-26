@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.sql.Date;
+import java.time.LocalDate;
 
 /**
  *
@@ -49,6 +50,7 @@ public class EditPromotionServletManage extends HttpServlet {
             String discountAmountStr = request.getParameter("discount_amount");
             String startDateStr = request.getParameter("start_date");
             String endDateStr = request.getParameter("end_date");
+            String newStatus = request.getParameter("status");
 
             Double discountPercent = null;
             Double discountAmount = null;
@@ -62,7 +64,23 @@ public class EditPromotionServletManage extends HttpServlet {
             }
             Date startDate = Date.valueOf(startDateStr);
             Date endDate = Date.valueOf(endDateStr);
-
+            SeasonalPromotion current = p.getPromotionById(promotionId);
+            String oldStatus = current.getStatus();
+            LocalDate start = startDate.toLocalDate();
+            LocalDate end = endDate.toLocalDate();
+            LocalDate today = LocalDate.now();
+            if (newStatus.equalsIgnoreCase("Inactive") && oldStatus.equalsIgnoreCase("Active")) {
+                if (start.isAfter(end)) {
+                    session.setAttribute("error", "Start date must be before or equal to end date.");
+                    response.sendRedirect("promotions");
+                    return;
+                }
+                if (end.isBefore(today)) {
+                    session.setAttribute("error", "End date must not be in the past when activating promotion.");
+                    response.sendRedirect("promotions");
+                    return;
+                }
+            }
             SeasonalPromotion promotion = new SeasonalPromotion();
             promotion.setId(promotionId);
             promotion.setName(name);
@@ -72,18 +90,21 @@ public class EditPromotionServletManage extends HttpServlet {
             promotion.setStartDate(startDate);
             promotion.setEndDate(endDate);
             promotion.setBranchId(branchId);
-            promotion.setStatus("Active");// mac dinh
-            promotion.setIs_deleted(false);
+            promotion.setStatus(newStatus);// mac dinh
+            
             // data base
             boolean check = p.updatePromotion(promotion);
-           if(check){
-               session.setAttribute("success", "update successfully!");
-               response.sendRedirect("promotions");
-           }else{
-               session.setAttribute("error", "update false");
-               response.sendRedirect("promotions");
-            
-           }
+            if (check) {
+                session.setAttribute("success", "update successfully!");
+                session.setAttribute("returnPage", "promotions");
+                response.sendRedirect("promotions");
+                return;
+            } else {
+                session.setAttribute("error", "update false");
+                response.sendRedirect("promotions");
+                return;
+
+            }
 
         } else {
             request.setAttribute("error", "Please login to edit room.");
