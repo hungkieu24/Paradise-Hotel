@@ -411,6 +411,7 @@ public class BookingServlet extends HttpServlet {
                 transaction.setAmount(amount);
                 transaction.setDescription("Booking payment #" + bookingId);
                 transaction.setStatus("Success");
+                transaction.setBookingID(bookingId); // THÊM DÒNG NÀY
                 transaction.setBankAccountID(0);
                 transaction.setCreatedAt(new Timestamp(new Date().getTime()));
 
@@ -599,6 +600,7 @@ public class BookingServlet extends HttpServlet {
                 transaction.setAmount(amount);
                 transaction.setDescription("Booking payment #" + bookingId);
                 transaction.setStatus("Success");
+                transaction.setBookingID(bookingId); // THÊM DÒNG NÀY
                 transaction.setBankAccountID(0);
                 transaction.setCreatedAt(new Timestamp(new Date().getTime()));
 

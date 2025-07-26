@@ -184,7 +184,7 @@
                                             <h5 class="card-title">
                                                 <c:choose>
                                                     <c:when test="${b.branchName != null}">${b.branchName}</c:when>
-                                                    <c:otherwise>Chi nhánh không xác định</c:otherwise>
+                                                    <c:otherwise>Unknown branch</c:otherwise>
                                                 </c:choose>
                                             </h5>
 
@@ -197,11 +197,11 @@
 
                                             <c:if test="${b.paymentStatus == 'Refunded'}">
                                                 <div class="refund-info" style="background: #e8f5e8; padding: 10px; border-radius: 5px; margin-top: 10px;">
-                                                    <h4 style="color: #28a745; margin: 0 0 5px 0;">✅ ĐÃ HOÀN TIỀN</h4>
-                                                    <p><strong>🏦 Mã giao dịch VNPay:</strong> ${b.refundTransactionNo}</p>
-                                                    <p><strong>📅 Ngày hoàn tiền:</strong> ${b.refundDate}</p>
-                                                    <p><strong>💰 Số tiền hoàn:</strong> <fmt:formatNumber value="${b.totalPrice}" type="currency" currencySymbol="VND"/></p>
-                                                    <p style="color: #666; font-size: 12px;">⏰ Tiền đã được VNPay xử lý và sẽ về tài khoản trong 1-3 ngày làm việc</p>
+                                                    <h4 style="color: #28a745; margin: 0 0 5px 0;">✅ REFUNDED TO WALLET</h4>
+                                                    <p><strong>💳 Refund on:</strong> E-wallet</p>
+                                                    <p><strong>📅 Refund date:</strong> ${b.refundDate}</p>
+                                                    <p><strong>💰 Refund amount:</strong> <fmt:formatNumber value="${b.totalPrice}" type="currency" currencySymbol="VND"/></p>
+                                                    <p style="color: #666; font-size: 12px;">💳 Money has been added to your wallet</p>
                                                 </div>
                                             </c:if>
 
@@ -217,7 +217,7 @@
                                             </p>
                                             <div class="d-flex justify-content-between mt-3">
 
-                                                <a href="#" class="btn_1 small open-detail" data-id="${b.id}">Chi tiết</a>
+                                                <a href="#" class="btn_1 small open-detail" data-id="${b.id}">Detail</a>
                                                 <button type="button" class="btn_1 small" onclick="openEditModal('${b.id}', '${fn:escapeXml(b.note)}')">Edit Special Request</button>
 
                                                 <c:if test="${b.status == 'Pending'}">
@@ -225,7 +225,7 @@
                                                 </c:if>   
                                                 <!-- Thêm nút hoàn tiền cho booking đã thanh toán -->
                                                 <c:if test="${b.status == 'Paid'}">
-                                                    <button type="button" class="btn_1 small warning" onclick="showRefundForm('${b.id}', '${b.totalPrice}')">Hoàn tiền</button>
+                                                    <button type="button" class="btn_1 small warning" onclick="showRefundForm('${b.id}', '${b.totalPrice}')">Refund</button>
                                                 </c:if>
                                             </div>
 
@@ -274,22 +274,35 @@
                     <div id="refundModal" class="modal" style="display: none;">
                         <div class="modal-content">
                             <span class="close" onclick="closeRefundForm()">×</span>
-                            <h2>Hoàn tiền Booking</h2>
+                            <h2>Refund to Wallet</h2>
                             <form id="refundForm" method="post" action="vnpay-refund">
                                 <input type="hidden" name="bookingId" id="refundBookingId">
                                 <input type="hidden" name="amount" id="refundAmount">
 
                                 <p><strong>Booking ID:</strong> <span id="refundBookingIdDisplay"></span></p>
-                                <p><strong>Số tiền hoàn:</strong> <span id="refundAmountDisplay"></span> VND</p>
+                                <p><strong>Original Amount:</strong> <span id="refundAmountDisplay"></span> VND</p>
 
-                                <label for="refundReason">Lý do hoàn tiền: <span style="color: red;">*</span></label>
-                                <textarea name="refundReason" id="refundReason" rows="4" 
-                                          placeholder="Vui lòng nhập lý do hoàn tiền (bắt buộc)" 
+                                <!-- Refund Policy Information -->
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #007bff;">
+                                    <h4 style="margin: 0 0 10px 0; color: #007bff;">📋 Refund Policy</h4>
+                                    <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+                                        <li><strong>Within 24 hours:</strong> 100% refund</li>
+                                        <li><strong>Within 2 days:</strong> 75% refund</li>
+                                        <li><strong>After 2 days:</strong> No refund</li>
+                                    </ul>
+                                    <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">
+                                        * Refund amount will be calculated based on payment time
+                                    </p>
+                                </div>
+
+                                <label for="refundReason">Refund Reason: <span style="color: red;">*</span></label>
+                                <textarea name="refundReason" id="refundReason" rows="4"
+                                          placeholder="Please enter refund reason (required)"
                                           required minlength="10"></textarea>
 
                                 <div style="margin-top: 15px;">
-                                    <button type="submit" class="btn_1">Xác nhận hoàn tiền</button>
-                                    <button type="button" class="btn_1" onclick="closeRefundForm()">Hủy</button>
+                                    <button type="submit" class="btn_1">Refund Confirmation</button>
+                                    <button type="button" class="btn_1" onclick="closeRefundForm()">Cancel</button>
                                 </div>
                             </form>
                         </div>
@@ -308,14 +321,14 @@
                             <span class="close" onclick="closeLateCancel()">×</span>
                             <div style="text-align: center;">
                                 <h2 style="color: #ff6b35; margin-bottom: 20px;">
-                                    <i class="fa fa-exclamation-triangle"></i> Xác nhận hủy booking
+                                    <i class="fa fa-exclamation-triangle"></i> Confirm cancellation
                                 </h2>
                                 <div style="text-align: left; line-height: 1.6; margin-bottom: 20px;">
-                                    <p><strong>⚠️ Thông báo quan trọng:</strong></p>
-                                    <p>Đã quá 1 ngày từ khi thanh toán, bạn sẽ <strong style="color: red;">KHÔNG được hoàn tiền</strong>.</p>
-                                    <p>Bạn có chắc chắn muốn hủy booking này không?</p>
+                                    <p><strong>⚠️Important Notice:</strong></p>
+                                    <p>It's been more than 2 days since payment, you will <strong style="color: red;">NO refunds</strong>.</p>
+                                    <p>Are you sure you want to cancel this booking?</p>
                                     <p><strong>Booking ID:</strong> <%= lateCancelBookingId %></p>
-                                    <p><strong>Số tiền:</strong> <%= String.format("%,.0f", lateCancelAmount) %> VND</p>
+                                    <p><strong>Amount:</strong> <%= String.format("%,.0f", lateCancelAmount) %> VND</p>
                                 </div>
                                 <div style="display: flex; gap: 10px; justify-content: center;">
                                     <form method="post" action="vnpay-refund" style="display: inline;">
@@ -324,12 +337,12 @@
                                         <input type="hidden" name="refundReason" value="<%= lateCancelReason != null ? lateCancelReason : "Late cancellation" %>">
                                         <input type="hidden" name="confirmLateCancel" value="true">
                                         <button type="submit" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
-                                            Xác nhận hủy (Không hoàn tiền)
+                                            Confirm Cancellation (No Refund)
                                         </button>
                                     </form>
                                     <button onclick="closeLateCancel()"
                                             style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
-                                        Không hủy
+                                        No cancellation
                                     </button>
                                 </div>
                             </div>
@@ -344,14 +357,14 @@
                             <span class="close" onclick="closeRefundSuccessModal()">×</span>
                             <div style="text-align: center;">
                                 <h2 style="color: #28a745; margin-bottom: 20px;">
-                                    <i class="fa fa-check-circle"></i> Thông báo hoàn tiền
+                                    <i class="fa fa-check-circle"></i> Refund Notice
                                 </h2>
                                 <div style="text-align: left; line-height: 1.6;">
                                     <%= refundMsg %>
                                 </div>
                                 <button onclick="closeRefundSuccessModal()"
                                         style="margin-top: 20px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                                    Đã hiểu
+                                    Got it
                                 </button>
                             </div>
                         </div>
@@ -534,8 +547,8 @@
                     refundForm.addEventListener('submit', function (e) {
                         const submitBtn = this.querySelector('button[type="submit"]');
 
-                        // Show VNPay processing steps
-                        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang kết nối VNPay...';
+                        // Show processing steps
+                        submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing refund to wallet...';
                         submitBtn.disabled = true;
 
                         // Thêm progress indicator
@@ -543,8 +556,9 @@
                         progressDiv.id = 'refund-progress';
                         progressDiv.innerHTML = `
                 <div style="margin-top: 10px; padding: 10px; background: #f0f8ff; border-radius: 5px;">
-                    <p>🔄 Đang xử lý hoàn tiền qua VNPay...</p>
-                    <p>⏳ Vui lòng đợi trong giây lát</p>
+                    <p>🔄 Processing refund to e-wallet...</p>
+                    <p>⏳ Calculating refund amount based on timing...</p>
+                    <p>💳 Please wait a moment</p>
                 </div>
             `;
                         this.appendChild(progressDiv);
