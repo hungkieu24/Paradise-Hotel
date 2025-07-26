@@ -25,8 +25,8 @@ import java.util.Properties;
 public class EmailUtility {
 
     public static void sendEmail(String toEmail, String subject, String messageText) throws Exception {
-        final String fromEmail = "hung70919@gmail.com"; // Thay bằng email của bạn
-        final String password = "swav xtfi qiqe oeqz"; // App Password của Gmail
+        final String fromEmail = "hotelparadise.work@gmail.com"; // Thay bằng email của bạn
+        final String password = "nwyv eife dbhb piok"; // App Password của Gmail
 
         // Cấu hình thông số SMTP
         Properties props = new Properties();
@@ -65,8 +65,8 @@ public class EmailUtility {
     }
 
     public static void sendResetPasswordEmail(String toEmail, String subject, String messageText) throws Exception {
-        final String fromEmail = "hung70919@gmail.com"; // Thay bằng email của bạn
-        final String password = "swav xtfi qiqe oeqz"; // App Password của Gmail
+        final String fromEmail = "hotelparadise.work@gmail.com"; // Thay bằng email của bạn
+        final String password = "nwyv eife dbhb piok"; // App Password của Gmail
 
         // Cấu hình thông số SMTP
         Properties props = new Properties();
@@ -110,8 +110,8 @@ public class EmailUtility {
     }
   
   public static void sendRefundEmail(String toEmail, String subject, String htmlContent) throws Exception {
-        final String fromEmail = "hung70919@gmail.com";
-        final String password = "swav xtfi qiqe oeqz";
+        final String fromEmail = "hotelparadise.work@gmail.com";
+        final String password = "nwyv eife dbhb piok";
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -139,8 +139,8 @@ public class EmailUtility {
             List<Room> bookingRoomList, UserAccount user,
             Booking bookingCurrent, List<BookingRoomType> bookingRoomTypes
     ) throws Exception {
-        final String fromEmail = "hung70919@gmail.com"; // Thay bằng email của bạn
-        final String password = "swav xtfi qiqe oeqz"; // App Password của Gmail
+        final String fromEmail = "hotelparadise.work@gmail.com"; // Thay bằng email của bạn
+        final String password = "nwyv eife dbhb piok"; // App Password của Gmail
 
         // Cấu hình thông số SMTP
         Properties props = new Properties();
@@ -417,8 +417,8 @@ public class EmailUtility {
             String reason,
             int newTotalPoints
     ) throws Exception {
-        final String fromEmail = "hung70919@gmail.com";
-        final String password = "swav xtfi qiqe oeqz";
+        final String fromEmail = "hotelparadise.work@gmail.com";
+        final String password = "nwyv eife dbhb piok";
 
         String subject = "Notification: Your Loyalty Points Have Been Updated!";
         String htmlContent = "<h2>Dear " + customerName + ",</h2>"

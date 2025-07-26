@@ -168,7 +168,6 @@
                             <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px;">
                                 <button class="openEditProfileModal1" type="submit">Update</button>
                                 <!--                                <button class="openEditProfileModal1" type="reset">Cancel</button>-->
-                                <a href="forgotPassword.jsp" class="btn_1" style="display: inline-block;">Forgot password?</a>
                             </div>
 
                         </form>

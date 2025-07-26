@@ -55,12 +55,12 @@ public class VerifyCodeForChangePasswordServlet extends HttpServlet {
         UserAccountDAO useraccountdao = new UserAccountDAO();
         UserAccount user = (UserAccount) session.getAttribute("user");
         String newPassword = (String) session.getAttribute("newPassword");
-//        String hashedNewPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+        String hashedNewPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt(12));
 
-        boolean updated = useraccountdao.updatePassword1(user.getUsername(), newPassword);
+        boolean updated = useraccountdao.updatePassword1(user.getUsername(), hashedNewPassword);
 
         if (updated) {
-            user.setPassword(newPassword);
+            user.setPassword(hashedNewPassword);
             setSessionMessage(session, "Your password has been updated.", "success");
         } else {
             setSessionMessage(session, "Password updated failed!", "error");
