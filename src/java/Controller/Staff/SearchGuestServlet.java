@@ -39,161 +39,164 @@ public class SearchGuestServlet extends HttpServlet {
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-zA-Z0-9_\\-.]+@[a-zA-Z0-9\\-.]+\\.[a-zA-Z]{2,}$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^(0\\d{9,10}|\\+84\\d{9,10})$");
     
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        // Lấy staff từ session để lấy branch
-        UserAccount staff = (UserAccount) request.getSession().getAttribute("user");
-        Integer branchId = (staff != null) ? staff.getBranchId() : null;
-        System.out.println("Branch ID: " + branchId);
+@Override
+protected void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    
+    // Lấy staff từ session để lấy branch
+    UserAccount staff = (UserAccount) request.getSession().getAttribute("user");
+    Integer branchId = (staff != null) ? staff.getBranchId() : null;
+    System.out.println("Branch ID: " + branchId);
 
-        // Lấy check-in và check-out dates từ parameters (chỉ ngày)
-        String checkInStr = request.getParameter("checkInDate");
-        String checkOutStr = request.getParameter("checkOutDate");
-        Date checkInDate = null;
-        Date checkOutDate = null;
+    // Lấy check-in và check-out dates từ parameters (chỉ ngày)
+    String checkInStr = request.getParameter("checkInDate");
+    String checkOutStr = request.getParameter("checkOutDate");
+    java.sql.Date checkInDate = null;
+    java.sql.Date checkOutDate = null;
 
-        // Thay đổi format để chỉ parse ngày
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        try {
-            if (checkInStr != null && !checkInStr.isEmpty()) {
-                checkInDate = dateFormat.parse(checkInStr);
-            }
-            if (checkOutStr != null && !checkOutStr.isEmpty()) {
-                checkOutDate = dateFormat.parse(checkOutStr);
-            }
-        } catch (ParseException e) {
-            e.printStackTrace();
-            System.out.println("Error parsing dates: " + e.getMessage());
+    // Parse dates
+    try {
+        if (checkInStr != null && !checkInStr.isEmpty()) {
+            checkInDate = java.sql.Date.valueOf(checkInStr);
         }
-        
-        // Load room types và rooms cho branch
-        RoomDAO roomDAO = new RoomDAO();
-        RoomTypeDAO roomTypeDAO = new RoomTypeDAO();
-        
-        List<RoomType> allSystemRoomTypes = roomTypeDAO.getAllRoomType();
-        Map<Integer, List<Room>> availableRoomsByAllTypes = new HashMap<>();
-        Map<Integer, Integer> bookedQuantitiesByRoomType = new HashMap<>();
-        Map<Integer, Integer> totalRoomsByRoomType = new HashMap<>();
-        Map<Integer, Integer> availableQuantitiesByRoomType = new HashMap<>();
-        
-        ServiceDAO serviceDAO = new ServiceDAO();
-        List<Service> availableServices = serviceDAO.getActiveServicesByBranch(branchId);
-        
-        if (branchId != null) {
-            for (RoomType rt : allSystemRoomTypes) {
-                int roomTypeId = rt.getRoomTypeID();
-
-                // Lấy tổng số phòng theo room type và branch
-                int totalRooms = roomDAO.getTotalRoomsByRoomTypeAndBranch(branchId, roomTypeId);
-                totalRoomsByRoomType.put(roomTypeId, totalRooms);
-
-                if (totalRooms > 0) {
-                    // Lấy số phòng đã book trong khoảng thời gian
-                    int bookedQuantity = 0;
-                    if (checkInDate != null && checkOutDate != null) {
-                        bookedQuantity = roomDAO.getBookedQuantityByRoomTypeAndDateRange(
-                            branchId, 
-                            roomTypeId, 
-                            new java.sql.Date(checkInDate.getTime()), 
-                            new java.sql.Date(checkOutDate.getTime())
-                        );
-                    } else {
-                        // Nếu không có dates thì lấy tất cả bookings đang active (CheckedIn)
-                        bookedQuantity = roomDAO.getActiveBookedQuantityByRoomType(branchId, roomTypeId);
-                    }
-                    bookedQuantitiesByRoomType.put(roomTypeId, bookedQuantity);
-
-                    // Tính số phòng available
-                    int availableQuantity = totalRooms - bookedQuantity;
-                    availableQuantitiesByRoomType.put(roomTypeId, Math.max(0, availableQuantity));
-
-                    // Lấy danh sách phòng available cho việc assign rooms
-                    List<Room> availableRooms;
-                    if (checkInDate != null && checkOutDate != null) {
-                        availableRooms = roomDAO.getAvailableRoomsByBranchRoomTypeAndDateRange(
-                            branchId, 
-                            roomTypeId, 
-                            new java.sql.Date(checkInDate.getTime()), 
-                            new java.sql.Date(checkOutDate.getTime())
-                        );
-                    } else {
-                        availableRooms = roomDAO.getAvailableRoomsByBranchAndRoomType(branchId, roomTypeId);
-                    }
-
-                    // Chỉ add vào map nếu có rooms available hoặc để hiển thị thông tin
-                    availableRoomsByAllTypes.put(roomTypeId, availableRooms);
-                } else {
-                    // Nếu không có phòng nào, set tất cả về 0
-                    bookedQuantitiesByRoomType.put(roomTypeId, 0);
-                    availableQuantitiesByRoomType.put(roomTypeId, 0);
-                    availableRoomsByAllTypes.put(roomTypeId, new ArrayList<>());
-                }
-            }
+        if (checkOutStr != null && !checkOutStr.isEmpty()) {
+            checkOutDate = java.sql.Date.valueOf(checkOutStr);
         }
-        
-        // Xử lý tìm kiếm nếu có parameters
-        String keyword = request.getParameter("keyword");
-        String fullName = request.getParameter("fullName");
-        String username = request.getParameter("username");
-        String email = request.getParameter("email");
-        String phone = request.getParameter("phone");
-        String idNumber = request.getParameter("idNumber");
-        String status = request.getParameter("status");
-        
-        List<UserAccount> searchResults = new ArrayList<>();
-        String errorMsg = null;
-        
-        // Kiểm tra nếu có bất kỳ search parameter nào
-        boolean hasSearchParams = (keyword != null && !keyword.trim().isEmpty()) ||
-                                 (fullName != null && !fullName.trim().isEmpty()) ||
-                                 (username != null && !username.trim().isEmpty()) ||
-                                 (email != null && !email.trim().isEmpty()) ||
-                                 (phone != null && !phone.trim().isEmpty()) ||
-                                 (idNumber != null && !idNumber.trim().isEmpty()) ||
-                                 (status != null && !status.trim().isEmpty());
-        
-        if (hasSearchParams) {
-            UserAccountDAO userDao = new UserAccountDAO();
-            
-            // Tìm kiếm cơ bản với keyword
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                keyword = keyword.trim();
-                boolean isEmail = EMAIL_PATTERN.matcher(keyword).matches();
-                boolean isPhone = PHONE_PATTERN.matcher(keyword).matches();
-                
-                if (!isEmail && !isPhone) {
-                    errorMsg = "Invalid email or phone number format.";
-                } else {
-                    UserAccount guest = userDao.getUserByEmailOrPhone(keyword);
-                    if (guest != null) {
-                        searchResults.add(guest);
-                    }
-                }
-            }
-            // Tìm kiếm nâng cao
-            else {
-                searchResults = userDao.searchUserAccounts(keyword, 0, 10);
-            }
-            if (searchResults.isEmpty() && errorMsg == null) {
-                errorMsg = "No users found matching your search criteria.";
-            }
-        }
-        // Set attributes
-        request.setAttribute("availableServices", availableServices);
-        request.setAttribute("roomTypes", allSystemRoomTypes);
-        request.setAttribute("availableRoomsByAllTypes", availableRoomsByAllTypes);
-        request.setAttribute("bookedQuantitiesByRoomType", bookedQuantitiesByRoomType);
-        request.setAttribute("totalRoomsByRoomType", totalRoomsByRoomType);
-        request.setAttribute("availableQuantitiesByRoomType", availableQuantitiesByRoomType);
-        request.setAttribute("checkInDate", checkInStr);
-        request.setAttribute("checkOutDate", checkOutStr);
-        request.setAttribute("searchResults", searchResults);
-        request.setAttribute("errorMsg", errorMsg);
-        request.getRequestDispatcher("searchGuest.jsp").forward(request, response);
+    } catch (IllegalArgumentException e) {
+        e.printStackTrace();
+        System.out.println("Error parsing dates: " + e.getMessage());
     }
     
+    // Load room types và rooms cho branch
+    RoomDAO roomDAO = new RoomDAO();
+    RoomTypeDAO roomTypeDAO = new RoomTypeDAO();
+    
+    // Chỉ lấy room types của branch hiện tại
+    List<RoomType> branchRoomTypes = new ArrayList<>();
+    if (branchId != null) {
+        branchRoomTypes = roomTypeDAO.getRoomTypesByBranchId(branchId);
+    }
+    
+    Map<Integer, List<Room>> availableRoomsByAllTypes = new HashMap<>();
+    Map<Integer, Integer> bookedQuantitiesByRoomType = new HashMap<>();
+    Map<Integer, Integer> totalRoomsByRoomType = new HashMap<>();
+    Map<Integer, Integer> availableQuantitiesByRoomType = new HashMap<>();
+    
+    ServiceDAO serviceDAO = new ServiceDAO();
+    List<Service> availableServices = serviceDAO.getActiveServicesByBranch(branchId);
+    
+    if (branchId != null) {
+        for (RoomType rt : branchRoomTypes) {
+            int roomTypeId = rt.getRoomTypeID();
+
+            // Lấy tổng số phòng theo room type và branch
+            int totalRooms = roomDAO.getTotalRoomsByRoomTypeAndBranch(branchId, roomTypeId);
+            totalRoomsByRoomType.put(roomTypeId, totalRooms);
+
+            if (totalRooms > 0) {
+                // Lấy số phòng đã book trong khoảng thời gian
+                int bookedQuantity = 0;
+                if (checkInDate != null && checkOutDate != null) {
+                    bookedQuantity = roomDAO.getBookedQuantityByRoomTypeAndDateRange(
+                        branchId, 
+                        roomTypeId, 
+                        checkInDate, 
+                        checkOutDate
+                    );
+                } else {
+                    // Nếu không có dates thì lấy tất cả bookings đang active (CheckedIn)
+                    bookedQuantity = roomDAO.getActiveBookedQuantityByRoomType(branchId, roomTypeId);
+                }
+                bookedQuantitiesByRoomType.put(roomTypeId, bookedQuantity);
+
+                // Tính số phòng available
+                int availableQuantity = totalRooms - bookedQuantity;
+                availableQuantitiesByRoomType.put(roomTypeId, Math.max(0, availableQuantity));
+
+                // Lấy danh sách phòng available cho việc assign rooms
+                List<Room> availableRooms;
+                if (checkInDate != null && checkOutDate != null) {
+                    availableRooms = roomDAO.getAvailableRoomsByBranchRoomTypeAndDateRange(
+                        branchId, 
+                        roomTypeId, 
+                        checkInDate, 
+                        checkOutDate
+                    );
+                } else {
+                    availableRooms = roomDAO.getAvailableRoomsByBranchAndRoomType(branchId, roomTypeId);
+                }
+
+                // Chỉ add vào map nếu có rooms available hoặc để hiển thị thông tin
+                availableRoomsByAllTypes.put(roomTypeId, availableRooms);
+            } else {
+                // Nếu không có phòng nào, set tất cả về 0
+                bookedQuantitiesByRoomType.put(roomTypeId, 0);
+                availableQuantitiesByRoomType.put(roomTypeId, 0);
+                availableRoomsByAllTypes.put(roomTypeId, new ArrayList<>());
+            }
+        }
+    }
+    
+    // Xử lý tìm kiếm nếu có parameters
+    String keyword = request.getParameter("keyword");
+    String fullName = request.getParameter("fullName");
+    String username = request.getParameter("username");
+    String email = request.getParameter("email");
+    String phone = request.getParameter("phone");
+    String idNumber = request.getParameter("idNumber");
+    String status = request.getParameter("status");
+    
+    List<UserAccount> searchResults = new ArrayList<>();
+    String errorMsg = null;
+    
+    // Kiểm tra nếu có bất kỳ search parameter nào
+    boolean hasSearchParams = (keyword != null && !keyword.trim().isEmpty()) ||
+                             (fullName != null && !fullName.trim().isEmpty()) ||
+                             (username != null && !username.trim().isEmpty()) ||
+                             (email != null && !email.trim().isEmpty()) ||
+                             (phone != null && !phone.trim().isEmpty()) ||
+                             (idNumber != null && !idNumber.trim().isEmpty()) ||
+                             (status != null && !status.trim().isEmpty());
+    
+    if (hasSearchParams) {
+        UserAccountDAO userDao = new UserAccountDAO();
+        
+        // Tìm kiếm cơ bản với keyword
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            keyword = keyword.trim();
+            boolean isEmail = EMAIL_PATTERN.matcher(keyword).matches();
+            boolean isPhone = PHONE_PATTERN.matcher(keyword).matches();
+            
+            if (!isEmail && !isPhone) {
+                errorMsg = "Invalid email or phone number format.";
+            } else {
+                UserAccount guest = userDao.getUserByEmailOrPhone(keyword);
+                if (guest != null) {
+                    searchResults.add(guest);
+                }
+            }
+        }
+        // Tìm kiếm nâng cao
+        else {
+            searchResults = userDao.searchUserAccounts(keyword, 0, 10);
+        }
+        if (searchResults.isEmpty() && errorMsg == null) {
+            errorMsg = "No users found matching your search criteria.";
+        }
+    }
+    // Set attributes
+    request.setAttribute("availableServices", availableServices);
+    request.setAttribute("roomTypes", branchRoomTypes);
+    request.setAttribute("availableRoomsByAllTypes", availableRoomsByAllTypes);
+    request.setAttribute("bookedQuantitiesByRoomType", bookedQuantitiesByRoomType);
+    request.setAttribute("totalRoomsByRoomType", totalRoomsByRoomType);
+    request.setAttribute("availableQuantitiesByRoomType", availableQuantitiesByRoomType);
+    request.setAttribute("checkInDate", checkInStr);
+    request.setAttribute("checkOutDate", checkOutStr);
+    request.setAttribute("searchResults", searchResults);
+    request.setAttribute("errorMsg", errorMsg);
+    request.getRequestDispatcher("searchGuest.jsp").forward(request, response);
+}
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -361,7 +364,7 @@ public class SearchGuestServlet extends HttpServlet {
     }
 
     // Tính tổng giá cuối cùng
-    double finalTotalPrice = totalRoomPrice + totalServicePrice;
+    double finalTotalPrice = totalRoomPrice  + totalServicePrice;
 
     // Tạo booking với giá đúng
     BookingDAO bookingDAO = new BookingDAO();
