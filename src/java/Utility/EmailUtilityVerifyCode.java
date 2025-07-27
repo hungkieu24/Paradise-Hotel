@@ -19,8 +19,8 @@ import java.util.Properties;
  */
 public class EmailUtilityVerifyCode {
     public static void sendEmail(String toEmail, String subject,String messageText) throws MessagingException{
-        final String fromEmail = "thientc108.work@gmail.com";// email người gửi 
-        final String password = "xrrw gete rvrq zopr";// App password(không phải mật khẩu email);
+        final String fromEmail = "hotelparadise.work@gmail.com";// email người gửi 
+        final String password = "nwyv eife dbhb piok";// App password(không phải mật khẩu email);
         
         // cấu hình SMTP server
         Properties props = new Properties();

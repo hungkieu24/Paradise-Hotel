@@ -166,7 +166,8 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label>Check in / Check out</label>
-                                        <input class="form-control" type="text" id="dates" name="dates" value="${param.dates}" placeholder="YYYY-MM-DD - YYYY-MM-DD" readonly="readonly" required>
+                                        <input class="form-control" type="text" name="dates" value="${param.dates}" placeholder="YYYY-MM-DD - YYYY-MM-DD" readonly="readonly" required>
+
                                     </div>
                                 </div>  
                                 <div class="col-md-3">
@@ -230,19 +231,15 @@
                                             </ul>
                                         </div>
                                         <div class="box_item_footer d-flex align-items-center justify-content-between">
-                                            <a href="booking?roomTypeId=${r.getRoomTypeID()}&action=oneRoom" 
-                                               onclick="return validateDates(event);" 
-                                               class="btn_4 learn-more">
-
+                                            <a href="booking?roomTypeId=${r.getRoomTypeID()}&action=oneRoom" class="btn_4 learn-more">
 
                                                 <span class="circle">
                                                     <span class="icon arrow"></span>
                                                 </span>
                                                 <span class="button-text">Book Now</span>
                                             </a>
-                                            <a href="javascript:void(0);" 
-                                               onclick="validateDates(event, ${r.getRoomTypeID()})" 
-                                               class="btn_4 learn-more">                                                <span class="circle"><span class="icon arrow"></span></span>
+                                            <a href="javascript:void(0);" onclick="addToCart(${r.getRoomTypeID()})" class="btn_4 learn-more">
+                                                <span class="circle"><span class="icon arrow"></span></span>
                                                 <span class="button-text">Add Cart</span>
                                             </a>
                                             <a href="./viewRoomTypeDetail?roomTypeId=${r.getRoomTypeID()}" class="animated_link">
@@ -384,17 +381,17 @@
         <script src="./js/validationForm.js"></script>
         <script src="./js/toastMessage.js"></script>
         <script>
-                                                   Validator({
-                                                       form: '#search',
-                                                       formGroupSelector: '.form-group',
-                                                       errorSelector: '.form_error',
-                                                       rules: [
-                                                           Validator.minLessThanMax('#minPrice', '#maxPrice', 'Maximum price must be more than or equal to minimum price')
-                                                       ],
-                                                       onsubmit: function (formValue) {
-                                                           document.querySelector('#search').submit();
-                                                       }
-                                                   })
+                                                Validator({
+                                                    form: '#search',
+                                                    formGroupSelector: '.form-group',
+                                                    errorSelector: '.form_error',
+                                                    rules: [
+                                                        Validator.minLessThanMax('#minPrice', '#maxPrice', 'Maximum price must be more than or equal to minimum price')
+                                                    ],
+                                                    onsubmit: function (formValue) {
+                                                        document.querySelector('#search').submit();
+                                                    }
+                                                })
         </script>
         <script>
             function addToCart(roomTypeId) {
@@ -431,21 +428,50 @@
             }
         </script>
         <script>
-            function validateDates(event, roomTypeId = null) {
-                const dates = document.getElementById("dates").value.trim();
-
-                if (!dates || dates.indexOf(" - ") === -1) {
-                    showToast("Please select Check-in and Check-out dates first.", color = "#ff0000");
-                    event.preventDefault(); // chặn hành động mặc định
+            // Add validation for check-in/check-out dates
+            function validateDates() {
+                const datesInput = document.querySelector('input[name="dates"]');
+                if (!datesInput || !datesInput.value.trim()) {
+                    showToast("❌ Please select check-in and check-out dates first", "#e53935");
                     return false;
                 }
+                return true;
+            }
 
-                // Nếu là addToCart
-                if (roomTypeId !== null) {
-                    addToCart(roomTypeId);
+// Modified addToCart function with date validation
+            function addToCart(roomTypeId) {
+                if (!validateDates()) {
+                    return;
+                }
+
+                fetch('<%=request.getContextPath()%>/addToCart?roomTypeId=' + roomTypeId)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === "success") {
+                                showToast("✅ " + data.message);
+                            } else if (data.status === "exists") {
+                                showToast("ℹ️ " + data.message, "#ff9800");
+                            } else {
+                                showToast("❌ Cannot add to cart", "#e53935");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            showToast("❌ An error occurred");
+                        });
             }
-            }
+
+// Add click event validation for Book Now buttons
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('a[href*="booking?roomTypeId="]').forEach(function (bookBtn) {
+                    bookBtn.addEventListener('click', function (e) {
+                        if (!validateDates()) {
+                            e.preventDefault();
+                            return false;
+                        }
+                    });
+                });
+            });
         </script>
-
     </body>
 </html>

@@ -455,16 +455,27 @@ public class UserAccountDAO extends DBContext {
             ps.setString(1, username);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
+                Timestamp ts = rs.getTimestamp("created_at");
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String createdAt = (ts != null) ? sdf.format(ts) : null;
+                Integer branchId = null;
+                try {
+                    branchId = rs.getObject("branch_id") != null ? rs.getInt("branch_id") : null;
+                } catch (Exception e) {
+                    branchId = null;
+                }
                 return new UserAccount(
                         rs.getString("id"),
                         rs.getString("username"),
                         rs.getString("password"),
+                        rs.getString("fullname"),
                         rs.getString("email"),
                         rs.getString("avatar_url"),
                         rs.getString("role"),
                         rs.getString("status"),
-                        rs.getString("created_at"),
-                        rs.getString("phonenumber")
+                        createdAt,
+                        rs.getString("phonenumber"),
+                        branchId
                 );
             }
         } catch (SQLException e) {
